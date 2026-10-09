@@ -1,0 +1,19 @@
+/* terra 蜜陶 —— 蜜桃暖底 + 陶土橙主色（自带 palette，优先于 tokens 轴） */
+:root {
+  --paper: #ffffff;
+  --bg: #f7f0ea;
+  --ink: #3a2d22;
+  --soft: #f3e6dc;
+  --soft-2: #ecdcd0;
+  --mid: #98897c;
+  --bad: #c1341f;
+  --acc: #d97a3a;
+  --border: 1px solid var(--soft-2);
+  --row-h: 28px;
+  --btn-h: 28px;
+  --fs-core: 12px;
+  --radius-btn: 6px;
+  --shadow-relief: 0 2px 8px rgba(180, 110, 60, 0.12);
+  --shadow-relief-press: inset 0 1px 3px rgba(180, 110, 60, 0.15);
+  --shadow-relief-inset: inset 0 0 0 1px var(--soft-2);
+}

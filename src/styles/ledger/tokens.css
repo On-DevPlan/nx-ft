@@ -1,0 +1,20 @@
+/* ledger 账本 —— 米色纸面 + 墨棕字 + 朱砂印章红（自带 palette，优先于 tokens 轴） */
+:root {
+  --paper: #fffdf6;
+  --bg: #f5f0e4;
+  --ink: #28231a;
+  --soft: #f3ecdc;
+  --soft-2: #e0d6bd;
+  --mid: #8d8471;
+  --bad: #b03a2e;
+  --acc: #b03a2e;
+
+  --border: 1px solid var(--soft-2);
+  --row-h: 28px;
+  --btn-h: 28px;
+  --fs-core: 12px;
+  --radius-btn: 6px;
+  --shadow-relief: 3px 3px 0 var(--soft-2);
+  --shadow-relief-press: inset 1px 1px 2px rgba(40, 35, 26, 0.12);
+  --shadow-relief-inset: inset 0 0 0 1px var(--soft-2);
+}

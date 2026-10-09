@@ -1,0 +1,6 @@
+{
+  "name": "ledger",
+  "label": "账本 · 米纸衬线 + 朱砂印章 + 双线框（原型 P1）",
+  "extends": "paper",
+  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
+}

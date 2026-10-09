@@ -1,0 +1,8 @@
+/* 策略：卡片（蓝图）。细框 + 2px 硬偏移投影。 */
+.card {
+  padding: 0;
+  border: 1px solid var(--soft-2); border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 var(--soft-2);
+}
+.stack > .card + .card { margin-top: 14px; }

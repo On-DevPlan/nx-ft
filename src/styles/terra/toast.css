@@ -1,0 +1,8 @@
+/* 策略：提示条（蜜陶）。白面浮起 + 暖橙左缘。 */
+.toast-stack { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+.toast {
+  background: var(--paper); color: var(--ink);
+  border: 0; border-left: 3px solid var(--acc);
+  border-radius: 6px; padding: 10px 14px; font-size: 12px;
+  box-shadow: var(--shadow-relief);
+}

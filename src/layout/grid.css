@@ -1,0 +1,32 @@
+/* ============================================================
+   layout/grid —— 内容栅格
+   ============================================================
+   12 列网格 + 16px gutter，与 .shell-main 的 padding 对齐。
+   卡片边对齐到版心，不靠卡片阴影堆叠——分隔由 1px 线承担。
+   ============================================================ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.col-1 { grid-column: span 1; }
+.col-2 { grid-column: span 2; }
+.col-3 { grid-column: span 3; }
+.col-4 { grid-column: span 4; }
+.col-6 { grid-column: span 6; }
+.col-8 { grid-column: span 8; }
+.col-12 { grid-column: span 12; }
+
+/* 响应式：≤ 1024px 退化为 6 列；≤ 640px 退化为 1 列 */
+@media (max-width: 1024px) {
+  .col-3, .col-4 { grid-column: span 6; }
+}
+@media (max-width: 640px) {
+  .col-2, .col-3, .col-4, .col-6, .col-8 { grid-column: span 12; }
+}
+
+/* 等高行：用于「并排卡片」场景 */
+.grid.even > * { height: 100%; }

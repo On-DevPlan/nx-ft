@@ -1,0 +1,15 @@
+/* 策略：按钮（账本）。描边墨线，按下盖朱砂章。 */
+.btn {
+  font: inherit; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: var(--btn-h); padding: 0 12px;
+  border: 1px solid var(--ink); border-radius: 6px;
+  background: var(--paper); color: var(--ink);
+}
+.btn:hover { outline: 1px solid var(--acc); outline-offset: 1px; }
+.btn:active:not(:disabled) { background: var(--acc); border-color: var(--acc); color: #fff; outline: none; }
+.btn:disabled { border-color: var(--soft-2); color: var(--mid); cursor: not-allowed; }
+.btn.ghost { border-color: var(--soft-2); }
+.btn.small { height: 22px; padding: 0 8px; font-size: 11px; border-radius: 4px; }
+.btn.danger { border-color: var(--bad); color: var(--bad); }
+.btn.danger:active:not(:disabled) { background: var(--bad); color: #fff; }

@@ -1,0 +1,53 @@
+/* ============================================================
+   layout/sidebar —— 左竖排导航
+   ============================================================
+   「导航在哪，分界线就在哪」：竖排用 right border 把自己圈起来，
+   顶部身份条用 bottom border 圈起来。视觉连续靠 1px 线，不靠卡片投影。
+   ============================================================ */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 8px;
+  height: 100%;
+}
+
+.sidebar-brand {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-bottom: var(--border);
+}
+
+.sidebar-section {
+  font-size: 11px;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 10px 4px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: var(--fs-core);
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sidebar-item:hover {
+  background: var(--soft);
+}
+
+.sidebar-item.active {
+  font-weight: 600;
+  background: var(--soft);
+  box-shadow: inset 2px 0 0 var(--ink);
+}

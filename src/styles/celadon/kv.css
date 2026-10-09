@@ -1,0 +1,5 @@
+/* 策略：键值表（青瓷）。留白行距无边框。 */
+.kv { margin: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; }
+.kv-row { display: flex; align-items: center; gap: 10px; }
+.kv dt { color: var(--mid); font-size: 11px; width: 80px; flex-shrink: 0; }
+.kv dd { margin: 0; min-width: 0; font-size: 12px; display: flex; align-items: center; }

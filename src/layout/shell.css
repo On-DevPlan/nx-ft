@@ -1,0 +1,74 @@
+/* ============================================================
+   layout/shell —— 应用外壳版式
+   ============================================================
+   这一层只管版式（容器排布 + 栅格）。按钮/卡片等原子类的纪律在
+   styles/<pack>/ 里，这里不出现 .btn/.card——三层纪律见 hooks.mjs。
+
+   组合方式：
+     .shell.sidebar > .shell-aside + .shell-main
+     .shell.topbar > .shell-topbar + .shell-main
+     混用：.shell > .shell-aside + .shell-topbar + .shell-main
+*/
+
+.shell {
+  display: grid;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--fs-core);
+}
+
+/* sidebar 形态：左竖排导航 + 右侧主区 */
+.shell.sidebar {
+  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-areas: "aside main";
+}
+
+/* topbar 形态：顶部横排 + 下方主区 */
+.shell.topbar {
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "topbar"
+    "main";
+}
+
+/* 混用：左竖排 + 顶部横排 + 主区 */
+.shell.mixed {
+  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "aside  topbar"
+    "aside  main";
+}
+
+.shell-aside {
+  grid-area: aside;
+  border-right: var(--border);
+  background: var(--paper);
+}
+
+.shell-topbar {
+  grid-area: topbar;
+  border-bottom: var(--border);
+  background: var(--paper);
+}
+
+.shell-main {
+  grid-area: main;
+  min-width: 0;
+  padding: 16px;
+}
+
+/* 窄屏退化为上下叠放（≤ 768px） */
+@media (max-width: 768px) {
+  .shell.sidebar,
+  .shell.mixed {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "topbar"
+      "aside"
+      "main";
+  }
+  .shell-aside { border-right: 0; border-bottom: var(--border); }
+}

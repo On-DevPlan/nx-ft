@@ -1,0 +1,329 @@
+{
+  "$schema": "ui-kit/catalog.schema.json",
+  "version": "0.1.0",
+  "generated": "2026-10-09T06:51:43.582Z",
+  "components": [
+    {
+      "id": "btn",
+      "category": "action",
+      "title": "按钮",
+      "description": "主操作触发器。28px 高、4px 圆角、1px 边框，密度由 tokens 控制。",
+      "classContract": ".btn[.ghost|.small|.danger]",
+      "classes": [
+        "btn",
+        "btn.ghost",
+        "btn.small",
+        "btn.danger"
+      ],
+      "dom": "<button class=\"btn\">label</button>",
+      "props": {
+        "variant": {
+          "type": "enum",
+          "values": [
+            "",
+            "ghost",
+            "danger"
+          ],
+          "default": "",
+          "description": "视觉变体：默认实色、ghost 浅边、danger 危险色"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": "",
+          "description": "尺寸：默认 28px、small 22px"
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--bad",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "primary",
+          "html": "<button class=\"btn\">确定</button>"
+        },
+        {
+          "title": "ghost",
+          "html": "<button class=\"btn ghost\">取消</button>"
+        },
+        {
+          "title": "danger",
+          "html": "<button class=\"btn danger\">删除</button>"
+        },
+        {
+          "title": "small",
+          "html": "<button class=\"btn small\">次要</button>"
+        }
+      ],
+      "pack": "paper",
+      "_source": "paper/components/btn.spec.json"
+    },
+    {
+      "id": "card",
+      "category": "container",
+      "title": "卡片",
+      "description": "通用容器：1px 边框圈出版心。可选 colhead 头部、footer 槽位。",
+      "classContract": ".card > .colhead + .card-body + .card-footer",
+      "classes": [
+        "card",
+        "colhead",
+        "card-body",
+        "card-footer"
+      ],
+      "dom": "<div class=\"card\"><div class=\"colhead\">title</div><div class=\"card-body\">content</div></div>",
+      "props": {
+        "title": {
+          "type": "string",
+          "description": "头部文案（省略则不渲染 colhead）"
+        },
+        "actions": {
+          "type": "node",
+          "description": "头部右侧的操作槽（按钮组）"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"card\"><div class=\"card-body\">内容</div></div>"
+        },
+        {
+          "title": "with title",
+          "html": "<div class=\"card\"><div class=\"colhead\">标题</div><div class=\"card-body\">内容</div></div>"
+        }
+      ],
+      "pack": "paper",
+      "_source": "paper/components/card.spec.json"
+    },
+    {
+      "id": "kv",
+      "category": "data",
+      "title": "键值对",
+      "description": "定义列表：dt/dd 形态的 key/value 行集合。等宽左列 + 自适应右列。",
+      "classContract": ".kv > .kv-row > dt + dd",
+      "classes": [
+        "kv",
+        "kv-row"
+      ],
+      "dom": "<dl class=\"kv\"><div class=\"kv-row\"><dt>k</dt><dd>v</dd></div></dl>",
+      "props": {
+        "items": {
+          "type": "array",
+          "item": {
+            "key": "string",
+            "value": "node"
+          },
+          "required": true,
+          "description": "[{key, value}] 列表"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
+        }
+      ],
+      "pack": "paper",
+      "_source": "paper/components/kv.spec.json"
+    },
+    {
+      "id": "row",
+      "category": "list",
+      "title": "行条目",
+      "description": "三段式水平行：name（左）+ desc（中）+ acts（右）。用于列表/表格/命令清单。",
+      "classContract": ".row > .name + .desc + .acts",
+      "classes": [
+        "row"
+      ],
+      "dom": "<div class=\"row\"><div class=\"name\">name</div><div class=\"desc\">desc</div><div class=\"acts\">acts</div></div>",
+      "props": {
+        "name": {
+          "type": "node",
+          "required": true,
+          "description": "左槽"
+        },
+        "desc": {
+          "type": "node",
+          "description": "中槽（省略则整行只剩 name + acts）"
+        },
+        "actions": {
+          "type": "node",
+          "description": "右槽"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"row\"><div class=\"name\">名称</div><div class=\"desc\">描述</div><div class=\"acts\"><button class=\"btn small\">操作</button></div></div>"
+        }
+      ],
+      "pack": "paper",
+      "_source": "paper/components/row.spec.json"
+    }
+  ],
+  "styles": {
+    "amber": {
+      "name": "amber",
+      "label": "琥珀 · 纯白浅底 + 琥珀金 + 等宽工具感，零框零面（原型 P3）",
+      "extends": "paper",
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "blueprint": {
+      "name": "blueprint",
+      "label": "蓝图 · 坐标纸浅底 + 工程蓝 + 硬偏移投影（原型 P4）",
+      "extends": "paper",
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "celadon": {
+      "name": "celadon",
+      "label": "青瓷 · 薄荷底 + 青绿主色 + 圆胶囊，零边框（原型 P5）",
+      "extends": "paper",
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "ledger": {
+      "name": "ledger",
+      "label": "账本 · 米纸衬线 + 朱砂印章 + 双线框（原型 P1）",
+      "extends": "paper",
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "ledger-offset": {
+      "name": "ledger-offset",
+      "label": "硬偏移 · 4px 硬影子，纸页叠纸页（继承 paper，仅覆盖局部）",
+      "extends": "paper",
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "magenta": {
+      "name": "magenta",
+      "label": "玫红 · 纯白 + 玫红主色 + 特粗字重硬规则线（原型 P6）",
+      "extends": "paper",
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "paper": {
+      "name": "paper",
+      "label": "纸上规范 · 纸质感极简 + 边框主义（双层莫兰迪点缀）",
+      "extends": null,
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "terra": {
+      "name": "terra",
+      "label": "蜜陶 · 蜜桃底 + 陶土橙 + 柔投影，零边框（原型 P2）",
+      "extends": "paper",
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    }
+  }
+}

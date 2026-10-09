@@ -1,0 +1,8 @@
+/* 策略：代码块（账本）。米白细框。 */
+.snippet-box {
+  display: block;
+  border: 1px solid var(--soft-2); border-radius: 4px;
+  background: var(--paper); padding: 8px 10px;
+  font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+}
+.snippet-box pre { font: inherit; margin: 0; white-space: pre-wrap; }

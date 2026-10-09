@@ -1,0 +1,53 @@
+/* ============================================================
+   layout/topbar —— 顶部横排
+   ============================================================
+   双行版式：第一行是身份（品牌 + 版本），第二行是操作（菜单 + 用户）。
+   把「我是谁」和「我能做什么」分开，挤一行时两边都在争视觉重心。
+   ============================================================ */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--paper);
+}
+
+.topbar-brand {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-brand .meta {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--mid);
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.topbar-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.topbar-item {
+  padding: 6px 12px;
+  font-size: var(--fs-core);
+  color: var(--mid);
+  text-decoration: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.topbar-item:hover { color: var(--ink); }
+.topbar-item.active {
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--ink);
+}

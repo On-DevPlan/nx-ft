@@ -1,0 +1,7 @@
+/* 策略：CLI 等价提示（蓝图）。 */
+.cli-hint {
+  color: var(--mid); font-size: 11px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
+  padding: 6px 12px; border-top: 1px solid var(--soft-2);
+}
+.cli-cmd { font-family: ui-monospace, Consolas, monospace; color: var(--acc); }

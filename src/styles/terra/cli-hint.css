@@ -1,0 +1,7 @@
+/* 策略：CLI 等价提示（蜜陶）。无边框。 */
+.cli-hint {
+  color: var(--mid); font-size: 11px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
+  padding: 8px 16px 12px;
+}
+.cli-cmd { font-family: ui-monospace, Consolas, monospace; color: #c2652a; }

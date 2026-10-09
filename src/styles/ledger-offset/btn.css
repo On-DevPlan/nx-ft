@@ -1,0 +1,42 @@
+/* 策略：按钮（ledger-offset 方言）。
+   继承自 paper；唯一差异是「按下时硬偏移被压实」——
+   box-shadow 4px 4px 0 var(--ink) 是这方言的印章。
+   其余形状规则（28px 高、4px 圆角、--ink/--paper 主色）一概沿用 paper。 */
+.btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0 12px;
+  height: 28px;
+  font-size: 12px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* 方言标志：4px 硬偏移，无模糊、无渐变 */
+  box-shadow: 4px 4px 0 var(--ink);
+  /* 偏移占位：避免按压时按钮位置跳变撑乱周边元素 */
+  margin: 0 4px 4px 0;
+}
+.btn:hover { outline: 1px solid var(--ink); outline-offset: 1px; }
+.btn:active:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
+  outline: none;
+  /* 压实偏移：影子被按进纸里，按钮视觉上「贴下去」 */
+  box-shadow: 0 0 0 var(--ink);
+  margin: 4px 0 0 4px;
+}
+.btn:disabled {
+  border-color: var(--soft-2);
+  color: var(--mid);
+  background: var(--paper);
+  cursor: not-allowed;
+  box-shadow: 2px 2px 0 var(--soft-2);
+}
+.btn.ghost { border-color: var(--soft-2); box-shadow: 4px 4px 0 var(--soft-2); }
+.btn.small { height: 22px; padding: 0 8px; font-size: 11px; }
+.btn.danger { border-color: var(--bad); color: var(--bad); box-shadow: 4px 4px 0 var(--bad); }
+.btn.danger:active:not(:disabled) { background: var(--bad); color: #fff; box-shadow: 0 0 0 var(--bad); }

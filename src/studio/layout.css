@@ -1,0 +1,181 @@
+/* ============================================================
+   3. layout —— 版式（tabs）。
+   **这一层随项目自由改**；tokens/atomic 层在 style.css 里，别把
+   原子类抄过来——两层的变更纪律不同（见 style.css 头部说明）。
+   ============================================================ */
+
+/* 头部：两行。第一行 = 身份（brand + 版本），第二行 = 导航（.tabbar）。
+   把「我是谁」和「我在哪」分开——挤一行时版本号跟着导航挤 flex，
+   两边都在争视觉重心，谁也不突出。 */
+header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--paper);
+  z-index: 5;
+}
+
+.brand { font-weight: 700; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; }
+.brand img { width: 24px; height: 24px; border-radius: 7px; display: block; }
+.brand .sub { font-weight: 400; color: var(--mid); margin-left: 8px; font-size: 12px; }
+
+header .meta {
+  margin-left: auto;
+  min-width: 0;
+  max-width: 46vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mid);
+  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+/* 导航条：sticky 双保险（header 不再 sticky，它不挡内容），底线只在
+   tabbar 上——视觉上「标签在哪，分界线就在哪」 */
+.tabbar {
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  border-bottom: var(--border);
+  z-index: 5;
+}
+.tabbar nav { display: flex; flex-wrap: wrap; gap: 2px; padding: 0 16px; }
+
+/* 标签块：文字 + 底部 2px 指示条，占比重的是字号和字重，不是背景和阴影。
+   底部指示条贴住容器的 border-bottom，形成「标签页插在线上」的关系。 */
+.tab {
+  border: 0;
+  background: none;
+  padding: 7px 12px 9px;
+  border-radius: 0;
+  cursor: pointer;
+  color: var(--mid);
+  font-size: 13px;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.tab:hover { color: var(--ink); }
+.tab.active {
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+
+
+/* 主区：与 header/tabbar 同一条 16px 边距线——卡片边缘对齐品牌区与导航，
+   不留满幅贴边（贴边时卡片边框被视口裁切，双细线风格直接破相）。 */
+main { padding: 16px; min-width: 0; }
+
+/* 并排卡片用 .cols，避免每个视图各写一套 flex */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+
+/* ============================================================
+   面板骨架（quiet chrome）
+   ------------------------------------------------------------
+   面板自身的容器一律不用组件策略类（.card 的双线框是「展示品」，
+   不是面板皮肤——线条会把被展示的 UI 淹掉）。分层靠留白与底色
+   微差：--soft 色块 + 圆角，零边框。
+   命名全部另起（.sheet/.side/.subtab/.c-row/.demo），避免与
+   ComponentDoc 注入的 pack css 同名相撞——注入块在 DOM 后部，
+   同名类会被它压掉。
+   ============================================================ */
+
+.stack { display: flex; flex-direction: column; gap: 16px; }
+
+/* 灰底圆角容器：替代 .card 做信息分组 */
+.sheet { background: var(--soft); border-radius: 10px; }
+.sheet-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+.sheet-b { padding: 12px 14px 14px; }
+
+/* catalog：左 pack 侧栏 + 右分类 tab 主区 */
+.catalog { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 720px) { .catalog { grid-template-columns: 1fr; } }
+
+.side { position: sticky; top: 56px; display: flex; flex-direction: column; gap: 2px; }
+.side-h { padding: 0 10px 8px; font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: 0.5px; }
+.side-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--mid);
+}
+.side-item:hover { background: var(--soft); color: var(--ink); }
+.side-item.active { background: var(--soft-2); color: var(--ink); font-weight: 600; }
+.side-item .lbl { display: block; }
+.side-item .sub { display: block; font-size: 11px; font-weight: 400; color: var(--mid); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-count { float: right; font-size: 11px; color: var(--mid); font-weight: 400; }
+
+/* 分类 tab：沿用顶部导航「文字 + 2px 底部指示条」语言，但容器无线 */
+.subtabs { display: flex; flex-wrap: wrap; gap: 2px; }
+.subtab {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 5px 10px 7px;
+  border-radius: 0;
+  color: var(--mid);
+  font-size: 12px;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.subtab:hover { color: var(--ink); }
+.subtab.active { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--ink); }
+
+/* 组件行：零分隔线，hover 用底色变化定位 */
+.c-row { display: flex; align-items: center; gap: 12px; padding: 9px 14px; border-radius: 8px; }
+.c-row:hover { background: var(--soft-2); }
+.c-row .name { font-weight: 600; font-size: 13px; min-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c-row .desc { color: var(--mid); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c-row .acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* 预览示例块：白底承托被展示的组件（组件多为自己带 --paper 白底，
+   同色融合，视觉上只有组件本身）；标题与代码不再压线 */
+.demo { background: var(--paper); border-radius: 8px; }
+.demo + .demo { margin-top: 8px; }
+.demo-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 0;
+  font-size: 12px;
+  color: var(--mid);
+  font-weight: 600;
+}
+.demo-b { padding: 16px 14px 8px; }
+.demo .snippet-box { border: 0; border-radius: 0 0 8px 8px; background: transparent; }
+
+/* catalog 自足式组件卡：左预览右契约，无二级文档页 */
+.demo-grid { display: flex; flex-direction: column; gap: 12px; }
+.demo-card { background: var(--paper); border-radius: 10px; }
+.demo-card-h { display: flex; align-items: center; gap: 8px; padding: 10px 14px 0; font-size: 12px; }
+.demo-card-main { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(250px, 0.9fr); gap: 0 16px; padding: 4px 14px 14px; }
+@media (max-width: 900px) { .demo-card-main { grid-template-columns: 1fr; } }
+.demo-card-b { padding: 8px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.demo-ex-h { font-size: 11px; color: var(--mid); display: flex; align-items: center; gap: 8px; }
+.demo-stage { min-height: 34px; display: flex; align-items: center; }
+/* 右侧契约面板：底色微差分区，不压线 */
+.demo-side { background: var(--soft); border-radius: 8px; padding: 10px 12px; align-self: start; font-size: 12px; }
+.demo-side-h {
+  font-size: 11px;
+  color: var(--mid);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 10px 0 4px;
+}
+.demo-side .levels td { height: 26px; }

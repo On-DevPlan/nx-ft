@@ -1,0 +1,11 @@
+/* 策略：列表行（蓝图）。发丝线 + hover 工程蓝淡底。 */
+.row {
+  display: flex; align-items: center;
+  height: 28px; padding: 0 12px;
+  border-bottom: 1px solid var(--soft-2);
+}
+.row:hover { background: var(--soft); }
+.row:last-child { border-bottom: 0; }
+.row .name { font-weight: 600; min-width: 22ch; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .desc { color: var(--mid); flex: 1; min-width: 0; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }

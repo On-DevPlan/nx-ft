@@ -1,0 +1,12 @@
+/* 策略：标签（玫红）。左竖条 + 大写粗字。 */
+.tag {
+  display: inline-flex; align-items: center;
+  height: 20px; padding: 0 6px;
+  border: 0; border-left: 3px solid currentColor; border-radius: 0;
+  background: transparent; color: var(--mid);
+  font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+}
+.tag.ok { color: #0a7a3d; }
+.tag.warn { color: #9a6700; }
+.tag.strong { color: var(--acc); }
+.tag.bad { color: var(--bad); }

@@ -1,0 +1,6 @@
+/* 策略：键值表（玫红）。大写粗字 dt + 发丝行。 */
+.kv { margin: 0; }
+.kv-row { display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--soft-2); }
+.kv-row:last-child { border-bottom: 0; }
+.kv dt { color: var(--mid); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; width: 90px; flex-shrink: 0; padding: 6px 0 6px 8px; }
+.kv dd { margin: 0; min-width: 0; padding: 6px 8px 6px 0; font-size: 12px; font-weight: 600; display: flex; align-items: center; }

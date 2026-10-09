@@ -1,0 +1,6 @@
+{
+  "name": "blueprint",
+  "label": "蓝图 · 坐标纸浅底 + 工程蓝 + 硬偏移投影（原型 P4）",
+  "extends": "paper",
+  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
+}

@@ -1,0 +1,11 @@
+/* 策略：标签（蜜陶）。软色填充圆角，无边框。 */
+.tag {
+  display: inline-flex; align-items: center;
+  height: 20px; padding: 0 8px;
+  border-radius: 4px; border: 0;
+  background: var(--soft); color: var(--mid); font-size: 11px; font-weight: 600;
+}
+.tag.ok { background: #e6efdf; color: #4a7040; }
+.tag.warn { background: #f5ead2; color: #9a6700; }
+.tag.strong { background: #fbeadd; color: #c2652a; }
+.tag.bad { background: #f9e3df; color: var(--bad); }

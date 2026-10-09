@@ -1,0 +1,19 @@
+/* celadon 青瓷 —— 青绿釉色（自带 palette，优先于 tokens 轴） */
+:root {
+  --paper: #ffffff;
+  --bg: #eaf2ee;
+  --ink: #16302a;
+  --soft: #e2efe9;
+  --soft-2: #d8e8e0;
+  --mid: #72908a;
+  --bad: #c1341f;
+  --acc: #0f8a6d;
+  --border: 1px solid var(--soft-2);
+  --row-h: 28px;
+  --btn-h: 28px;
+  --fs-core: 12px;
+  --radius-btn: 6px;
+  --shadow-relief: 0 2px 10px rgba(15, 138, 109, 0.10);
+  --shadow-relief-press: inset 0 1px 3px rgba(15, 138, 109, 0.14);
+  --shadow-relief-inset: inset 0 0 0 1px var(--soft-2);
+}

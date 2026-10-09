@@ -1,0 +1,15 @@
+/* 策略：按钮（玫红）。玫红实心特粗；ghost 纯文字。 */
+.btn {
+  font: inherit; cursor: pointer; border: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: var(--btn-h); padding: 0 14px;
+  border-radius: 6px; letter-spacing: 0.8px;
+  background: var(--acc); color: #fff; font-weight: 800; font-size: 11px;
+}
+.btn:hover { background: #9e1c4a; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { background: var(--soft-2); color: var(--mid); cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink); font-weight: 700; padding: 0 6px; }
+.btn.ghost:hover { color: var(--acc); background: none; }
+.btn.small { height: 22px; padding: 0 8px; font-size: 10px; }
+.btn.danger { background: var(--bad); color: #fff; }

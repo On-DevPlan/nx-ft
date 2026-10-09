@@ -1,0 +1,8 @@
+/* 策略：代码块（蜜陶）。陶土软底填充。 */
+.snippet-box {
+  display: block;
+  border: 0; border-radius: 6px;
+  background: var(--soft); padding: 10px 12px;
+  font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+}
+.snippet-box pre { font: inherit; margin: 0; white-space: pre-wrap; }

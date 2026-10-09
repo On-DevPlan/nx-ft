@@ -1,0 +1,7 @@
+/* 策略：提示条（琥珀）。细框 + 琥珀左缘。 */
+.toast-stack { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+.toast {
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--soft-2); border-left: 3px solid var(--acc);
+  border-radius: 6px; padding: 8px 12px; font-size: 12px;
+}
