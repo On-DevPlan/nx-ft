@@ -6,7 +6,7 @@
 //   3. 渲染 HTML：把 spec + style → 一段可粘贴的 HTML + class 契约。
 //      这正是 "uix 失败的那条路" 的反向解法——组件是 class-contract，
 //      不需要运行时环境就能拼接出预览 HTML。
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -101,11 +101,6 @@ export async function manifest({ style } = {}) {
     components: out,
     styles: cat.styles,
   };
-}
-
-function pickCssForComponent() {
-  // 兼容旧引用：css 不再内联进 catalog，端点按需从 styles/<pack>/<strat>.css 读。
-  return {};
 }
 
 // ---- packs：只列清单 ----

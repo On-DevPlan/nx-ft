@@ -1,7 +1,0 @@
-/* 策略：CLI 等价提示（玫红）。2px 规则线压顶。 */
-.cli-hint {
-  color: var(--mid); font-size: 11px;
-  display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
-  padding: 6px 8px; border-top: 2px solid var(--soft-2);
-}
-.cli-cmd { font-family: ui-monospace, Consolas, monospace; color: var(--acc); font-weight: 700; }

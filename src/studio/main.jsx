@@ -7,22 +7,22 @@ import { ToastProvider } from './components/ui.jsx';
 
 // 三层样式纪律：tokens → atomic strategies → layout
 // 1. tokens 来自 src/tokens/<default>.css（与 defaultTokens 选项对应；palette 轴与 pack 正交）
-// 2. atomic 来自 src/styles/<pack>/（与 defaultStyle 选项对应；paper 不含 tokens.css）
+// 2. atomic 来自 src/styles/<pack>/（与 defaultStyle 选项对应；hairline 不含 tokens.css）
 // 3. layout 来自 src/studio/layout.css（studio 自身的版式，最后压住组件策略）
 //
-// 基线：studio 自身的 chrome 用 paper 方言（最稳定的参考实现）。
+// 基线：studio 自身的 chrome 用 hairline 方言（01-hairline 原型落地的基线克制）。
 // 用户在 StyleLab 里可以预览其他方言——这正是库的多风格价值所在。
 import '../tokens/light.css';
-import '../styles/paper/btn.css';
-import '../styles/paper/tag.css';
-import '../styles/paper/card.css';
-import '../styles/paper/colhead.css';
-import '../styles/paper/row.css';
-import '../styles/paper/kv.css';
-import '../styles/paper/toast.css';
-import '../styles/paper/snippet-box.css';
-import '../styles/paper/cli-hint.css';
-import '../styles/paper/dlg.css';
+import '../styles/hairline/btn.css';
+import '../styles/hairline/tag.css';
+import '../styles/hairline/card.css';
+import '../styles/hairline/colhead.css';
+import '../styles/hairline/row.css';
+import '../styles/hairline/kv.css';
+import '../styles/hairline/toast.css';
+import '../styles/hairline/snippet-box.css';
+import '../styles/hairline/cli-hint.css';
+import '../styles/hairline/dlg.css';
 import './style.css';
 import './layout.css';
 

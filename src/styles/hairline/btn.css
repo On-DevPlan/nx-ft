@@ -1,0 +1,36 @@
+/* 策略：按钮（默认）。ink-filled 主按钮，1px hairline 幽灵态，
+   6px 圆角；按压用色相反转代替投影。light/dark 共用同一份规则—— */
+.btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0 12px;
+  height: var(--btn-h);
+  font-size: var(--fs-core);
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: background-color 80ms ease, border-color 80ms ease, color 80ms ease;
+}
+.btn:hover:not(:disabled) { opacity: 0.85; }
+.btn:active:not(:disabled) { opacity: 0.7; }
+.btn:disabled { border-color: var(--soft-2); background: var(--soft); color: var(--mid); cursor: not-allowed; }
+/* ghost：白底描边，主操作之外的次要操作 */
+.btn.ghost {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--soft-2);
+}
+.btn.ghost:hover:not(:disabled) { background: var(--soft); border-color: var(--ink); opacity: 1; }
+/* danger：唯一语义色（--bad），永远不用作主操作 */
+.btn.danger {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #fff;
+}
+.btn.danger.ghost { background: var(--paper); color: var(--bad); }
+.btn.small { height: 22px; padding: 0 8px; font-size: 11px; border-radius: 4px; }

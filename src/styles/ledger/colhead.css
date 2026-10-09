@@ -1,7 +1,0 @@
-/* 策略：卡片头（账本）。28px 加粗，发丝线压底，字距略宽。 */
-.colhead {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 12px; height: 28px;
-  border-bottom: 1px solid var(--soft-2);
-  font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
-}

@@ -1,0 +1,6 @@
+/* 策略：键值表（默认）。 */
+.kv { margin: 0; }
+.kv-row { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--soft-2); }
+.kv-row:last-child { border-bottom: 0; }
+.kv dt { color: var(--mid); font-size: 11px; width: 90px; flex-shrink: 0; padding-left: 14px; }
+.kv dd { margin: 0; min-width: 0; padding: 7px 14px 7px 0; font-size: var(--fs-core); display: flex; align-items: center; }

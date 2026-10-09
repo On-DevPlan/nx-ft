@@ -1,6 +1,0 @@
-{
-  "name": "celadon",
-  "label": "青瓷 · 薄荷底 + 青绿主色 + 圆胶囊，零边框（原型 P5）",
-  "extends": "paper",
-  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
-}

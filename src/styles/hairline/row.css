@@ -1,0 +1,16 @@
+/* 策略：列表行（hairline）。32px 行高，hover 整行染色；
+   .selected 给数据表用：浅黄高亮选中行。 */
+.row {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+.row:hover { background: var(--bg-row-hover); }
+.row.selected { background: var(--bg-row-selected); }
+.row.selected:hover { background: #fff3a3; }
+.row:last-child { border-bottom: 0; }
+.row .name { font-weight: 500; min-width: 22ch; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .desc { color: var(--mid); flex: 1; min-width: 0; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }

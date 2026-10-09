@@ -1,8 +1,0 @@
-/* 策略：提示条（蓝图）。细框硬偏移 + 工程蓝左缘。 */
-.toast-stack { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
-.toast {
-  background: var(--paper); color: var(--ink);
-  border: 1px solid var(--soft-2); border-left: 3px solid var(--acc);
-  border-radius: 4px; padding: 8px 12px; font-size: 12px;
-  box-shadow: 3px 3px 0 var(--soft-2);
-}

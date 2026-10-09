@@ -2,9 +2,11 @@
 :root {
   --ink: #14161a;
   --paper: #fff;
-  --soft: #f5f6f7;
+  --soft: #f6f8fa;          /* 行 hover（hairline 包的 .row:hover） */
   --soft-2: #ebedf0;
-  --mid: #8b9096;
+  --bg-row-hover: #f6f8fa;   /* 与 --soft 同值（hairline 公开别名） */
+  --bg-row-selected: #fff8c5;/* 行 selected（数据表选中行浅黄，hairline） */
+  --mid: #656d76;
   --bad: #b3261e;
 
   --border: 1px solid var(--soft-2);

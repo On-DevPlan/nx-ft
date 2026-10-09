@@ -1,0 +1,15 @@
+/* 策略：卡片头（hairline）。32px 高，与 .row 同高；发丝线压底；
+   可选 .sticky 用于粘性表头（gray bg）。 */
+.colhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 32px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mid);
+  background: var(--bg-sub);
+}
+.colhead.sticky { position: sticky; top: 0; z-index: 1; }

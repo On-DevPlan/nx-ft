@@ -5,6 +5,8 @@
   --paper: #17191d;
   --soft: #1f2227;
   --soft-2: #2b2f36;
+  --bg-row-hover: #1f2227;   /* 与 --soft 同值 */
+  --bg-row-selected: #2a2f17;/* 暗色版选中行：低饱和的暗黄 */
   --mid: #8b9096;
   --bad: #f28b82;
 

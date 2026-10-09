@@ -1,6 +1,0 @@
-{
-  "name": "ledger-offset",
-  "label": "硬偏移 · 4px 硬影子，纸页叠纸页（继承 paper，仅覆盖局部）",
-  "extends": "paper",
-  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
-}

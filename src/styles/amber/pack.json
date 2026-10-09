@@ -1,6 +1,0 @@
-{
-  "name": "amber",
-  "label": "琥珀 · 纯白浅底 + 琥珀金 + 等宽工具感，零框零面（原型 P3）",
-  "extends": "paper",
-  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
-}

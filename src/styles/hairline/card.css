@@ -1,0 +1,10 @@
+/* 策略：卡片（默认）。1px hairline + 8px 圆角；零投影、零双线。 */
+.card {
+  padding: 0;
+  border: var(--border);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.stack > .card + .card { margin-top: 12px; }
+.cols > .card + .card { margin-top: 0; }
+.card-body { padding: 16px; }

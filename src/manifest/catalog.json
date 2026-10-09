@@ -1,13 +1,13 @@
 {
   "$schema": "ui-kit/catalog.schema.json",
   "version": "0.1.0",
-  "generated": "2026-10-09T06:51:43.582Z",
+  "generated": "2026-10-09T08:49:11.786Z",
   "components": [
     {
       "id": "btn",
       "category": "action",
       "title": "按钮",
-      "description": "主操作触发器。28px 高、4px 圆角、1px 边框，密度由 tokens 控制。",
+      "description": "主操作触发器。32px 高、6px 圆角、1px hairline 边框，密度由 tokens 控制。",
       "classContract": ".btn[.ghost|.small|.danger]",
       "classes": [
         "btn",
@@ -65,8 +65,8 @@
           "html": "<button class=\"btn small\">次要</button>"
         }
       ],
-      "pack": "paper",
-      "_source": "paper/components/btn.spec.json"
+      "pack": "hairline",
+      "_source": "hairline/components/btn.spec.json"
     },
     {
       "id": "card",
@@ -108,8 +108,8 @@
           "html": "<div class=\"card\"><div class=\"colhead\">标题</div><div class=\"card-body\">内容</div></div>"
         }
       ],
-      "pack": "paper",
-      "_source": "paper/components/card.spec.json"
+      "pack": "hairline",
+      "_source": "hairline/components/card.spec.json"
     },
     {
       "id": "kv",
@@ -144,8 +144,8 @@
           "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
         }
       ],
-      "pack": "paper",
-      "_source": "paper/components/kv.spec.json"
+      "pack": "hairline",
+      "_source": "hairline/components/kv.spec.json"
     },
     {
       "id": "row",
@@ -184,134 +184,15 @@
           "html": "<div class=\"row\"><div class=\"name\">名称</div><div class=\"desc\">描述</div><div class=\"acts\"><button class=\"btn small\">操作</button></div></div>"
         }
       ],
-      "pack": "paper",
-      "_source": "paper/components/row.spec.json"
+      "pack": "hairline",
+      "_source": "hairline/components/row.spec.json"
     }
   ],
   "styles": {
-    "amber": {
-      "name": "amber",
-      "label": "琥珀 · 纯白浅底 + 琥珀金 + 等宽工具感，零框零面（原型 P3）",
-      "extends": "paper",
-      "strategies": [
-        "btn",
-        "tag",
-        "card",
-        "colhead",
-        "row",
-        "kv",
-        "toast",
-        "snippet-box",
-        "cli-hint",
-        "dlg"
-      ]
-    },
-    "blueprint": {
-      "name": "blueprint",
-      "label": "蓝图 · 坐标纸浅底 + 工程蓝 + 硬偏移投影（原型 P4）",
-      "extends": "paper",
-      "strategies": [
-        "btn",
-        "tag",
-        "card",
-        "colhead",
-        "row",
-        "kv",
-        "toast",
-        "snippet-box",
-        "cli-hint",
-        "dlg"
-      ]
-    },
-    "celadon": {
-      "name": "celadon",
-      "label": "青瓷 · 薄荷底 + 青绿主色 + 圆胶囊，零边框（原型 P5）",
-      "extends": "paper",
-      "strategies": [
-        "btn",
-        "tag",
-        "card",
-        "colhead",
-        "row",
-        "kv",
-        "toast",
-        "snippet-box",
-        "cli-hint",
-        "dlg"
-      ]
-    },
-    "ledger": {
-      "name": "ledger",
-      "label": "账本 · 米纸衬线 + 朱砂印章 + 双线框（原型 P1）",
-      "extends": "paper",
-      "strategies": [
-        "btn",
-        "tag",
-        "card",
-        "colhead",
-        "row",
-        "kv",
-        "toast",
-        "snippet-box",
-        "cli-hint",
-        "dlg"
-      ]
-    },
-    "ledger-offset": {
-      "name": "ledger-offset",
-      "label": "硬偏移 · 4px 硬影子，纸页叠纸页（继承 paper，仅覆盖局部）",
-      "extends": "paper",
-      "strategies": [
-        "btn",
-        "tag",
-        "card",
-        "colhead",
-        "row",
-        "kv",
-        "toast",
-        "snippet-box",
-        "cli-hint",
-        "dlg"
-      ]
-    },
-    "magenta": {
-      "name": "magenta",
-      "label": "玫红 · 纯白 + 玫红主色 + 特粗字重硬规则线（原型 P6）",
-      "extends": "paper",
-      "strategies": [
-        "btn",
-        "tag",
-        "card",
-        "colhead",
-        "row",
-        "kv",
-        "toast",
-        "snippet-box",
-        "cli-hint",
-        "dlg"
-      ]
-    },
-    "paper": {
-      "name": "paper",
-      "label": "纸上规范 · 纸质感极简 + 边框主义（双层莫兰迪点缀）",
+    "hairline": {
+      "name": "hairline",
+      "label": "hairline · 基线克制（1px hairline / 0 投影 / 32px 行，GitHub·Linear 平衡）",
       "extends": null,
-      "strategies": [
-        "btn",
-        "tag",
-        "card",
-        "colhead",
-        "row",
-        "kv",
-        "toast",
-        "snippet-box",
-        "cli-hint",
-        "dlg"
-      ]
-    },
-    "terra": {
-      "name": "terra",
-      "label": "蜜陶 · 蜜桃底 + 陶土橙 + 柔投影，零边框（原型 P2）",
-      "extends": "paper",
       "strategies": [
         "btn",
         "tag",

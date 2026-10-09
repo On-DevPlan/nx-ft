@@ -1,3 +1,0 @@
-/* 策略：卡片（琥珀）。零框零面，容器退化为留白分组。 */
-.card { padding: 4px 0 0; border: 0; border-radius: 0; background: transparent; outline: none; box-shadow: none; }
-.stack > .card + .card { margin-top: 14px; }

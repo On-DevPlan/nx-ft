@@ -1,0 +1,17 @@
+/* 策略：标签（默认）。克制圆角，背景同 --soft 与 --paper 之间。
+   强态不加背景色只换字色——避免色块污染。 */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--soft-2);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--mid);
+  font-size: 11px;
+  font-weight: 500;
+}
+.tag.strong { color: var(--ink); border-color: var(--ink); }
+.tag.bad { color: var(--bad); border-color: var(--bad); }
+.tag.muted { color: var(--mid); opacity: 0.7; }

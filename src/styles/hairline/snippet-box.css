@@ -1,0 +1,13 @@
+/* 策略：代码块（默认）。1px hairline + 4px 圆角，浅底色区分于内容。 */
+.snippet-box {
+  display: block;
+  border: var(--border);
+  border-radius: 6px;
+  background: var(--soft);
+  padding: 10px 12px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+.snippet-box pre { font: inherit; margin: 0; white-space: pre-wrap; }

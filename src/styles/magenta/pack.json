@@ -1,6 +1,0 @@
-{
-  "name": "magenta",
-  "label": "玫红 · 纯白 + 玫红主色 + 特粗字重硬规则线（原型 P6）",
-  "extends": "paper",
-  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
-}
