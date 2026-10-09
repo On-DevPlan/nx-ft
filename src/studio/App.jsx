@@ -45,29 +45,26 @@ export default function App() {
 
   return (
     <>
-      <header>
+      {/* 单行头：品牌 + 导航 + 版本一线排开（tab 的 2px 指示条贴住容器的 border-bottom） */}
+      <div className="tabbar">
         <div className="brand">
           <img src="/logo-rounded.png" alt="" />
           {appName}
           <span className="sub">多风格 UI 组件库 + agent-facing studio</span>
         </div>
+        <nav>
+          {views.map((v) => (
+            <button
+              key={v.id}
+              className={'tab' + (current && current.id === v.id ? ' active' : '')}
+              onClick={() => patchUi({ view: v.id })}
+            >
+              {v.title}
+            </button>
+          ))}
+        </nav>
         <div className="meta">{boot ? `v${boot.app.version}` : ''}</div>
-      </header>
-      {views.length > 0 && (
-        <div className="tabbar">
-          <nav>
-            {views.map((v) => (
-              <button
-                key={v.id}
-                className={'tab' + (current && current.id === v.id ? ' active' : '')}
-                onClick={() => patchUi({ view: v.id })}
-              >
-                {v.title}
-              </button>
-            ))}
-          </nav>
-        </div>
-      )}
+      </div>
       <main>
         {!current ? (
           <div className="empty">

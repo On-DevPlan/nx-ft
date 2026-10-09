@@ -1,0 +1,21 @@
+{
+  "id": "kv",
+  "category": "data",
+  "title": "键值对",
+  "description": "定义列表：dt/dd 形态的 key/value 行集合。等宽左列 + 自适应右列。",
+  "classContract": ".kv > .kv-row > dt + dd",
+  "classes": ["kv", "kv-row"],
+  "dom": "<dl class=\"kv\"><div class=\"kv-row\"><dt>k</dt><dd>v</dd></div></dl>",
+  "props": {
+    "items": {
+      "type": "array",
+      "item": { "key": "string", "value": "node" },
+      "required": true,
+      "description": "[{key, value}] 列表"
+    }
+  },
+  "tokens": ["--ink", "--mid", "--soft-2"],
+  "examples": [
+    { "title": "basic", "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>" }
+  ]
+}

@@ -1,0 +1,14 @@
+/* 策略：CLI 等价提示（terminal）。以 "> " 前缀示意命令行。 */
+.cli-hint {
+  color: var(--mid);
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--grid, var(--soft-2));
+}
+.cli-hint::before { content: ">"; color: var(--mid); margin-right: 4px; }
+.cli-cmd { color: var(--ink); font-weight: 500; }

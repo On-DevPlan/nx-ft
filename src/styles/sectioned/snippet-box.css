@@ -1,0 +1,12 @@
+/* 策略：代码块（sectioned）。软底 + 8px 圆角。 */
+.snippet-box {
+  display: block;
+  border: var(--border);
+  border-radius: 8px;
+  background: var(--soft);
+  padding: 12px 14px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  color: var(--ink);
+}
+.snippet-box pre { font: inherit; margin: 0; white-space: pre-wrap; }

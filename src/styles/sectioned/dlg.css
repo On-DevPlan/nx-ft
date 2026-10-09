@@ -1,0 +1,36 @@
+/* 策略：弹窗（sectioned）。12px 圆角 + 大软投影。 */
+.dlg, .modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+.dlg-box {
+  background: var(--paper);
+  border: var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  width: min(460px, 100%);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+.dlg-title { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+.dlg-msg { color: var(--mid); font-size: 13px; margin-bottom: 14px; word-break: break-word; }
+.dlg-input { width: 100%; margin-bottom: 14px; }
+.dlg-acts { display: flex; justify-content: flex-end; gap: 8px; }
+
+.modal-box {
+  background: var(--paper);
+  border: var(--border);
+  border-radius: 12px;
+  width: min(900px, 100%);
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+.modal-title { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--soft-2); font-weight: 600; font-size: 13px; }
+.modal-body { padding: 18px; overflow: auto; font-size: 13px; }

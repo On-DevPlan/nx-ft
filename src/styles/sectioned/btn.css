@@ -1,0 +1,26 @@
+/* 策略：按钮（sectioned）。32px 高、8px 圆角，ink-filled 主操作；
+   hover 用 --soft 染底而非透明度——宽松版式里透明度变化显得"没反应"。 */
+.btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0 14px;
+  height: var(--btn-h);
+  font-size: var(--fs-core);
+  border: 1px solid var(--ink);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.btn:hover:not(:disabled) { background: var(--soft); color: var(--ink); }
+.btn:active:not(:disabled) { background: var(--soft-2); }
+.btn:disabled { border-color: var(--soft-2); background: var(--soft); color: var(--mid); cursor: not-allowed; }
+.btn.ghost { background: var(--paper); color: var(--ink); border-color: var(--soft-2); }
+.btn.ghost:hover:not(:disabled) { background: var(--soft); border-color: var(--mid); }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.danger:hover:not(:disabled) { background: var(--bad); opacity: 0.88; color: #fff; }
+.btn.danger.ghost { background: var(--paper); color: var(--bad); }
+.btn.small { height: 24px; padding: 0 10px; font-size: 11px; border-radius: 6px; }

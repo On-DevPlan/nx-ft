@@ -1,0 +1,26 @@
+/* 策略：按钮（boxed）。饱和蓝主操作（Atlassian 蓝），2px 边框直角。
+   蓝是 pack 色相，不随 tokens 轴——这是 boxed 的身份。 */
+.btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 0 12px;
+  height: var(--btn-h);
+  font-size: var(--fs-core);
+  border: 2px solid #1f6feb;
+  border-radius: 0;
+  background: #1f6feb;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.btn:hover:not(:disabled) { background: #1a5fd0; border-color: #1a5fd0; }
+.btn:active:not(:disabled) { background: #164fae; }
+.btn:disabled { border-color: var(--soft-2); background: var(--soft); color: var(--mid); cursor: not-allowed; }
+.btn.ghost { background: var(--paper); color: var(--ink); border-color: var(--ink); }
+.btn.ghost:hover:not(:disabled) { background: var(--soft); }
+.btn.danger { background: #d1242f; border-color: #d1242f; color: #fff; }
+.btn.danger:hover:not(:disabled) { background: #a40e26; border-color: #a40e26; }
+.btn.danger.ghost { background: var(--paper); color: #d1242f; }
+.btn.small { height: 24px; padding: 0 8px; font-size: 11px; }

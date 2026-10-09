@@ -7,6 +7,13 @@
   --soft-2: #2b2f36;
   --bg-row-hover: #1f2227;   /* 与 --soft 同值 */
   --bg-row-selected: #2a2f17;/* 暗色版选中行：低饱和的暗黄 */
+
+  /* terminal 包专属：金融终端网格（暗色） */
+  --grid: #262c36;
+  --grid-strong: #3d444d;
+  --head-bg: #161b22;
+  --zebra: #12161d;
+  --sel-border: #1f6feb;
   --mid: #8b9096;
   --bad: #f28b82;
 

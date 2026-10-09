@@ -1,0 +1,6 @@
+/* 策略：键值表（terminal）。monospace、严格行分隔。 */
+.kv { margin: 0; font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+.kv-row { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--grid, var(--soft-2)); }
+.kv-row:last-child { border-bottom: 0; }
+.kv dt { color: var(--mid); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; width: 90px; flex-shrink: 0; padding-left: 8px; }
+.kv dd { margin: 0; min-width: 0; padding: 7px 8px 7px 0; font-size: 12px; display: flex; align-items: center; }

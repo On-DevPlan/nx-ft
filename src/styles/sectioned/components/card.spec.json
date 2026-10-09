@@ -1,0 +1,18 @@
+{
+  "id": "card",
+  "category": "container",
+  "title": "卡片",
+  "description": "通用容器：1px 边框圈出版心。可选 colhead 头部、footer 槽位。",
+  "classContract": ".card > .colhead + .card-body + .card-footer",
+  "classes": ["card", "colhead", "card-body", "card-footer"],
+  "dom": "<div class=\"card\"><div class=\"colhead\">title</div><div class=\"card-body\">content</div></div>",
+  "props": {
+    "title": { "type": "string", "description": "头部文案（省略则不渲染 colhead）" },
+    "actions": { "type": "node", "description": "头部右侧的操作槽（按钮组）" }
+  },
+  "tokens": ["--ink", "--paper", "--soft", "--soft-2", "--border"],
+  "examples": [
+    { "title": "basic", "html": "<div class=\"card\"><div class=\"card-body\">内容</div></div>" },
+    { "title": "with title", "html": "<div class=\"card\"><div class=\"colhead\">标题</div><div class=\"card-body\">内容</div></div>" }
+  ]
+}

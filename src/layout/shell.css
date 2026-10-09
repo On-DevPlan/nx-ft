@@ -18,14 +18,19 @@
   font-size: var(--fs-core);
 }
 
-/* sidebar 形态：左竖排导航 + 右侧主区 */
+/* sidebar 形态：左竖排导航 + 右侧主区。
+   display:grid 在形态类里重复声明是有意的：.shell.sidebar 与组件类 .sidebar
+   同权重（0,1,0 vs 0,2,0），不提权重的话后注入的组件 css（display:flex）
+   会把外壳压成 flex——vue-artifact 预览实验里踩过的同名冲突。 */
 .shell.sidebar {
+  display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   grid-template-areas: "aside main";
 }
 
-/* topbar 形态：顶部横排 + 下方主区 */
+/* topbar 形态：顶部横排 + 下方主区（同理，display 必须在形态类里钉住） */
 .shell.topbar {
+  display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     "topbar"
@@ -34,6 +39,7 @@
 
 /* 混用：左竖排 + 顶部横排 + 主区 */
 .shell.mixed {
+  display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:

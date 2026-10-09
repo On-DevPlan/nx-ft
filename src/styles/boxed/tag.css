@@ -1,0 +1,23 @@
+/* 策略：标签（boxed）。直角细框；语义类 = 8px 方块色标 + 文字。 */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--soft-2);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--mid);
+  font-size: 11px;
+  font-weight: 500;
+}
+.tag::before { content: ""; width: 8px; height: 8px; background: var(--soft-2); flex-shrink: 0; }
+.tag.strong { color: var(--ink); border-color: var(--ink); }
+.tag.strong::before { background: var(--ink); }
+.tag.bad { color: var(--bad); border-color: var(--bad); }
+.tag.bad::before { background: var(--bad); }
+.tag.info  { color: #1f6feb; border-color: #1f6feb; }   .tag.info::before  { background: #1f6feb; }
+.tag.ok    { color: #1a7f37; border-color: #1a7f37; }   .tag.ok::before    { background: #1a7f37; }
+.tag.warn  { color: #9a6700; border-color: #d4a72c66; } .tag.warn::before  { background: #d4a72c; }
+.tag.err   { color: #d1242f; border-color: #d1242f; }   .tag.err::before   { background: #d1242f; }

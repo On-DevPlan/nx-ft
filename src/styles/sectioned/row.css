@@ -1,0 +1,16 @@
+/* 策略：列表行（sectioned）。40px 宽松行、13px 字；hover 染 --soft。 */
+.row {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--soft-2);
+}
+.row:hover { background: var(--soft); }
+.row.selected { background: color-mix(in srgb, #2f81f7 7%, var(--paper)); }
+.row.selected:hover { background: color-mix(in srgb, #2f81f7 11%, var(--paper)); }
+.row:last-child { border-bottom: 0; }
+.row .name { font-weight: 500; min-width: 22ch; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .desc { color: var(--mid); flex: 1; min-width: 0; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .acts { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }

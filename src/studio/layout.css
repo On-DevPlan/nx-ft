@@ -4,27 +4,30 @@
    原子类抄过来——两层的变更纪律不同（见 style.css 头部说明）。
    ============================================================ */
 
-/* 头部：两行。第一行 = 身份（brand + 版本），第二行 = 导航（.tabbar）。
-   把「我是谁」和「我在哪」分开——挤一行时版本号跟着导航挤 flex，
-   两边都在争视觉重心，谁也不突出。 */
-header {
+/* 单行头：品牌 + 导航 + 版本一线排开。tab 的 2px 底部指示条贴住容器
+   border-bottom，「标签插在线上」；sticky 让导航在长页面保持可达。 */
+.tabbar {
+  position: sticky;
+  top: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
   align-items: center;
-  padding: 12px 16px;
+  gap: 18px;
+  padding: 8px 16px;
   background: var(--paper);
+  border-bottom: var(--border);
   z-index: 5;
 }
 
-.brand { font-weight: 700; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; }
+.brand { font-weight: 700; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .brand img { width: 24px; height: 24px; border-radius: 7px; display: block; }
 .brand .sub { font-weight: 400; color: var(--mid); margin-left: 8px; font-size: 12px; }
 
-header .meta {
+.tabbar nav { display: flex; flex-wrap: wrap; gap: 2px; min-width: 0; }
+
+.tabbar .meta {
   margin-left: auto;
   min-width: 0;
-  max-width: 46vw;
+  max-width: 30vw;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -32,17 +35,6 @@ header .meta {
   font-size: 12px;
   font-family: ui-monospace, Consolas, monospace;
 }
-
-/* 导航条：sticky 双保险（header 不再 sticky，它不挡内容），底线只在
-   tabbar 上——视觉上「标签在哪，分界线就在哪」 */
-.tabbar {
-  position: sticky;
-  top: 0;
-  background: var(--paper);
-  border-bottom: var(--border);
-  z-index: 5;
-}
-.tabbar nav { display: flex; flex-wrap: wrap; gap: 2px; padding: 0 16px; }
 
 /* 标签块：文字 + 底部 2px 指示条，占比重的是字号和字重，不是背景和阴影。
    底部指示条贴住容器的 border-bottom，形成「标签页插在线上」的关系。 */
@@ -100,7 +92,7 @@ main { padding: 16px; min-width: 0; }
 .catalog { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 720px) { .catalog { grid-template-columns: 1fr; } }
 
-.side { position: sticky; top: 56px; display: flex; flex-direction: column; gap: 2px; }
+.side { position: sticky; top: 52px; display: flex; flex-direction: column; gap: 2px; }
 .side-h { padding: 0 10px 8px; font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: 0.5px; }
 .side-item {
   display: block;

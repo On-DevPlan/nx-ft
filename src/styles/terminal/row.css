@@ -1,0 +1,18 @@
+/* 策略：列表行（terminal）。30px 行、zebra 隔行染色、单元格思维；
+   .selected = 上下 2px 蓝框（无底色变化，金融终端式）。 */
+.row {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 8px;
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  border-bottom: 1px solid var(--grid, var(--soft-2));
+}
+.row:nth-child(even) { background: var(--zebra, var(--soft)); }
+.row:hover { background: #f0f4f8; }
+.row.selected { border-top: 2px solid var(--sel-border, #1a66d6); border-bottom: 2px solid var(--sel-border, #1a66d6); background: var(--paper); }
+.row:last-child { border-bottom: 1px solid var(--grid, var(--soft-2)); }
+.row .name { font-weight: 500; min-width: 22ch; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .desc { color: var(--mid); flex: 1; min-width: 0; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .acts { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }

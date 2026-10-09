@@ -1,0 +1,6 @@
+/* 策略：键值表（boxed）。dt 加粗墨色。 */
+.kv { margin: 0; }
+.kv-row { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--soft-2); }
+.kv-row:last-child { border-bottom: 0; }
+.kv dt { color: var(--ink); font-size: 11px; font-weight: 700; width: 90px; flex-shrink: 0; padding-left: 12px; }
+.kv dd { margin: 0; min-width: 0; padding: 8px 12px 8px 0; font-size: var(--fs-core); display: flex; align-items: center; }

@@ -1,0 +1,21 @@
+/* 策略：标签（sectioned）。描边 + 浅底 pill（全圆角），Stripe 气质。
+   语义扩展类 .info/.ok/.warn/.err：中饱和色在 light/dark 都可读。 */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 10px;
+  border: 1px solid var(--soft-2);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--mid);
+  font-size: 11px;
+  font-weight: 500;
+}
+.tag.strong { color: var(--ink); border-color: var(--ink); }
+.tag.bad { color: var(--bad); border-color: var(--bad); }
+.tag.info  { color: #2f81f7; border-color: color-mix(in srgb, #2f81f7 35%, transparent); background: color-mix(in srgb, #2f81f7 10%, var(--paper)); }
+.tag.ok    { color: #1a7f37; border-color: color-mix(in srgb, #1a7f37 35%, transparent); background: color-mix(in srgb, #1a7f37 10%, var(--paper)); }
+.tag.warn  { color: #9a6700; border-color: color-mix(in srgb, #d29922 40%, transparent); background: color-mix(in srgb, #d29922 12%, var(--paper)); }
+.tag.err   { color: #cf222e; border-color: color-mix(in srgb, #cf222e 35%, transparent); background: color-mix(in srgb, #cf222e 10%, var(--paper)); }

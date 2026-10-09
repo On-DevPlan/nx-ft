@@ -1,0 +1,27 @@
+/* 策略：按钮（terminal）。全 monospace，白底 1px 框为主；
+   主操作 = 深蓝 #0b57d0 填充（终端蓝）。直角。 */
+.btn {
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 12px;
+  height: var(--btn-h);
+  border: 1px solid var(--grid-strong, var(--soft-2));
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.btn:hover:not(:disabled) { background: #f0f4f8; }
+.btn:active:not(:disabled) { background: #e4e7ea; }
+.btn:disabled { border-color: var(--soft-2); background: var(--soft); color: var(--mid); cursor: not-allowed; }
+.btn.primary { background: #0b57d0; border-color: #0b57d0; color: #fff; }
+.btn.primary:hover:not(:disabled) { background: #0a4cb8; }
+.btn.ghost { border-color: var(--soft-2); color: var(--mid); }
+.btn.danger { border-color: #d1242f; color: #d1242f; background: var(--paper); }
+.btn.danger:hover:not(:disabled) { background: #d1242f; color: #fff; }
+.btn.small { height: 24px; padding: 0 8px; font-size: 11px; }

@@ -1,0 +1,6 @@
+{
+  "name": "boxed",
+  "label": "boxed · 厚边框直角（2px 边框 / 饱和蓝主操作 / Jira 老派可靠）",
+  "extends": null,
+  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
+}

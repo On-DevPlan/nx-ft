@@ -1,0 +1,22 @@
+/* 策略：标签（terminal）。状态 = 整格浅底（.info/.ok/.warn/.err），
+   无 pill 无圆角——像素就是边框。 */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--grid-strong, var(--soft-2));
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--mid);
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.tag.strong { color: var(--ink); border-color: var(--ink); }
+.tag.bad { color: #d1242f; border-color: #d1242f; }
+.tag.info  { background: #e1effe; color: #0b57d0; border-color: #b6d4fe; }
+.tag.ok    { background: #def7e6; color: #0f7b3b; border-color: #a6e2bf; }
+.tag.warn  { background: #fff3c4; color: #8a6100; border-color: #ead28a; }
+.tag.err   { background: #ffebe9; color: #d1242f; border-color: #f1b8b4; }

@@ -1,0 +1,10 @@
+/* 策略：卡片（boxed）。2px 墨线直角——"框出来给你看"，与 hairline 对立。 */
+.card {
+  padding: 0;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+}
+.stack > .card + .card { margin-top: 14px; }
+.cols > .card + .card { margin-top: 0; }
+.card-body { padding: 14px; }

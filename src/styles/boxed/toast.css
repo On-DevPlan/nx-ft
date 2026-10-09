@@ -1,0 +1,12 @@
+/* 策略：提示条（boxed）。2px 墨线直角 + 硬偏移影。 */
+.toast-stack { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+.toast {
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  padding: 8px 12px;
+  font-size: var(--fs-core);
+  box-shadow: 4px 4px 0 var(--soft-2);
+}
+.toast.bad { border-color: #d1242f; }

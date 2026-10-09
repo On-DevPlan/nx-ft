@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client.js';
 import { useStore } from '../store.jsx';
 import { Copyable } from '../components/ui.jsx';
+import TemplatePreview from './TemplatePreview.jsx';
 
 const CATEGORY_LABELS = {
   action: '操作',
@@ -20,6 +21,7 @@ const CATEGORY_LABELS = {
 };
 
 const TOKEN_AXES = ['light', 'dark', 'warm', 'mono'];
+const TPL_CAT = '@tpl'; // 「模板」tag 的保留值：整页预览，不属于任何组件分类
 
 export default function CatalogView() {
   const { ui, patchUi } = useStore();
@@ -73,8 +75,10 @@ export default function CatalogView() {
     : (byPack.paper ? 'paper' : packs[0]);
   const cats = byPack[activePack] || {};
   const catKeys = Object.keys(cats);
+  // 「模板」tag：整页预览，不属于任何组件分类（保留值 @tpl）
+  const isTpl = ui.catalogCat === TPL_CAT;
   const activeCat = cats[ui.catalogCat] ? ui.catalogCat : catKeys[0];
-  const list = cats[activeCat] || [];
+  const list = isTpl ? [] : (cats[activeCat] || []);
   const tokensAxis = ui.docTokens || 'light';
 
   // 只为 css 而拉：examples/props/classes manifest 已带。切包或切 palette 轴才重拉。
@@ -141,6 +145,13 @@ export default function CatalogView() {
               {CATEGORY_LABELS[cat] || cat} · {cats[cat].length}
             </button>
           ))}
+          {/* 「模板」tag：整页预览，与组件分类并列 */}
+          <button
+            className={'subtab' + (isTpl ? ' active' : '')}
+            onClick={() => patchUi({ catalogCat: TPL_CAT })}
+          >
+            模板
+          </button>
           {/* palette 轴与 pack 正交：同一 pack × 不同 tokens = 不同外观 */}
           <span style={{ marginLeft: 'auto' }} />
           <span className="muted" style={{ fontSize: 11, alignSelf: 'center' }}>tokens:</span>
@@ -162,11 +173,14 @@ export default function CatalogView() {
           )}
         </div>
 
-        {/* 整包一份 <style>：palette/pack tokens + 全部 strategy css。
-            类名是组件契约（.btn/.card/…），面板骨架全用另起的类，不会互撞 */}
-        {injected && <style dangerouslySetInnerHTML={{ __html: injected }} />}
+        {/* 「模板」tag：整页预览画布（Shadow DOM 隔离，自带 css 装配） */}
+        {isTpl && (
+          <TemplatePreview pack={activePack} packMeta={manifest.styles[activePack]} axis={tokensAxis} />
+        )}
 
-        {!injected ? (
+        {!isTpl && injected && <style dangerouslySetInnerHTML={{ __html: injected }} />}
+
+        {!isTpl && (!injected ? (
           <div className="empty muted">载入样式…</div>
         ) : (
           <div className="demo-grid">
@@ -230,7 +244,7 @@ export default function CatalogView() {
               </div>
             ))}
           </div>
-        )}
+        ))}
       </section>
     </div>
   );

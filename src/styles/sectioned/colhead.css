@@ -1,0 +1,12 @@
+/* 策略：卡片头（sectioned）。36px 高，13px 字，宽松呼吸感。 */
+.colhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 36px;
+  border-bottom: 1px solid var(--soft-2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}

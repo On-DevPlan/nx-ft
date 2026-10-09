@@ -1,0 +1,10 @@
+/* 策略：卡片（terminal）。1px 网格线直角；卡片是"面板"，不是纸。 */
+.card {
+  padding: 0;
+  border: 1px solid var(--grid-strong, var(--soft-2));
+  border-radius: 0;
+  background: var(--paper);
+}
+.stack > .card + .card { margin-top: 12px; }
+.cols > .card + .card { margin-top: 0; }
+.card-body { padding: 12px; }

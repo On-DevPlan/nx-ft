@@ -1,8 +1,192 @@
 {
   "$schema": "ui-kit/catalog.schema.json",
   "version": "0.1.0",
-  "generated": "2026-10-09T08:49:11.786Z",
+  "generated": "2026-10-09T15:49:57.093Z",
   "components": [
+    {
+      "id": "btn",
+      "category": "action",
+      "title": "按钮",
+      "description": "主操作触发器。32px 高、直角、2px 边框、饱和蓝主操作。",
+      "classContract": ".btn[.ghost|.small|.danger]",
+      "classes": [
+        "btn",
+        "btn.ghost",
+        "btn.small",
+        "btn.danger"
+      ],
+      "dom": "<button class=\"btn\">label</button>",
+      "props": {
+        "variant": {
+          "type": "enum",
+          "values": [
+            "",
+            "ghost",
+            "danger"
+          ],
+          "default": "",
+          "description": "视觉变体：默认实色、ghost 浅边、danger 危险色"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": "",
+          "description": "尺寸：默认 28px、small 22px"
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--bad",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "primary",
+          "html": "<button class=\"btn\">确定</button>"
+        },
+        {
+          "title": "ghost",
+          "html": "<button class=\"btn ghost\">取消</button>"
+        },
+        {
+          "title": "danger",
+          "html": "<button class=\"btn danger\">删除</button>"
+        },
+        {
+          "title": "small",
+          "html": "<button class=\"btn small\">次要</button>"
+        }
+      ],
+      "pack": "boxed",
+      "_source": "boxed/components/btn.spec.json"
+    },
+    {
+      "id": "card",
+      "category": "container",
+      "title": "卡片",
+      "description": "通用容器：1px 边框圈出版心。可选 colhead 头部、footer 槽位。",
+      "classContract": ".card > .colhead + .card-body + .card-footer",
+      "classes": [
+        "card",
+        "colhead",
+        "card-body",
+        "card-footer"
+      ],
+      "dom": "<div class=\"card\"><div class=\"colhead\">title</div><div class=\"card-body\">content</div></div>",
+      "props": {
+        "title": {
+          "type": "string",
+          "description": "头部文案（省略则不渲染 colhead）"
+        },
+        "actions": {
+          "type": "node",
+          "description": "头部右侧的操作槽（按钮组）"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"card\"><div class=\"card-body\">内容</div></div>"
+        },
+        {
+          "title": "with title",
+          "html": "<div class=\"card\"><div class=\"colhead\">标题</div><div class=\"card-body\">内容</div></div>"
+        }
+      ],
+      "pack": "boxed",
+      "_source": "boxed/components/card.spec.json"
+    },
+    {
+      "id": "kv",
+      "category": "data",
+      "title": "键值对",
+      "description": "定义列表：dt/dd 形态的 key/value 行集合。等宽左列 + 自适应右列。",
+      "classContract": ".kv > .kv-row > dt + dd",
+      "classes": [
+        "kv",
+        "kv-row"
+      ],
+      "dom": "<dl class=\"kv\"><div class=\"kv-row\"><dt>k</dt><dd>v</dd></div></dl>",
+      "props": {
+        "items": {
+          "type": "array",
+          "item": {
+            "key": "string",
+            "value": "node"
+          },
+          "required": true,
+          "description": "[{key, value}] 列表"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
+        }
+      ],
+      "pack": "boxed",
+      "_source": "boxed/components/kv.spec.json"
+    },
+    {
+      "id": "row",
+      "category": "list",
+      "title": "行条目",
+      "description": "三段式水平行：name（左）+ desc（中）+ acts（右）。用于列表/表格/命令清单。",
+      "classContract": ".row > .name + .desc + .acts",
+      "classes": [
+        "row"
+      ],
+      "dom": "<div class=\"row\"><div class=\"name\">name</div><div class=\"desc\">desc</div><div class=\"acts\">acts</div></div>",
+      "props": {
+        "name": {
+          "type": "node",
+          "required": true,
+          "description": "左槽"
+        },
+        "desc": {
+          "type": "node",
+          "description": "中槽（省略则整行只剩 name + acts）"
+        },
+        "actions": {
+          "type": "node",
+          "description": "右槽"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"row\"><div class=\"name\">名称</div><div class=\"desc\">描述</div><div class=\"acts\"><button class=\"btn small\">操作</button></div></div>"
+        }
+      ],
+      "pack": "boxed",
+      "_source": "boxed/components/row.spec.json"
+    },
     {
       "id": "btn",
       "category": "action",
@@ -186,12 +370,431 @@
       ],
       "pack": "hairline",
       "_source": "hairline/components/row.spec.json"
+    },
+    {
+      "id": "btn",
+      "category": "action",
+      "title": "按钮",
+      "description": "主操作触发器。32px 高、8px 圆角、软边框，宽松版式。",
+      "classContract": ".btn[.ghost|.small|.danger]",
+      "classes": [
+        "btn",
+        "btn.ghost",
+        "btn.small",
+        "btn.danger"
+      ],
+      "dom": "<button class=\"btn\">label</button>",
+      "props": {
+        "variant": {
+          "type": "enum",
+          "values": [
+            "",
+            "ghost",
+            "danger"
+          ],
+          "default": "",
+          "description": "视觉变体：默认实色、ghost 浅边、danger 危险色"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": "",
+          "description": "尺寸：默认 28px、small 22px"
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--bad",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "primary",
+          "html": "<button class=\"btn\">确定</button>"
+        },
+        {
+          "title": "ghost",
+          "html": "<button class=\"btn ghost\">取消</button>"
+        },
+        {
+          "title": "danger",
+          "html": "<button class=\"btn danger\">删除</button>"
+        },
+        {
+          "title": "small",
+          "html": "<button class=\"btn small\">次要</button>"
+        }
+      ],
+      "pack": "sectioned",
+      "_source": "sectioned/components/btn.spec.json"
+    },
+    {
+      "id": "card",
+      "category": "container",
+      "title": "卡片",
+      "description": "通用容器：1px 边框圈出版心。可选 colhead 头部、footer 槽位。",
+      "classContract": ".card > .colhead + .card-body + .card-footer",
+      "classes": [
+        "card",
+        "colhead",
+        "card-body",
+        "card-footer"
+      ],
+      "dom": "<div class=\"card\"><div class=\"colhead\">title</div><div class=\"card-body\">content</div></div>",
+      "props": {
+        "title": {
+          "type": "string",
+          "description": "头部文案（省略则不渲染 colhead）"
+        },
+        "actions": {
+          "type": "node",
+          "description": "头部右侧的操作槽（按钮组）"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"card\"><div class=\"card-body\">内容</div></div>"
+        },
+        {
+          "title": "with title",
+          "html": "<div class=\"card\"><div class=\"colhead\">标题</div><div class=\"card-body\">内容</div></div>"
+        }
+      ],
+      "pack": "sectioned",
+      "_source": "sectioned/components/card.spec.json"
+    },
+    {
+      "id": "kv",
+      "category": "data",
+      "title": "键值对",
+      "description": "定义列表：dt/dd 形态的 key/value 行集合。等宽左列 + 自适应右列。",
+      "classContract": ".kv > .kv-row > dt + dd",
+      "classes": [
+        "kv",
+        "kv-row"
+      ],
+      "dom": "<dl class=\"kv\"><div class=\"kv-row\"><dt>k</dt><dd>v</dd></div></dl>",
+      "props": {
+        "items": {
+          "type": "array",
+          "item": {
+            "key": "string",
+            "value": "node"
+          },
+          "required": true,
+          "description": "[{key, value}] 列表"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
+        }
+      ],
+      "pack": "sectioned",
+      "_source": "sectioned/components/kv.spec.json"
+    },
+    {
+      "id": "row",
+      "category": "list",
+      "title": "行条目",
+      "description": "三段式水平行：name（左）+ desc（中）+ acts（右）。用于列表/表格/命令清单。",
+      "classContract": ".row > .name + .desc + .acts",
+      "classes": [
+        "row"
+      ],
+      "dom": "<div class=\"row\"><div class=\"name\">name</div><div class=\"desc\">desc</div><div class=\"acts\">acts</div></div>",
+      "props": {
+        "name": {
+          "type": "node",
+          "required": true,
+          "description": "左槽"
+        },
+        "desc": {
+          "type": "node",
+          "description": "中槽（省略则整行只剩 name + acts）"
+        },
+        "actions": {
+          "type": "node",
+          "description": "右槽"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"row\"><div class=\"name\">名称</div><div class=\"desc\">描述</div><div class=\"acts\"><button class=\"btn small\">操作</button></div></div>"
+        }
+      ],
+      "pack": "sectioned",
+      "_source": "sectioned/components/row.spec.json"
+    },
+    {
+      "id": "btn",
+      "category": "action",
+      "title": "按钮",
+      "description": "主操作触发器。monospace、直角、终端蓝主操作（.primary）。",
+      "classContract": ".btn[.ghost|.small|.danger]",
+      "classes": [
+        "btn",
+        "btn.ghost",
+        "btn.small",
+        "btn.danger"
+      ],
+      "dom": "<button class=\"btn\">label</button>",
+      "props": {
+        "variant": {
+          "type": "enum",
+          "values": [
+            "",
+            "ghost",
+            "danger"
+          ],
+          "default": "",
+          "description": "视觉变体：默认实色、ghost 浅边、danger 危险色"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": "",
+          "description": "尺寸：默认 28px、small 22px"
+        },
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--bad",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "primary",
+          "html": "<button class=\"btn\">确定</button>"
+        },
+        {
+          "title": "ghost",
+          "html": "<button class=\"btn ghost\">取消</button>"
+        },
+        {
+          "title": "danger",
+          "html": "<button class=\"btn danger\">删除</button>"
+        },
+        {
+          "title": "small",
+          "html": "<button class=\"btn small\">次要</button>"
+        }
+      ],
+      "pack": "terminal",
+      "_source": "terminal/components/btn.spec.json"
+    },
+    {
+      "id": "card",
+      "category": "container",
+      "title": "卡片",
+      "description": "通用容器：1px 边框圈出版心。可选 colhead 头部、footer 槽位。",
+      "classContract": ".card > .colhead + .card-body + .card-footer",
+      "classes": [
+        "card",
+        "colhead",
+        "card-body",
+        "card-footer"
+      ],
+      "dom": "<div class=\"card\"><div class=\"colhead\">title</div><div class=\"card-body\">content</div></div>",
+      "props": {
+        "title": {
+          "type": "string",
+          "description": "头部文案（省略则不渲染 colhead）"
+        },
+        "actions": {
+          "type": "node",
+          "description": "头部右侧的操作槽（按钮组）"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"card\"><div class=\"card-body\">内容</div></div>"
+        },
+        {
+          "title": "with title",
+          "html": "<div class=\"card\"><div class=\"colhead\">标题</div><div class=\"card-body\">内容</div></div>"
+        }
+      ],
+      "pack": "terminal",
+      "_source": "terminal/components/card.spec.json"
+    },
+    {
+      "id": "kv",
+      "category": "data",
+      "title": "键值对",
+      "description": "定义列表：dt/dd 形态的 key/value 行集合。等宽左列 + 自适应右列。",
+      "classContract": ".kv > .kv-row > dt + dd",
+      "classes": [
+        "kv",
+        "kv-row"
+      ],
+      "dom": "<dl class=\"kv\"><div class=\"kv-row\"><dt>k</dt><dd>v</dd></div></dl>",
+      "props": {
+        "items": {
+          "type": "array",
+          "item": {
+            "key": "string",
+            "value": "node"
+          },
+          "required": true,
+          "description": "[{key, value}] 列表"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
+        }
+      ],
+      "pack": "terminal",
+      "_source": "terminal/components/kv.spec.json"
+    },
+    {
+      "id": "row",
+      "category": "list",
+      "title": "行条目",
+      "description": "三段式水平行：name（左）+ desc（中）+ acts（右）。用于列表/表格/命令清单。",
+      "classContract": ".row > .name + .desc + .acts",
+      "classes": [
+        "row"
+      ],
+      "dom": "<div class=\"row\"><div class=\"name\">name</div><div class=\"desc\">desc</div><div class=\"acts\">acts</div></div>",
+      "props": {
+        "name": {
+          "type": "node",
+          "required": true,
+          "description": "左槽"
+        },
+        "desc": {
+          "type": "node",
+          "description": "中槽（省略则整行只剩 name + acts）"
+        },
+        "actions": {
+          "type": "node",
+          "description": "右槽"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"row\"><div class=\"name\">名称</div><div class=\"desc\">描述</div><div class=\"acts\"><button class=\"btn small\">操作</button></div></div>"
+        }
+      ],
+      "pack": "terminal",
+      "_source": "terminal/components/row.spec.json"
     }
   ],
   "styles": {
+    "boxed": {
+      "name": "boxed",
+      "label": "boxed · 厚边框直角（2px 边框 / 饱和蓝主操作 / Jira 老派可靠）",
+      "extends": null,
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
     "hairline": {
       "name": "hairline",
       "label": "hairline · 基线克制（1px hairline / 0 投影 / 32px 行，GitHub·Linear 平衡）",
+      "extends": null,
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "sectioned": {
+      "name": "sectioned",
+      "label": "sectioned · 友好分块（40px 宽松行 / 描边浅底徽章 / Stripe Dashboard 气质）",
+      "extends": null,
+      "strategies": [
+        "btn",
+        "tag",
+        "card",
+        "colhead",
+        "row",
+        "kv",
+        "toast",
+        "snippet-box",
+        "cli-hint",
+        "dlg"
+      ]
+    },
+    "terminal": {
+      "name": "terminal",
+      "label": "terminal · 金融数据终端（全 monospace / 单元格级严格网格 / zebra / 2px 蓝框选中）",
       "extends": null,
       "strategies": [
         "btn",

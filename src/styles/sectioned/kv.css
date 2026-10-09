@@ -1,0 +1,6 @@
+/* 策略：键值表（sectioned）。宽松版 40px 行距。 */
+.kv { margin: 0; }
+.kv-row { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--soft-2); }
+.kv-row:last-child { border-bottom: 0; }
+.kv dt { color: var(--mid); font-size: 12px; width: 96px; flex-shrink: 0; padding-left: 16px; }
+.kv dd { margin: 0; min-width: 0; padding: 10px 16px 10px 0; font-size: 13px; display: flex; align-items: center; }

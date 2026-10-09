@@ -1,0 +1,12 @@
+/* 策略：代码块（terminal）。代码块在终端里就是"原生输出"：无框直角浅底。 */
+.snippet-box {
+  display: block;
+  border: 1px solid var(--grid, var(--soft-2));
+  border-radius: 0;
+  background: var(--head-bg, var(--soft));
+  padding: 8px 10px;
+  font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--ink);
+}
+.snippet-box pre { font: inherit; margin: 0; white-space: pre-wrap; }

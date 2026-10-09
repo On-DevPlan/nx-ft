@@ -1,0 +1,18 @@
+{
+  "id": "row",
+  "category": "list",
+  "title": "行条目",
+  "description": "三段式水平行：name（左）+ desc（中）+ acts（右）。用于列表/表格/命令清单。",
+  "classContract": ".row > .name + .desc + .acts",
+  "classes": ["row"],
+  "dom": "<div class=\"row\"><div class=\"name\">name</div><div class=\"desc\">desc</div><div class=\"acts\">acts</div></div>",
+  "props": {
+    "name": { "type": "node", "required": true, "description": "左槽" },
+    "desc": { "type": "node", "description": "中槽（省略则整行只剩 name + acts）" },
+    "actions": { "type": "node", "description": "右槽" }
+  },
+  "tokens": ["--ink", "--mid", "--soft", "--border"],
+  "examples": [
+    { "title": "basic", "html": "<div class=\"row\"><div class=\"name\">名称</div><div class=\"desc\">描述</div><div class=\"acts\"><button class=\"btn small\">操作</button></div></div>" }
+  ]
+}
