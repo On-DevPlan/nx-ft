@@ -30,3 +30,11 @@ src/web/public/
 
 # Scratch 临时区：原型草稿与生成实验（eslint 同步忽略 temp/**）
 temp/
+
+# Flutter showcase dist（35MB canvaskit，clone 后 `pnpm showcase:build` 重新生成）
+src/studio/public/flutter/
+
+# Flutter 项目自带的构建产物（.dart_tool 是 SDK 缓存 + build 是编译输出，
+# 都是 `flutter build` 重新生成的中间产物，不入 git；clone 后 pnpm showcase:build 触发）
+tools/flutter-showcase/build/
+tools/flutter-showcase/.dart_tool/

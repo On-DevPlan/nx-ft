@@ -10,9 +10,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client.js';
 import { useStore } from '../store.jsx';
-import { Copyable } from '../components/ui.jsx';
 import TemplatePreview from './TemplatePreview.jsx';
 import ThemeRenderer from '../components/ThemeRenderer.jsx';
+import FlutterPlayground from '../components/FlutterPlayground.jsx';
 
 const CATEGORY_LABELS = {
   action: '操作',
@@ -23,6 +23,32 @@ const CATEGORY_LABELS = {
 
 const TOKEN_AXES = ['light', 'dark', 'warm', 'mono'];
 const TPL_CAT = '@tpl'; // 「模板」tag 的保留值：整页预览，不属于任何组件分类
+
+// StageCard：单个用法小节（TolyUI 形态）——18px 小节标题 + 白区 demo +
+// 底部分隔条挂动作（复制 / 代码折叠）。代码默认收着，画面清爽。
+function StageCard({ ex }) {
+  const [showCode, setShowCode] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const onCopy = () => {
+    navigator.clipboard?.writeText(ex.html).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    }).catch(() => {});
+  };
+  return (
+    <section className="cmp-section">
+      <h3 className="cmp-sec-title">{ex.title}</h3>
+      <div className="cmp-demo">
+        <div className="cmp-demo-stage" dangerouslySetInnerHTML={{ __html: ex.html }} />
+        <div className="cmp-demo-bar">
+          <button onClick={onCopy}>{copied ? '已复制' : '复制'}</button>
+          <button onClick={() => setShowCode((v) => !v)}>{showCode ? '隐藏代码' : '</> 代码'}</button>
+        </div>
+        {showCode && <pre className="cmp-code">{ex.html}</pre>}
+      </div>
+    </section>
+  );
+}
 
 export default function CatalogView() {
   const { ui, patchUi } = useStore();
@@ -177,19 +203,15 @@ export default function CatalogView() {
             </div>
 
             {/* 真实渲染：Flutter Web playground（懒加载——选中本组件才挂 iframe）。
-                路由协议：entry + #/preview/<id>?<prop>=<value>；产物由 flutter 仓库 CI 构建覆盖 */}
+                单 playground 模式：key 稳定 + 永不刷 src，组件/变体切换走 postMessage，
+                Flutter 端状态切换、引擎不重载。当前已实现 button 与 tag。 */}
             {activeRegistry.preview?.type === 'flutter-web' && (
               <div className="card" style={{ overflow: 'hidden' }}>
                 <div className="colhead">
-                  <span>真实渲染 · Flutter Web</span>
+                  <span>真实渲染 · Flutter Web（单 playground）</span>
                   <a className="muted" style={{ fontSize: 11 }} href={activeRegistry.preview.entry} target="_blank" rel="noreferrer">新窗口打开</a>
                 </div>
-                <iframe
-                  title={`${activeRegistry.platform}-${activeRegistry.id}-real`}
-                  src={`${activeRegistry.preview.entry}#/preview/${activeRegistry.id}?variant=primary`}
-                  style={{ width: '100%', height: 300, border: 0, display: 'block', background: '#fff' }}
-                  loading="lazy"
-                />
+                <FlutterPlayground registry={activeRegistry} />
               </div>
             )}
 
@@ -254,61 +276,71 @@ export default function CatalogView() {
           <div className="demo-grid">
             {list.map((c) => (
               <div key={c.id} className="demo-card">
-                <div className="demo-card-h">
-                  <span className="mono" style={{ fontWeight: 700 }}>{c.id}</span>
-                  <span className="tag">{c.title}</span>
-                  <span className="tag">{CATEGORY_LABELS[c.category] || c.category}</span>
-                  <span className="muted mono" style={{ marginLeft: 'auto', fontSize: 11 }}>{c.classContract}</span>
+                {/* 标题行：巨型 id + 中文名 + 分类/契约 chip（TolyUI 的 hero 手法） */}
+                <div className="cmp-hero">
+                  <h2 className="cmp-title">
+                    {c.id}
+                    <span className="cn">{c.title}</span>
+                  </h2>
+                  <span className="cmp-chip">{CATEGORY_LABELS[c.category] || c.category}</span>
+                  <span className="cmp-chip mono">{c.classContract}</span>
                 </div>
-                <div className="demo-card-main">
-                  {/* 左：全部变体，样式直出 */}
-                  <div className="demo-card-b">
-                    {(c.examples || []).map((ex) => (
-                      <div key={ex.title} className="demo-ex">
-                        <div className="demo-ex-h">
-                          {ex.title}
-                          <Copyable text={ex.html} className="tag mono">复制</Copyable>
-                        </div>
-                        <div className="demo-stage" dangerouslySetInnerHTML={{ __html: ex.html }} />
+                <div className="cmp-desc">{c.description}</div>
+
+                {/* 签名式 API 行：【param】：说明 【Type/可选值】 */}
+                {Object.keys(c.props || {}).length > 0 && (
+                  <div className="cmp-api-line">
+                    {Object.entries(c.props || {}).map(([name, p]) => (
+                      <div key={name}>
+                        <span className="pname">【{name}】</span>：{p.description || ''}
+                        <span className="ptype">
+                          【{p.values ? p.values.filter(Boolean).join(' | ') : p.type}】
+                        </span>
                       </div>
                     ))}
                   </div>
-                  {/* 右：契约面板（原文档页内容就地并排） */}
-                  <aside className="demo-side">
-                    <div style={{ fontSize: 12, marginBottom: 8 }}>{c.description}</div>
-                    <div className="demo-side-h">Props · {Object.keys(c.props || {}).length}</div>
-                    <table className="levels">
-                      <tbody>
-                        {Object.entries(c.props || {}).map(([pname, p]) => (
-                          <tr key={pname}>
-                            <td className="mono">{pname}{p.required && <span className="bad">*</span>}</td>
-                            <td className="mono muted">
-                              {p.values ? p.values.filter(Boolean).join(' · ') : p.type}
-                              {p.default ? ` ／ ${String(p.default)}` : ''}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <div className="demo-side-h">CSS 类 · {(c.classes || []).length}</div>
-                    <div>
-                      {(c.classes || []).map((cls) => (
-                        <span key={cls} className="tag mono" style={{ marginRight: 4, marginBottom: 2, display: 'inline-block' }}>.{cls}</span>
+                )}
+
+                {/* 每个 example 一个用法小节 */}
+                {(c.examples || []).map((ex) => (
+                  <StageCard key={ex.title} ex={ex} />
+                ))}
+
+                {/* 契约区：Props / CSS 类 / tokens / API，全宽收尾 */}
+                <aside className="demo-side demo-side-wide">
+                  <div className="demo-side-h">Props · {Object.keys(c.props || {}).length}</div>
+                  <table className="levels">
+                    <tbody>
+                      {Object.entries(c.props || {}).map(([pname, p]) => (
+                        <tr key={pname}>
+                          <td className="mono">{pname}{p.required && <span className="bad">*</span>}</td>
+                          <td className="mono muted">
+                            {p.values ? p.values.filter(Boolean).join(' · ') : p.type}
+                            {p.default ? ` ／ ${String(p.default)}` : ''}
+                          </td>
+                          <td className="muted">{p.description || ''}</td>
+                        </tr>
                       ))}
-                    </div>
-                    <div className="demo-side-h">tokens 引用</div>
-                    <div>
-                      {(c.tokens || []).map((t) => (
-                        <span key={t} className="tag mono" style={{ marginRight: 4, marginBottom: 2, display: 'inline-block' }}>{t}</span>
-                      ))}
-                    </div>
-                    <div className="demo-side-h">API</div>
-                    <div className="mono muted" style={{ fontSize: 11, wordBreak: 'break-all' }}>
-                      GET /api/studio/component/{c.id}?style={activePack}
-                      <a href={`/api/studio/component/${c.id}?style=${activePack}`} target="_blank" rel="noreferrer" style={{ marginLeft: 6 }}>打开</a>
-                    </div>
-                  </aside>
-                </div>
+                    </tbody>
+                  </table>
+                  <div className="demo-side-h">CSS 类 · {(c.classes || []).length}</div>
+                  <div>
+                    {(c.classes || []).map((cls) => (
+                      <span key={cls} className="tag mono" style={{ marginRight: 4, marginBottom: 2, display: 'inline-block' }}>.{cls}</span>
+                    ))}
+                  </div>
+                  <div className="demo-side-h">tokens 引用</div>
+                  <div>
+                    {(c.tokens || []).map((t) => (
+                      <span key={t} className="tag mono" style={{ marginRight: 4, marginBottom: 2, display: 'inline-block' }}>{t}</span>
+                    ))}
+                  </div>
+                  <div className="demo-side-h">API</div>
+                  <div className="mono muted" style={{ fontSize: 11, wordBreak: 'break-all' }}>
+                    GET /api/studio/component/{c.id}?style={activePack}
+                    <a href={`/api/studio/component/${c.id}?style=${activePack}`} target="_blank" rel="noreferrer" style={{ marginLeft: 6 }}>打开</a>
+                  </div>
+                </aside>
               </div>
             ))}
           </div>

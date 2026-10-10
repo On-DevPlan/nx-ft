@@ -24,6 +24,7 @@
   ],
   "scripts": {
     "manifest:build": "node src/manifest/build.mjs",
+    "showcase:build": "node tools/build-flutter-showcase.mjs",
     "build": "pnpm run manifest:build && vite build",
     "dev": "node scripts/dev.mjs",
     "dev:vite": "vite --host 127.0.0.1",

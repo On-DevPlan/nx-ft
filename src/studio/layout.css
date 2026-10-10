@@ -152,17 +152,69 @@ main { padding: 16px; min-width: 0; }
 .demo-b { padding: 16px 14px 8px; }
 .demo .snippet-box { border: 0; border-radius: 0 0 8px 8px; background: transparent; }
 
-/* catalog 自足式组件卡：左预览右契约，无二级文档页 */
-.demo-grid { display: flex; flex-direction: column; gap: 12px; }
-.demo-card { background: var(--paper); border-radius: 10px; }
-.demo-card-h { display: flex; align-items: center; gap: 8px; padding: 10px 14px 0; font-size: 12px; }
-.demo-card-main { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(250px, 0.9fr); gap: 0 16px; padding: 4px 14px 14px; }
-@media (max-width: 900px) { .demo-card-main { grid-template-columns: 1fr; } }
-.demo-card-b { padding: 8px 0 0; display: flex; flex-direction: column; gap: 12px; }
-.demo-ex-h { font-size: 11px; color: var(--mid); display: flex; align-items: center; gap: 8px; }
-.demo-stage { min-height: 34px; display: flex; align-items: center; }
-/* 右侧契约面板：底色微差分区，不压线 */
-.demo-side { background: var(--soft); border-radius: 8px; padding: 10px 12px; align-self: start; font-size: 12px; }
+/* catalog 自足式组件卡：TolyUI 形态——巨型标题 + 签名式 API 行 +
+   每用法独立小节 + 白区 demo 卡（底部分隔条挂 复制/代码 动作） */
+.demo-grid { display: flex; flex-direction: column; gap: 20px; }
+.demo-card { background: var(--paper); border-radius: 10px; padding: 4px 0 0; }
+
+/* 组件标题行：大标题（id 粗体 + 中文名常规）+ 分类/契约 chip */
+.cmp-hero { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; padding: 12px 14px 0; }
+.cmp-title { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; margin: 0; line-height: 1.3; }
+.cmp-title .cn { font-weight: 400; color: var(--mid); margin-left: 8px; }
+.cmp-chip {
+  font-size: 11px; color: var(--mid); background: var(--soft);
+  border-radius: 4px; padding: 2px 8px; align-self: center;
+}
+.cmp-chip.mono { font-family: ui-monospace, Consolas, monospace; }
+.cmp-desc { padding: 6px 14px 0; font-size: 14px; color: var(--mid); }
+
+/* 签名式 API 行：【param】：说明 【Type/可选值】——TolyUI 的辨识度所在 */
+.cmp-api-line {
+  padding: 10px 14px 0;
+  font-size: 14px;
+  line-height: 1.9;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.cmp-api-line .pname { font-weight: 600; }
+.cmp-api-line .ptype { color: var(--mid); }
+
+/* 用法小节：18px 小节标题 + demo 卡 */
+.cmp-section { padding: 26px 14px 0; }
+.cmp-sec-title { font-size: 18px; font-weight: 600; margin: 0 0 12px; letter-spacing: -0.01em; }
+
+/* demo 卡：白区承托 + 底部分隔条（右对齐动作），代码折叠在分隔条下 */
+.cmp-demo { border: 1px solid var(--soft-2); border-radius: 8px; overflow: hidden; background: var(--paper); }
+.cmp-demo-stage {
+  min-height: 132px;
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  gap: 14px; padding: 40px 24px;
+}
+.cmp-demo-bar {
+  display: flex; align-items: center; justify-content: flex-end; gap: 4px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--soft-2);
+}
+.cmp-demo-bar button {
+  border: 0; background: none; cursor: pointer; font: inherit; font-size: 12px;
+  color: var(--mid); padding: 4px 10px; border-radius: 6px;
+}
+.cmp-demo-bar button:hover { background: var(--soft); color: var(--ink); }
+.cmp-code {
+  margin: 0; padding: 12px 16px;
+  border-top: 1px solid var(--soft-2);
+  background: var(--soft);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px; line-height: 1.7; white-space: pre-wrap; word-break: break-all;
+}
+
+/* demo 卡间距（同卡内多个用法小节） */
+.cmp-section + .cmp-section { padding-top: 26px; }
+
+/* 契约区：舞台之后全宽收尾；TemplatePreview 的侧挂契约面板共用 .demo-side */
+.demo-side { background: var(--soft); border-radius: 8px; padding: 10px 12px; font-size: 12px; }
+.demo-side-wide { margin: 14px; }
 .demo-side-h {
   font-size: 11px;
   color: var(--mid);
