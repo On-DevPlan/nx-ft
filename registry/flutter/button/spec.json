@@ -1,0 +1,26 @@
+{
+  "id": "button",
+  "platform": "flutter",
+  "archetype": "btn",
+  "title": "按钮",
+  "category": "action",
+  "description": "HxButton：主操作触发器。结构契约与 web 端 button 对齐，视觉由 platform theme 表达。",
+  "props": {
+    "variant": {
+      "type": "enum",
+      "values": ["primary", "ghost"],
+      "default": "primary",
+      "description": "视觉变体：primary 实底、ghost 描边"
+    },
+    "size": {
+      "type": "enum",
+      "values": ["md", "sm"],
+      "default": "md",
+      "description": "尺寸：md 36px（material 默认触达高度）、sm 28px"
+    },
+    "disabled": { "type": "boolean", "default": false }
+  },
+  "repo": "https://github.com/On-DevPlan/hx-flutter",
+  "preview": { "type": "flutter-web", "entry": "/flutter/" },
+  "code": "HxButton(\n  variant: HxVariant.primary,\n  size: HxSize.md,\n  onPressed: () {},\n  child: Text('确定'),\n)"
+}

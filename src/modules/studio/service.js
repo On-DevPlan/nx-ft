@@ -100,6 +100,7 @@ export async function manifest({ style } = {}) {
     inheritedVia: style ? [...chain].filter((p) => p !== style) : [],
     components: out,
     styles: cat.styles,
+    registry: cat.registry || [],
   };
 }
 

@@ -1,0 +1,73 @@
+/* ============================================================
+   archetype —— 多平台注册表的中性结构原型（ThemeRenderer 专用）
+   ============================================================
+   职责：把 registry/<platform>/<id>/theme.json 的设计变量（nx tokens
+   词汇）翻译成可视结构。它表达"结构 + 变量取值"，不表达任何单一
+   平台的像素真相——Flutter/Swift 的像素由各自平台负责。
+
+   纪律：全部取值走 var(--token, fallback)，与 nx tokens 词汇一一对应；
+   只进 Shadow DOM（ThemeRenderer），不进面板主文档。
+   ============================================================ */
+
+.btn {
+  font: inherit;
+  font-family: var(--font, system-ui, sans-serif);
+  cursor: pointer;
+  padding: 0 12px;
+  height: var(--btn-h, 32px);
+  font-size: var(--fs-core, 12px);
+  border: 1px solid var(--ink, #14161a);
+  border-radius: var(--radius-btn, 6px);
+  background: var(--ink, #14161a);
+  color: var(--paper, #fff);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.08); }
+.btn:active:not(:disabled) { filter: brightness(0.92); }
+.btn:disabled { background: var(--soft, #f5f6f7); border-color: var(--soft-2, #ebedf0); color: var(--mid, #8b9096); cursor: not-allowed; }
+.btn.ghost {
+  background: var(--paper, #fff);
+  color: var(--ink, #14161a);
+  border-color: var(--soft-2, #ebedf0);
+}
+.btn.ghost:hover:not(:disabled) { background: var(--soft, #f5f6f7); filter: none; }
+.btn.danger { background: var(--bad, #b3261e); border-color: var(--bad, #b3261e); color: var(--paper, #fff); }
+.btn.small { height: calc(var(--btn-h, 32px) - 8px); padding: 0 8px; font-size: 11px; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border: 1px solid var(--soft-2, #ebedf0);
+  border-radius: var(--radius-btn, 6px);
+  background: var(--paper, #fff);
+  color: var(--mid, #8b9096);
+  font-size: 11px;
+  font-weight: 500;
+}
+.tag.strong { color: var(--ink); border-color: var(--ink); }
+.tag.bad { color: var(--bad); border-color: var(--bad); }
+
+.card {
+  padding: 0;
+  border: 1px solid var(--soft-2, #ebedf0);
+  border-radius: var(--radius-btn, 6px);
+  background: var(--paper, #fff);
+}
+.card-body { padding: 14px; }
+
+.row {
+  display: flex;
+  align-items: center;
+  height: var(--row-h, 32px);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--soft-2, #ebedf0);
+}
+.row:hover { background: var(--soft, #f5f6f7); }
+.row:last-child { border-bottom: 0; }
+.row .name { font-weight: 500; min-width: 20ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .desc { color: var(--mid); flex: 1; min-width: 0; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

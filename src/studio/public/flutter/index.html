@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>HxShowcase · Flutter 预览</title>
+<style>
+  body { font: 13px/1.6 Roboto, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; margin: 0; padding: 20px; background: #fff; color: #14181d; }
+  .card { border: 1px solid #dde3ec; border-radius: 8px; padding: 16px; max-width: 560px; }
+  h1 { font-size: 15px; margin: 0 0 4px; }
+  .sub { color: #5a6470; font-size: 12px; margin-bottom: 12px; }
+  code { background: #f1f4f9; padding: 1px 5px; border-radius: 4px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+  .kv { margin: 10px 0 0; font-size: 12px; }
+  .kv div { padding: 3px 0; border-bottom: 1px dashed #dde3ec; }
+  .kv b { display: inline-block; width: 90px; color: #5a6470; font-weight: 500; }
+  .btn { display: inline-block; padding: 8px 18px; background: #0b57d0; color: #fff; border-radius: 4px; font-size: 13px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1 id="title">HxShowcase · STUB</h1>
+  <div class="sub">本页是<b>预览协议的占位实现</b>。真实产物 = hx-flutter 仓库 <code>flutter build web</code> 的 dist，按同路径（src/studio/public/flutter/）覆盖即可，路由协议不变。</div>
+  <div class="kv" id="kv"></div>
+  <span class="btn" id="demo-btn">确定</span>
+</div>
+<script>
+  // 路由协议：#/preview/<componentId>?<prop>=<value>&…
+  // 真实 playground 按此 hash 渲染对应 widget + 参数；stub 只回显参数。
+  const m = location.hash.match(/#\/preview\/([\w-]+)\?(.*)/);
+  const kv = document.getElementById('kv');
+  if (!m) {
+    kv.innerHTML = '<div><b>route</b> 未命中（期望 #/preview/&lt;id&gt;?params）</div>';
+  } else {
+    const [, id, qs] = m;
+    document.getElementById('title').textContent = 'HxShowcase · ' + id + '（STUB）';
+    document.getElementById('demo-btn').style.borderRadius = '4px';
+    let html = '<div><b>component</b> ' + id + '</div>';
+    new URLSearchParams(qs).forEach((v, k) => { html += '<div><b>' + k + '</b> ' + v + '</div>'; });
+    kv.innerHTML = html;
+  }
+</script>
+</body>
+</html>

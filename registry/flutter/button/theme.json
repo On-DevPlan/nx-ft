@@ -1,0 +1,17 @@
+{
+  "$schema": "ui-kit/theme.schema.json",
+  "platform": "flutter",
+  "note": "变量词汇 = nx tokens。Material 触达高度 36px、4px 圆角（Flutter 默认）、Roboto。",
+  "vars": {
+    "--ink": "#0b57d0",
+    "--paper": "#ffffff",
+    "--soft": "#f1f4f9",
+    "--soft-2": "#dde3ec",
+    "--mid": "#5a6470",
+    "--bad": "#b3261e",
+    "--btn-h": "36px",
+    "--fs-core": "13px",
+    "--radius-btn": "4px",
+    "--font": "Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif"
+  }
+}

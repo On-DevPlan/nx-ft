@@ -12,6 +12,7 @@ import { api } from '../api/client.js';
 import { useStore } from '../store.jsx';
 import { Copyable } from '../components/ui.jsx';
 import TemplatePreview from './TemplatePreview.jsx';
+import ThemeRenderer from '../components/ThemeRenderer.jsx';
 
 const CATEGORY_LABELS = {
   action: '操作',
@@ -81,6 +82,10 @@ export default function CatalogView() {
   const list = isTpl ? [] : (cats[activeCat] || []);
   const tokensAxis = ui.docTokens || 'light';
 
+  // 多平台注册表：registry/<platform>/<id>，选中态 ui.registryId = '<platform>/<id>'
+  const registry = manifest?.registry || [];
+  const activeRegistry = registry.find((r) => `${r.platform}/${r.id}` === ui.registryId) || null;
+
   // 只为 css 而拉：examples/props/classes manifest 已带。切包或切 palette 轴才重拉。
   const packIds = useMemo(
     () => Object.values(cats).flat().map((c) => c.id).sort(),
@@ -120,7 +125,7 @@ export default function CatalogView() {
             <button
               key={pack}
               className={'side-item' + (pack === activePack ? ' active' : '')}
-              onClick={() => patchUi({ catalogPack: pack, catalogCat: null })}
+              onClick={() => patchUi({ catalogPack: pack, catalogCat: null, registryId: null })}
               title={info.label || pack}
             >
               <span className="lbl">
@@ -131,10 +136,73 @@ export default function CatalogView() {
             </button>
           );
         })}
+        {/* 多平台注册表：与风格包并列的另一族组件（组件级隔离，一目录一组件） */}
+        {registry.length > 0 && (
+          <>
+            <div className="side-h" style={{ marginTop: 14 }}>注册表 · 多平台</div>
+            {registry.map((r) => {
+              const key = `${r.platform}/${r.id}`;
+              return (
+                <button
+                  key={key}
+                  className={'side-item' + (key === ui.registryId ? ' active' : '')}
+                  onClick={() => patchUi({ registryId: key })}
+                  title={r.description || r.id}
+                >
+                  <span className="lbl">{r.id}<span className="side-count">{r.platform}</span></span>
+                  <span className="sub">{r.title}</span>
+                </button>
+              );
+            })}
+          </>
+        )}
       </aside>
 
-      {/* 右栏：分类 tab + palette 轴 + 自足式组件卡 */}
+      {/* 右栏：分类 tab + palette 轴 + 自足式组件卡；注册表选中时切换为注册表详情 */}
       <section className="stack">
+        {activeRegistry ? (
+          <>
+            <div className="muted" style={{ fontSize: 12, padding: '0 2px' }}>
+              {activeRegistry.platform} · {activeRegistry.description}
+              {activeRegistry.repo && (
+                <a href={activeRegistry.repo} target="_blank" rel="noreferrer" style={{ marginLeft: 8 }}>仓库 ↗</a>
+              )}
+              {activeRegistry.code && (
+                <a
+                  href={`https://dartpad.dev/embed-flutter.html?split=60&code=${encodeURIComponent(activeRegistry.code)}`}
+                  target="_blank" rel="noreferrer" style={{ marginLeft: 8 }}
+                  title="真实 Flutter 运行（DartPad 云端编译，需网络）"
+                >DartPad 运行 ↗</a>
+              )}
+            </div>
+
+            {/* 真实渲染：Flutter Web playground（懒加载——选中本组件才挂 iframe）。
+                路由协议：entry + #/preview/<id>?<prop>=<value>；产物由 flutter 仓库 CI 构建覆盖 */}
+            {activeRegistry.preview?.type === 'flutter-web' && (
+              <div className="card" style={{ overflow: 'hidden' }}>
+                <div className="colhead">
+                  <span>真实渲染 · Flutter Web</span>
+                  <a className="muted" style={{ fontSize: 11 }} href={activeRegistry.preview.entry} target="_blank" rel="noreferrer">新窗口打开</a>
+                </div>
+                <iframe
+                  title={`${activeRegistry.platform}-${activeRegistry.id}-real`}
+                  src={`${activeRegistry.preview.entry}#/preview/${activeRegistry.id}?variant=primary`}
+                  style={{ width: '100%', height: 300, border: 0, display: 'block', background: '#fff' }}
+                  loading="lazy"
+                />
+              </div>
+            )}
+
+            <ThemeRenderer item={activeRegistry} />
+            {activeRegistry.code && (
+              <div className="sheet">
+                <div className="sheet-h"><span>平台实现（{activeRegistry.platform}）</span></div>
+                <pre className="snippet-box" style={{ margin: 12, fontSize: 11 }}>{activeRegistry.code}</pre>
+              </div>
+            )}
+          </>
+        ) : (
+        <>
         <div className="subtabs">
           {catKeys.map((cat) => (
             <button
@@ -245,6 +313,8 @@ export default function CatalogView() {
             ))}
           </div>
         ))}
+        </>
+        )}
       </section>
     </div>
   );

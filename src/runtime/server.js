@@ -27,7 +27,7 @@ const MIME = {
 
 async function serveStatic(pathname, res) {
   const rel = pathname === '/' ? 'index.html' : decodeURIComponent(pathname).replace(/^\/+/, '');
-  const file = resolve(PUBLIC_DIR, rel);
+  let file = resolve(PUBLIC_DIR, rel);
 
   // 越界校验：解析成绝对路径后必须仍落在 PUBLIC_DIR 内。
   // 比对解析结果，而不是剥离 '..' 字面量——后者挡不住编码变形。
@@ -35,6 +35,14 @@ async function serveStatic(pathname, res) {
     res.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });
     res.end('Forbidden');
     return;
+  }
+
+  // 目录路径解析到目录内 index.html（如 /flutter/ → /flutter/index.html）：
+  // 多平台 playground 以目录为单位嵌入（hash 路由留给应用自身）。
+  try {
+    if ((await fsp.stat(file)).isDirectory()) file = resolve(file, 'index.html');
+  } catch {
+    // stat 失败留给下方 readFile 的 404
   }
 
   try {

@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const STYLES_DIR = join(HERE, '..', 'styles');
+const REGISTRY_DIR = join(HERE, '..', '..', 'registry');
 const OUT_PATH = join(HERE, 'catalog.json');
 
 async function readJson(p) {
@@ -64,24 +65,69 @@ async function loadComponents() {
   return components;
 }
 
+// registry/<platform>/<id>/{spec.json, theme.json} —— 多平台组件注册表。
+// 组件级隔离：一目录一组件，目录间零引用；theme 是 nx tokens 词汇的设计变量，
+// 面板用它驱动 archetype 渲染（不依赖任何平台工具链、不生成图片）。
+async function loadRegistry() {
+  if (!existsSync(REGISTRY_DIR)) return [];
+  const out = [];
+  for (const p of await fsp.readdir(REGISTRY_DIR, { withFileTypes: true })) {
+    if (!p.isDirectory()) continue;
+    const platDir = join(REGISTRY_DIR, p.name);
+    for (const c of await fsp.readdir(platDir, { withFileTypes: true })) {
+      if (!c.isDirectory()) continue;
+      const specPath = join(platDir, c.name, 'spec.json');
+      if (!existsSync(specPath)) continue;
+      const spec = await readJson(specPath);
+      const themePath = join(platDir, c.name, 'theme.json');
+      const theme = existsSync(themePath) ? await readJson(themePath) : null;
+      out.push({
+        id: spec.id || c.name,
+        platform: spec.platform || p.name,
+        archetype: spec.archetype || 'btn',
+        title: spec.title || c.name,
+        category: spec.category || 'misc',
+        description: spec.description || '',
+        props: spec.props || {},
+        repo: spec.repo || null,
+        code: spec.code || null,
+        preview: spec.preview || null,
+        theme: theme?.vars || {},
+      });
+    }
+  }
+  out.sort((a, b) => a.platform.localeCompare(b.platform) || a.id.localeCompare(b.id));
+  return out;
+}
+
 export async function buildCatalog() {
   const components = await loadComponents();
   const styles = await loadStyles();
+  const registry = await loadRegistry();
   const catalog = {
     $schema: 'ui-kit/catalog.schema.json',
     version: '0.1.0',
     generated: new Date().toISOString(),
     components,
     styles,
+    registry,
   };
   await fsp.writeFile(OUT_PATH, JSON.stringify(catalog, null, 2), 'utf8');
-  return { components: components.length, styles: Object.keys(styles).length };
+  return {
+    components: components.length,
+    styles: Object.keys(styles).length,
+    registry: registry.length,
+  };
 }
 
 const isMain = process.argv[1] && process.argv[1].endsWith('build.mjs');
 if (isMain) {
   buildCatalog()
-    .then((r) => console.log(`catalog 已写入: ${OUT_PATH}（${r.components} 个组件 / ${r.styles} 个风格包）`))
+    .then((r) =>
+      console.log(
+        `catalog 已写入: ${OUT_PATH}（${r.components} 个组件 / ${r.styles} 个风格包 / registry ${r.registry} 件）`
+      )
+    )
     .catch((e) => {
       console.error(e.stack || String(e));
       process.exit(1);
