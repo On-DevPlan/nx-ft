@@ -6,6 +6,7 @@
   --soft-2: #e4ddd0;
   --mid: #9a9186;
   --bad: #b3261e;
+  --accent: #94632f;          /* 暖色调的 --accent：焦糖橙 */
 
   --border: 1px solid var(--soft-2);
   --row-h: 28px;

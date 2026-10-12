@@ -15,6 +15,7 @@
   --sel-border: #1a66d6;
   --mid: #656d76;
   --bad: #b3261e;
+  --accent: #1f6feb;          /* 次主色：badge / chip.selected / 选中描边 */
 
   --border: 1px solid var(--soft-2);
   --row-h: 28px;

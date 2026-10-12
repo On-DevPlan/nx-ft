@@ -1,0 +1,40 @@
+/* 策略：可交互标签（hairline）。1px hairline 边框、6px 圆角，
+   selected 填实 ink 色，removable 显示 × 按钮。 */
+.chip {
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: 26px;
+  font-size: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--soft-2);
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 80ms ease, border-color 80ms ease, color 80ms ease;
+}
+.chip:hover { background: var(--soft); border-color: var(--ink); }
+.chip.selected {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.chip-icon { display: inline-flex; align-items: center; font-size: 12px; }
+.chip-label { line-height: 1; }
+.chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 3px;
+  opacity: 0.6;
+}
+.chip-x:hover { opacity: 1; background: rgba(0, 0, 0, 0.08); }
+.chip.selected .chip-x:hover { background: rgba(255, 255, 255, 0.2); }
+.chip.small { height: 20px; padding: 0 8px; font-size: 11px; }

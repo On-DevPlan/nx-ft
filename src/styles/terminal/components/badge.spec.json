@@ -1,0 +1,19 @@
+{
+  "id": "badge",
+  "category": "display",
+  "title": "计数徽标",
+  "description": "小红点 / 数字计数。monospace、方角、深色 fill。终端信息密度风格。",
+  "classContract": ".badge[.dot|.danger]",
+  "classes": ["badge", "badge.dot", "badge.danger"],
+  "dom": "<span class=\"badge\">5</span>",
+  "props": {
+    "count": { "type": "number" },
+    "max": { "type": "number", "default": 99 },
+    "dot": { "type": "boolean", "default": false },
+    "variant": { "type": "enum", "values": ["", "danger"], "default": "" }
+  },
+  "tokens": ["--ink", "--paper", "--bad", "--soft-2"],
+  "examples": [
+    { "title": "basic", "html": "<span class=\"badge\">5</span>" }
+  ]
+}

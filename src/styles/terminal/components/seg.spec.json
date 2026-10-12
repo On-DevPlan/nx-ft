@@ -1,0 +1,24 @@
+{
+  "id": "seg",
+  "category": "action",
+  "title": "胶囊单选组",
+  "description": "单选多段按钮组。monospace 字体、单元格式严格网格，selected 蓝底白字 + 2px 蓝框。",
+  "classContract": ".seg > .seg-item[.active]",
+  "classes": ["seg", "seg-item", "seg-item.active"],
+  "dom": "<div class=\"seg\"><button class=\"seg-item active\">A</button><button class=\"seg-item\">B</button></div>",
+  "props": {
+    "options": {
+      "type": "array",
+      "item": { "label": "string", "value": "string" },
+      "required": true,
+      "description": "[{label, value}] 段定义"
+    },
+    "value": { "type": "string", "required": true, "description": "当前选中项的 value" },
+    "onChange": { "type": "string", "required": true, "description": "选中切换回调" },
+    "size": { "type": "enum", "values": ["", "small"], "default": "", "description": "尺寸" }
+  },
+  "tokens": ["--ink", "--paper", "--soft", "--soft-2", "--mid"],
+  "examples": [
+    { "title": "basic", "html": "<div class=\"seg\"><button class=\"seg-item active\">LIST</button><button class=\"seg-item\">GRID</button><button class=\"seg-item\">MAP</button></div>" }
+  ]
+}

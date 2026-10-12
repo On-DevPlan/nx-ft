@@ -1,0 +1,22 @@
+{
+  "id": "chip",
+  "category": "action",
+  "title": "可交互标签",
+  "description": "可点击 / 可关闭 / 可选中的标签。2px 边框直角、selected 蓝底白字。",
+  "classContract": ".chip[.selected|.removable] > [.chip-icon] + .chip-label + [.chip-x]",
+  "classes": ["chip", "chip.selected", "chip.removable", "chip-icon", "chip-label", "chip-x"],
+  "dom": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>",
+  "props": {
+    "label": { "type": "string", "required": true },
+    "onClick": { "type": "string" },
+    "onRemove": { "type": "string" },
+    "selected": { "type": "boolean", "default": false },
+    "icon": { "type": "node" },
+    "size": { "type": "enum", "values": ["", "small"], "default": "" }
+  },
+  "tokens": ["--ink", "--paper", "--soft", "--soft-2", "--mid"],
+  "examples": [
+    { "title": "basic", "html": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>" },
+    { "title": "selected", "html": "<button class=\"chip selected\"><span class=\"chip-label\">选中</span></button>" }
+  ]
+}

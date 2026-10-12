@@ -2,5 +2,5 @@
   "name": "hairline",
   "label": "hairline · 基线克制（1px hairline / 0 投影 / 32px 行，GitHub·Linear 平衡）",
   "extends": null,
-  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
+  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg", "seg", "empty", "chip", "badge"]
 }

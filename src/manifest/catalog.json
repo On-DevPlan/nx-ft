@@ -1,7 +1,7 @@
 {
   "$schema": "ui-kit/catalog.schema.json",
   "version": "0.1.0",
-  "generated": "2026-10-12T11:42:54.835Z",
+  "generated": "2026-10-12T12:14:50.744Z",
   "components": [
     {
       "id": "btn",
@@ -67,6 +67,126 @@
       ],
       "pack": "boxed",
       "_source": "boxed/components/btn.spec.json"
+    },
+    {
+      "id": "chip",
+      "category": "action",
+      "title": "可交互标签",
+      "description": "可点击 / 可关闭 / 可选中的标签。2px 边框直角、selected 蓝底白字。",
+      "classContract": ".chip[.selected|.removable] > [.chip-icon] + .chip-label + [.chip-x]",
+      "classes": [
+        "chip",
+        "chip.selected",
+        "chip.removable",
+        "chip-icon",
+        "chip-label",
+        "chip-x"
+      ],
+      "dom": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>",
+      "props": {
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "onClick": {
+          "type": "string"
+        },
+        "onRemove": {
+          "type": "string"
+        },
+        "selected": {
+          "type": "boolean",
+          "default": false
+        },
+        "icon": {
+          "type": "node"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": ""
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--mid"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>"
+        },
+        {
+          "title": "selected",
+          "html": "<button class=\"chip selected\"><span class=\"chip-label\">选中</span></button>"
+        }
+      ],
+      "pack": "boxed",
+      "_source": "boxed/components/chip.spec.json"
+    },
+    {
+      "id": "seg",
+      "category": "action",
+      "title": "胶囊单选组",
+      "description": "单选多段按钮组。2px 边框直角、0 圆角，selected 蓝底白字（Jira 老派）。",
+      "classContract": ".seg > .seg-item[.active]",
+      "classes": [
+        "seg",
+        "seg-item",
+        "seg-item.active"
+      ],
+      "dom": "<div class=\"seg\"><button class=\"seg-item active\">A</button><button class=\"seg-item\">B</button></div>",
+      "props": {
+        "options": {
+          "type": "array",
+          "item": {
+            "label": "string",
+            "value": "string"
+          },
+          "required": true,
+          "description": "[{label, value}] 段定义"
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "description": "当前选中项的 value"
+        },
+        "onChange": {
+          "type": "string",
+          "required": true,
+          "description": "选中切换回调"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": "",
+          "description": "尺寸"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--mid"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"seg\"><button class=\"seg-item active\">列表</button><button class=\"seg-item\">网格</button><button class=\"seg-item\">地图</button></div>"
+        }
+      ],
+      "pack": "boxed",
+      "_source": "boxed/components/seg.spec.json"
     },
     {
       "id": "card",
@@ -146,6 +266,107 @@
       ],
       "pack": "boxed",
       "_source": "boxed/components/kv.spec.json"
+    },
+    {
+      "id": "badge",
+      "category": "display",
+      "title": "计数徽标",
+      "description": "小红点 / 数字计数。2px 边框、方角、饱和蓝填充白字（与 boxed 主体蓝同色）。",
+      "classContract": ".badge[.dot|.danger]",
+      "classes": [
+        "badge",
+        "badge.dot",
+        "badge.danger"
+      ],
+      "dom": "<span class=\"badge\">5</span>",
+      "props": {
+        "count": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number",
+          "default": 99
+        },
+        "dot": {
+          "type": "boolean",
+          "default": false
+        },
+        "variant": {
+          "type": "enum",
+          "values": [
+            "",
+            "danger"
+          ],
+          "default": ""
+        }
+      },
+      "tokens": [
+        "--paper",
+        "--ink",
+        "--bad",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<span class=\"badge\">5</span>"
+        },
+        {
+          "title": "dot",
+          "html": "<span class=\"badge dot\"></span>"
+        },
+        {
+          "title": "danger",
+          "html": "<span class=\"badge danger\">!</span>"
+        }
+      ],
+      "pack": "boxed",
+      "_source": "boxed/components/badge.spec.json"
+    },
+    {
+      "id": "empty",
+      "category": "display",
+      "title": "空状态",
+      "description": "无数据 / 等待时占位 UI。boxed 风格：2px 实线边框、硬朗、上下粗衬线标题。",
+      "classContract": ".empty-state > [.empty-icon] + .empty-title + [.empty-desc] + [.empty-action]",
+      "classes": [
+        "empty-state",
+        "empty-icon",
+        "empty-title",
+        "empty-desc",
+        "empty-action"
+      ],
+      "dom": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div></div>",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": true,
+          "description": "主标题"
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "node"
+        },
+        "action": {
+          "type": "node"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft-2",
+        "--paper"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"empty-state\"><div class=\"empty-title\">NO DATA</div><div class=\"empty-desc\">暂无数据</div></div>"
+        }
+      ],
+      "pack": "boxed",
+      "_source": "boxed/components/empty.spec.json"
     },
     {
       "id": "row",
@@ -253,6 +474,141 @@
       "_source": "hairline/components/btn.spec.json"
     },
     {
+      "id": "chip",
+      "category": "action",
+      "title": "可交互标签",
+      "description": "可点击 / 可关闭 / 可选中的标签。区别于静态 .tag：本身是个 button。1px hairline 边框，6px 圆角，selected 填实 ink 色。",
+      "classContract": ".chip[.selected|.removable] > [.chip-icon] + .chip-label + [.chip-x]",
+      "classes": [
+        "chip",
+        "chip.selected",
+        "chip.removable",
+        "chip-icon",
+        "chip-label",
+        "chip-x"
+      ],
+      "dom": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>",
+      "props": {
+        "label": {
+          "type": "string",
+          "required": true,
+          "description": "显示文本"
+        },
+        "onClick": {
+          "type": "string",
+          "description": "点击回调"
+        },
+        "onRemove": {
+          "type": "string",
+          "description": "提供则显示 × 按钮"
+        },
+        "selected": {
+          "type": "boolean",
+          "default": false,
+          "description": "选中态"
+        },
+        "icon": {
+          "type": "node",
+          "description": "前缀图标"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": ""
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--mid",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>"
+        },
+        {
+          "title": "selected",
+          "html": "<button class=\"chip selected\"><span class=\"chip-label\">选中</span></button>"
+        },
+        {
+          "title": "removable",
+          "html": "<button class=\"chip removable\"><span class=\"chip-label\">可关</span><span class=\"chip-x\">×</span></button>"
+        }
+      ],
+      "pack": "hairline",
+      "_source": "hairline/components/chip.spec.json"
+    },
+    {
+      "id": "seg",
+      "category": "action",
+      "title": "胶囊单选组",
+      "description": "单选多段按钮组（segmented control / 胶囊导航）。1px hairline 边框，6px 圆角，selected 填实 ink 色。",
+      "classContract": ".seg > .seg-item[.active]",
+      "classes": [
+        "seg",
+        "seg-item",
+        "seg-item.active"
+      ],
+      "dom": "<div class=\"seg\"><button class=\"seg-item active\">A</button><button class=\"seg-item\">B</button></div>",
+      "props": {
+        "options": {
+          "type": "array",
+          "item": {
+            "label": "string",
+            "value": "string"
+          },
+          "required": true,
+          "description": "[{label, value}] 段定义"
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "description": "当前选中项的 value"
+        },
+        "onChange": {
+          "type": "string",
+          "required": true,
+          "description": "选中切换回调（值为新 value）"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": "",
+          "description": "尺寸：默认 28px、small 22px"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--mid",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"seg\"><button class=\"seg-item active\">列表</button><button class=\"seg-item\">网格</button><button class=\"seg-item\">地图</button></div>"
+        },
+        {
+          "title": "small",
+          "html": "<div class=\"seg\"><button class=\"seg-item small active\">日</button><button class=\"seg-item small\">周</button><button class=\"seg-item small\">月</button></div>"
+        }
+      ],
+      "pack": "hairline",
+      "_source": "hairline/components/seg.spec.json"
+    },
+    {
       "id": "card",
       "category": "container",
       "title": "卡片",
@@ -330,6 +686,128 @@
       ],
       "pack": "hairline",
       "_source": "hairline/components/kv.spec.json"
+    },
+    {
+      "id": "badge",
+      "category": "display",
+      "title": "计数徽标",
+      "description": "小红点 / 数字计数。dot=true 只显点；count 超过 max 显 99+；danger 走 --bad 色。",
+      "classContract": ".badge[.dot|.danger]",
+      "classes": [
+        "badge",
+        "badge.dot",
+        "badge.danger"
+      ],
+      "dom": "<span class=\"badge\">5</span>",
+      "props": {
+        "count": {
+          "type": "number",
+          "description": "数字（dot=true 时忽略）"
+        },
+        "max": {
+          "type": "number",
+          "default": 99,
+          "description": "超过则显 N+"
+        },
+        "dot": {
+          "type": "boolean",
+          "default": false,
+          "description": "只显小点，不显数字"
+        },
+        "variant": {
+          "type": "enum",
+          "values": [
+            "",
+            "danger"
+          ],
+          "default": "",
+          "description": "danger 走 --bad 语义色"
+        }
+      },
+      "tokens": [
+        "--accent",
+        "--bad",
+        "--paper",
+        "--ink",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<span class=\"badge\">5</span>"
+        },
+        {
+          "title": "dot",
+          "html": "<span class=\"badge dot\"></span>"
+        },
+        {
+          "title": "max",
+          "html": "<span class=\"badge\">99+</span>"
+        },
+        {
+          "title": "danger",
+          "html": "<span class=\"badge danger\">!</span>"
+        }
+      ],
+      "pack": "hairline",
+      "_source": "hairline/components/badge.spec.json"
+    },
+    {
+      "id": "empty",
+      "category": "display",
+      "title": "空状态",
+      "description": "无数据 / 等待 / 错误时占位 UI。hairline 风格：居中、宽 14px 行间距、虚线 1px 描边容器。",
+      "classContract": ".empty-state > [.empty-icon] + .empty-title + [.empty-desc] + [.empty-action]",
+      "classes": [
+        "empty-state",
+        "empty-icon",
+        "empty-title",
+        "empty-desc",
+        "empty-action"
+      ],
+      "dom": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div><div class=\"empty-desc\">还没有任何记录</div></div>",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": true,
+          "description": "主标题（必填）"
+        },
+        "description": {
+          "type": "string",
+          "description": "副标题/说明"
+        },
+        "icon": {
+          "type": "node",
+          "description": "顶部图标（ReactNode）"
+        },
+        "action": {
+          "type": "node",
+          "description": "底部行动按钮（ReactNode）"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft-2",
+        "--paper",
+        "--border"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div></div>"
+        },
+        {
+          "title": "with-desc",
+          "html": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div><div class=\"empty-desc\">还没有任何记录，开始添加吧</div></div>"
+        },
+        {
+          "title": "with-action",
+          "html": "<div class=\"empty-state\"><div class=\"empty-title\">空空如也</div><div class=\"empty-action\"><button class=\"btn\">添加</button></div></div>"
+        }
+      ],
+      "pack": "hairline",
+      "_source": "hairline/components/empty.spec.json"
     },
     {
       "id": "row",
@@ -437,6 +915,124 @@
       "_source": "sectioned/components/btn.spec.json"
     },
     {
+      "id": "chip",
+      "category": "action",
+      "title": "可交互标签",
+      "description": "可点击 / 可关闭 / 可选中的标签。pill 形（999px 圆角）、selected 浅底彩边、Stripe 风格。",
+      "classContract": ".chip[.selected|.removable] > [.chip-icon] + .chip-label + [.chip-x]",
+      "classes": [
+        "chip",
+        "chip.selected",
+        "chip.removable",
+        "chip-icon",
+        "chip-label",
+        "chip-x"
+      ],
+      "dom": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>",
+      "props": {
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "onClick": {
+          "type": "string"
+        },
+        "onRemove": {
+          "type": "string"
+        },
+        "selected": {
+          "type": "boolean",
+          "default": false
+        },
+        "icon": {
+          "type": "node"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": ""
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--mid",
+        "--accent"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>"
+        }
+      ],
+      "pack": "sectioned",
+      "_source": "sectioned/components/chip.spec.json"
+    },
+    {
+      "id": "seg",
+      "category": "action",
+      "title": "胶囊单选组",
+      "description": "单选多段按钮组。40px 宽松行、12px 圆角，selected 浅底彩边（Stripe Dashboard 气质）。",
+      "classContract": ".seg > .seg-item[.active]",
+      "classes": [
+        "seg",
+        "seg-item",
+        "seg-item.active"
+      ],
+      "dom": "<div class=\"seg\"><button class=\"seg-item active\">A</button><button class=\"seg-item\">B</button></div>",
+      "props": {
+        "options": {
+          "type": "array",
+          "item": {
+            "label": "string",
+            "value": "string"
+          },
+          "required": true,
+          "description": "[{label, value}] 段定义"
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "description": "当前选中项的 value"
+        },
+        "onChange": {
+          "type": "string",
+          "required": true,
+          "description": "选中切换回调"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": "",
+          "description": "尺寸"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--mid",
+        "--accent"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"seg\"><button class=\"seg-item active\">列表</button><button class=\"seg-item\">网格</button><button class=\"seg-item\">地图</button></div>"
+        }
+      ],
+      "pack": "sectioned",
+      "_source": "sectioned/components/seg.spec.json"
+    },
+    {
       "id": "card",
       "category": "container",
       "title": "卡片",
@@ -514,6 +1110,102 @@
       ],
       "pack": "sectioned",
       "_source": "sectioned/components/kv.spec.json"
+    },
+    {
+      "id": "badge",
+      "category": "display",
+      "title": "计数徽标",
+      "description": "小红点 / 数字计数。pill 形、accent 色填充。Stripe 风格：圆滑、低饱和度。",
+      "classContract": ".badge[.dot|.danger]",
+      "classes": [
+        "badge",
+        "badge.dot",
+        "badge.danger"
+      ],
+      "dom": "<span class=\"badge\">5</span>",
+      "props": {
+        "count": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number",
+          "default": 99
+        },
+        "dot": {
+          "type": "boolean",
+          "default": false
+        },
+        "variant": {
+          "type": "enum",
+          "values": [
+            "",
+            "danger"
+          ],
+          "default": ""
+        }
+      },
+      "tokens": [
+        "--accent",
+        "--bad",
+        "--paper",
+        "--ink"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<span class=\"badge\">5</span>"
+        },
+        {
+          "title": "dot",
+          "html": "<span class=\"badge dot\"></span>"
+        }
+      ],
+      "pack": "sectioned",
+      "_source": "sectioned/components/badge.spec.json"
+    },
+    {
+      "id": "empty",
+      "category": "display",
+      "title": "空状态",
+      "description": "无数据时占位 UI。sectioned 风格：宽 40px padding、12px 圆角、soft 底色、Stripe Dashboard 气质。",
+      "classContract": ".empty-state > [.empty-icon] + .empty-title + [.empty-desc] + [.empty-action]",
+      "classes": [
+        "empty-state",
+        "empty-icon",
+        "empty-title",
+        "empty-desc",
+        "empty-action"
+      ],
+      "dom": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div><div class=\"empty-desc\">还没有任何记录</div></div>",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "node"
+        },
+        "action": {
+          "type": "node"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft",
+        "--paper"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div><div class=\"empty-desc\">还没有任何记录</div></div>"
+        }
+      ],
+      "pack": "sectioned",
+      "_source": "sectioned/components/empty.spec.json"
     },
     {
       "id": "row",
@@ -621,6 +1313,122 @@
       "_source": "terminal/components/btn.spec.json"
     },
     {
+      "id": "chip",
+      "category": "action",
+      "title": "可交互标签",
+      "description": "可点击 / 可关闭 / 可选中的标签。monospace、单元格式严格，selected 蓝底白字 + 2px 蓝框。",
+      "classContract": ".chip[.selected|.removable] > [.chip-icon] + .chip-label + [.chip-x]",
+      "classes": [
+        "chip",
+        "chip.selected",
+        "chip.removable",
+        "chip-icon",
+        "chip-label",
+        "chip-x"
+      ],
+      "dom": "<button class=\"chip\"><span class=\"chip-label\">TAG</span></button>",
+      "props": {
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "onClick": {
+          "type": "string"
+        },
+        "onRemove": {
+          "type": "string"
+        },
+        "selected": {
+          "type": "boolean",
+          "default": false
+        },
+        "icon": {
+          "type": "node"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": ""
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--mid"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<button class=\"chip\"><span class=\"chip-label\">TAG</span></button>"
+        }
+      ],
+      "pack": "terminal",
+      "_source": "terminal/components/chip.spec.json"
+    },
+    {
+      "id": "seg",
+      "category": "action",
+      "title": "胶囊单选组",
+      "description": "单选多段按钮组。monospace 字体、单元格式严格网格，selected 蓝底白字 + 2px 蓝框。",
+      "classContract": ".seg > .seg-item[.active]",
+      "classes": [
+        "seg",
+        "seg-item",
+        "seg-item.active"
+      ],
+      "dom": "<div class=\"seg\"><button class=\"seg-item active\">A</button><button class=\"seg-item\">B</button></div>",
+      "props": {
+        "options": {
+          "type": "array",
+          "item": {
+            "label": "string",
+            "value": "string"
+          },
+          "required": true,
+          "description": "[{label, value}] 段定义"
+        },
+        "value": {
+          "type": "string",
+          "required": true,
+          "description": "当前选中项的 value"
+        },
+        "onChange": {
+          "type": "string",
+          "required": true,
+          "description": "选中切换回调"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "",
+            "small"
+          ],
+          "default": "",
+          "description": "尺寸"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--soft",
+        "--soft-2",
+        "--mid"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"seg\"><button class=\"seg-item active\">LIST</button><button class=\"seg-item\">GRID</button><button class=\"seg-item\">MAP</button></div>"
+        }
+      ],
+      "pack": "terminal",
+      "_source": "terminal/components/seg.spec.json"
+    },
+    {
       "id": "card",
       "category": "container",
       "title": "卡片",
@@ -700,6 +1508,98 @@
       "_source": "terminal/components/kv.spec.json"
     },
     {
+      "id": "badge",
+      "category": "display",
+      "title": "计数徽标",
+      "description": "小红点 / 数字计数。monospace、方角、深色 fill。终端信息密度风格。",
+      "classContract": ".badge[.dot|.danger]",
+      "classes": [
+        "badge",
+        "badge.dot",
+        "badge.danger"
+      ],
+      "dom": "<span class=\"badge\">5</span>",
+      "props": {
+        "count": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number",
+          "default": 99
+        },
+        "dot": {
+          "type": "boolean",
+          "default": false
+        },
+        "variant": {
+          "type": "enum",
+          "values": [
+            "",
+            "danger"
+          ],
+          "default": ""
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--paper",
+        "--bad",
+        "--soft-2"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<span class=\"badge\">5</span>"
+        }
+      ],
+      "pack": "terminal",
+      "_source": "terminal/components/badge.spec.json"
+    },
+    {
+      "id": "empty",
+      "category": "display",
+      "title": "空状态",
+      "description": "无数据时占位 UI。terminal 风格：monospace、单元格级 grid、ASCII 风 frame。",
+      "classContract": ".empty-state > [.empty-icon] + .empty-title + [.empty-desc] + [.empty-action]",
+      "classes": [
+        "empty-state",
+        "empty-icon",
+        "empty-title",
+        "empty-desc",
+        "empty-action"
+      ],
+      "dom": "<div class=\"empty-state\"><div class=\"empty-title\">NO DATA</div><div class=\"empty-desc\">no records</div></div>",
+      "props": {
+        "title": {
+          "type": "string",
+          "required": true
+        },
+        "description": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "node"
+        },
+        "action": {
+          "type": "node"
+        }
+      },
+      "tokens": [
+        "--ink",
+        "--mid",
+        "--soft-2",
+        "--paper"
+      ],
+      "examples": [
+        {
+          "title": "basic",
+          "html": "<div class=\"empty-state\"><div class=\"empty-title\">NO DATA</div><div class=\"empty-desc\">no records found</div></div>"
+        }
+      ],
+      "pack": "terminal",
+      "_source": "terminal/components/empty.spec.json"
+    },
+    {
       "id": "row",
       "category": "list",
       "title": "行条目",
@@ -755,7 +1655,11 @@
         "toast",
         "snippet-box",
         "cli-hint",
-        "dlg"
+        "dlg",
+        "seg",
+        "empty",
+        "chip",
+        "badge"
       ]
     },
     "hairline": {
@@ -772,7 +1676,11 @@
         "toast",
         "snippet-box",
         "cli-hint",
-        "dlg"
+        "dlg",
+        "seg",
+        "empty",
+        "chip",
+        "badge"
       ]
     },
     "sectioned": {
@@ -789,7 +1697,11 @@
         "toast",
         "snippet-box",
         "cli-hint",
-        "dlg"
+        "dlg",
+        "seg",
+        "empty",
+        "chip",
+        "badge"
       ]
     },
     "terminal": {
@@ -806,7 +1718,11 @@
         "toast",
         "snippet-box",
         "cli-hint",
-        "dlg"
+        "dlg",
+        "seg",
+        "empty",
+        "chip",
+        "badge"
       ]
     }
   },

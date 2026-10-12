@@ -1,0 +1,24 @@
+{
+  "id": "seg",
+  "category": "action",
+  "title": "胶囊单选组",
+  "description": "单选多段按钮组。40px 宽松行、12px 圆角，selected 浅底彩边（Stripe Dashboard 气质）。",
+  "classContract": ".seg > .seg-item[.active]",
+  "classes": ["seg", "seg-item", "seg-item.active"],
+  "dom": "<div class=\"seg\"><button class=\"seg-item active\">A</button><button class=\"seg-item\">B</button></div>",
+  "props": {
+    "options": {
+      "type": "array",
+      "item": { "label": "string", "value": "string" },
+      "required": true,
+      "description": "[{label, value}] 段定义"
+    },
+    "value": { "type": "string", "required": true, "description": "当前选中项的 value" },
+    "onChange": { "type": "string", "required": true, "description": "选中切换回调" },
+    "size": { "type": "enum", "values": ["", "small"], "default": "", "description": "尺寸" }
+  },
+  "tokens": ["--ink", "--paper", "--soft", "--soft-2", "--mid", "--accent"],
+  "examples": [
+    { "title": "basic", "html": "<div class=\"seg\"><button class=\"seg-item active\">列表</button><button class=\"seg-item\">网格</button><button class=\"seg-item\">地图</button></div>" }
+  ]
+}

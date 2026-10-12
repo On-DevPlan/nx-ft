@@ -1,0 +1,31 @@
+/* 策略：胶囊单选组（hairline）。1px hairline 边框，6px 圆角，
+   selected 填实 ink 色。容器贴在一起、段间无间距。 */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--paper);
+}
+.seg-item {
+  font: inherit;
+  cursor: pointer;
+  padding: 0 12px;
+  height: 28px;
+  font-size: var(--fs-core);
+  background: var(--paper);
+  color: var(--ink);
+  border: 0;
+  border-left: 1px solid var(--soft-2);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  transition: background-color 80ms ease, color 80ms ease;
+}
+.seg-item:first-child { border-left: 0; }
+.seg-item:hover:not(.active) { background: var(--soft); }
+.seg-item.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+.seg-item.small { height: 22px; padding: 0 8px; font-size: 11px; }

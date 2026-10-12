@@ -1,0 +1,25 @@
+{
+  "id": "seg",
+  "category": "action",
+  "title": "胶囊单选组",
+  "description": "单选多段按钮组（segmented control / 胶囊导航）。1px hairline 边框，6px 圆角，selected 填实 ink 色。",
+  "classContract": ".seg > .seg-item[.active]",
+  "classes": ["seg", "seg-item", "seg-item.active"],
+  "dom": "<div class=\"seg\"><button class=\"seg-item active\">A</button><button class=\"seg-item\">B</button></div>",
+  "props": {
+    "options": {
+      "type": "array",
+      "item": { "label": "string", "value": "string" },
+      "required": true,
+      "description": "[{label, value}] 段定义"
+    },
+    "value": { "type": "string", "required": true, "description": "当前选中项的 value" },
+    "onChange": { "type": "string", "required": true, "description": "选中切换回调（值为新 value）" },
+    "size": { "type": "enum", "values": ["", "small"], "default": "", "description": "尺寸：默认 28px、small 22px" }
+  },
+  "tokens": ["--ink", "--paper", "--soft", "--soft-2", "--mid", "--border"],
+  "examples": [
+    { "title": "basic", "html": "<div class=\"seg\"><button class=\"seg-item active\">列表</button><button class=\"seg-item\">网格</button><button class=\"seg-item\">地图</button></div>" },
+    { "title": "small", "html": "<div class=\"seg\"><button class=\"seg-item small active\">日</button><button class=\"seg-item small\">周</button><button class=\"seg-item small\">月</button></div>" }
+  ]
+}

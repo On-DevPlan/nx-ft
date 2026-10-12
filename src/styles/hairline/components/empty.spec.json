@@ -1,0 +1,21 @@
+{
+  "id": "empty",
+  "category": "display",
+  "title": "空状态",
+  "description": "无数据 / 等待 / 错误时占位 UI。hairline 风格：居中、宽 14px 行间距、虚线 1px 描边容器。",
+  "classContract": ".empty-state > [.empty-icon] + .empty-title + [.empty-desc] + [.empty-action]",
+  "classes": ["empty-state", "empty-icon", "empty-title", "empty-desc", "empty-action"],
+  "dom": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div><div class=\"empty-desc\">还没有任何记录</div></div>",
+  "props": {
+    "title": { "type": "string", "required": true, "description": "主标题（必填）" },
+    "description": { "type": "string", "description": "副标题/说明" },
+    "icon": { "type": "node", "description": "顶部图标（ReactNode）" },
+    "action": { "type": "node", "description": "底部行动按钮（ReactNode）" }
+  },
+  "tokens": ["--ink", "--mid", "--soft-2", "--paper", "--border"],
+  "examples": [
+    { "title": "basic", "html": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div></div>" },
+    { "title": "with-desc", "html": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div><div class=\"empty-desc\">还没有任何记录，开始添加吧</div></div>" },
+    { "title": "with-action", "html": "<div class=\"empty-state\"><div class=\"empty-title\">空空如也</div><div class=\"empty-action\"><button class=\"btn\">添加</button></div></div>" }
+  ]
+}

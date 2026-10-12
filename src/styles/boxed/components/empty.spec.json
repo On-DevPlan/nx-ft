@@ -1,0 +1,19 @@
+{
+  "id": "empty",
+  "category": "display",
+  "title": "空状态",
+  "description": "无数据 / 等待时占位 UI。boxed 风格：2px 实线边框、硬朗、上下粗衬线标题。",
+  "classContract": ".empty-state > [.empty-icon] + .empty-title + [.empty-desc] + [.empty-action]",
+  "classes": ["empty-state", "empty-icon", "empty-title", "empty-desc", "empty-action"],
+  "dom": "<div class=\"empty-state\"><div class=\"empty-title\">暂无数据</div></div>",
+  "props": {
+    "title": { "type": "string", "required": true, "description": "主标题" },
+    "description": { "type": "string" },
+    "icon": { "type": "node" },
+    "action": { "type": "node" }
+  },
+  "tokens": ["--ink", "--mid", "--soft-2", "--paper"],
+  "examples": [
+    { "title": "basic", "html": "<div class=\"empty-state\"><div class=\"empty-title\">NO DATA</div><div class=\"empty-desc\">暂无数据</div></div>" }
+  ]
+}

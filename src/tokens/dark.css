@@ -16,6 +16,7 @@
   --sel-border: #1f6feb;
   --mid: #8b9096;
   --bad: #f28b82;
+  --accent: #58a6ff;          /* 暗色下的 --accent：蓝提亮 */
 
   --border: 1px solid var(--soft-2);
   --row-h: 28px;

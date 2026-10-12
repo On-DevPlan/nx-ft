@@ -1,0 +1,20 @@
+{
+  "id": "badge",
+  "category": "display",
+  "title": "计数徽标",
+  "description": "小红点 / 数字计数。pill 形、accent 色填充。Stripe 风格：圆滑、低饱和度。",
+  "classContract": ".badge[.dot|.danger]",
+  "classes": ["badge", "badge.dot", "badge.danger"],
+  "dom": "<span class=\"badge\">5</span>",
+  "props": {
+    "count": { "type": "number" },
+    "max": { "type": "number", "default": 99 },
+    "dot": { "type": "boolean", "default": false },
+    "variant": { "type": "enum", "values": ["", "danger"], "default": "" }
+  },
+  "tokens": ["--accent", "--bad", "--paper", "--ink"],
+  "examples": [
+    { "title": "basic", "html": "<span class=\"badge\">5</span>" },
+    { "title": "dot", "html": "<span class=\"badge dot\"></span>" }
+  ]
+}

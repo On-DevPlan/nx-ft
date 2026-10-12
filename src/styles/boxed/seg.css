@@ -1,0 +1,28 @@
+/* 策略：胶囊单选组（boxed）。2px 边框直角、0 圆角，
+   selected 蓝底白字。Atlassian 蓝是 boxed 的身份。 */
+.seg {
+  display: inline-flex;
+  border: 2px solid #1f6feb;
+  background: var(--paper);
+}
+.seg-item {
+  font: inherit;
+  cursor: pointer;
+  padding: 0 14px;
+  height: 32px;
+  font-size: var(--fs-core);
+  background: var(--paper);
+  color: var(--ink);
+  border: 0;
+  border-left: 2px solid #1f6feb;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+.seg-item:first-child { border-left: 0; }
+.seg-item:hover:not(.active) { background: var(--soft); }
+.seg-item.active {
+  background: #1f6feb;
+  color: #fff;
+}
+.seg-item.small { height: 24px; padding: 0 10px; font-size: 11px; }

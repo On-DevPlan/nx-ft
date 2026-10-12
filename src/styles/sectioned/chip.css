@@ -1,0 +1,39 @@
+/* 策略：可交互标签（sectioned）。pill 形（999px 圆角）、
+   selected 浅底 + 彩边，不进 ink 实心。Stripe 风格。 */
+.chip {
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 30px;
+  font-size: 12px;
+  background: var(--paper);
+  color: var(--mid);
+  border: 1px solid var(--soft-2);
+  border-radius: 999px;
+  font-weight: 500;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.chip:hover { color: var(--ink); border-color: var(--ink); }
+.chip.selected {
+  background: var(--soft);
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.chip-icon { display: inline-flex; align-items: center; font-size: 12px; }
+.chip-label { line-height: 1; }
+.chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+.chip-x:hover { opacity: 1; background: rgba(0, 0, 0, 0.08); }
+.chip.small { height: 22px; padding: 0 10px; font-size: 11px; }

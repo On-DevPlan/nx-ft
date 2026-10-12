@@ -1,0 +1,38 @@
+/* 策略：空状态（terminal）。monospace、单元格级 grid、ASCII 风 frame。 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--mid);
+  gap: 6px;
+  font-family: var(--mono, ui-monospace, monospace);
+}
+.empty-icon {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--mid);
+  margin-bottom: 6px;
+  letter-spacing: 0.1em;
+}
+.empty-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.empty-desc {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--mid);
+  max-width: 360px;
+  letter-spacing: 0.04em;
+}
+.empty-action {
+  margin-top: 12px;
+}

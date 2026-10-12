@@ -1,0 +1,21 @@
+{
+  "id": "badge",
+  "category": "display",
+  "title": "计数徽标",
+  "description": "小红点 / 数字计数。2px 边框、方角、饱和蓝填充白字（与 boxed 主体蓝同色）。",
+  "classContract": ".badge[.dot|.danger]",
+  "classes": ["badge", "badge.dot", "badge.danger"],
+  "dom": "<span class=\"badge\">5</span>",
+  "props": {
+    "count": { "type": "number" },
+    "max": { "type": "number", "default": 99 },
+    "dot": { "type": "boolean", "default": false },
+    "variant": { "type": "enum", "values": ["", "danger"], "default": "" }
+  },
+  "tokens": ["--paper", "--ink", "--bad", "--soft-2"],
+  "examples": [
+    { "title": "basic", "html": "<span class=\"badge\">5</span>" },
+    { "title": "dot", "html": "<span class=\"badge dot\"></span>" },
+    { "title": "danger", "html": "<span class=\"badge danger\">!</span>" }
+  ]
+}

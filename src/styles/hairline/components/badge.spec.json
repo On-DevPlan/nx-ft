@@ -1,0 +1,22 @@
+{
+  "id": "badge",
+  "category": "display",
+  "title": "计数徽标",
+  "description": "小红点 / 数字计数。dot=true 只显点；count 超过 max 显 99+；danger 走 --bad 色。",
+  "classContract": ".badge[.dot|.danger]",
+  "classes": ["badge", "badge.dot", "badge.danger"],
+  "dom": "<span class=\"badge\">5</span>",
+  "props": {
+    "count": { "type": "number", "description": "数字（dot=true 时忽略）" },
+    "max": { "type": "number", "default": 99, "description": "超过则显 N+" },
+    "dot": { "type": "boolean", "default": false, "description": "只显小点，不显数字" },
+    "variant": { "type": "enum", "values": ["", "danger"], "default": "", "description": "danger 走 --bad 语义色" }
+  },
+  "tokens": ["--accent", "--bad", "--paper", "--ink", "--soft-2"],
+  "examples": [
+    { "title": "basic", "html": "<span class=\"badge\">5</span>" },
+    { "title": "dot", "html": "<span class=\"badge dot\"></span>" },
+    { "title": "max", "html": "<span class=\"badge\">99+</span>" },
+    { "title": "danger", "html": "<span class=\"badge danger\">!</span>" }
+  ]
+}

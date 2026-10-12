@@ -2,5 +2,5 @@
   "name": "sectioned",
   "label": "sectioned · 友好分块（40px 宽松行 / 描边浅底徽章 / Stripe Dashboard 气质）",
   "extends": null,
-  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
+  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg", "seg", "empty", "chip", "badge"]
 }

@@ -1,0 +1,36 @@
+/* 策略：可交互标签（boxed）。2px 边框直角、selected 蓝底白字。 */
+.chip {
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: 28px;
+  font-size: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  font-weight: 600;
+}
+.chip:hover { background: var(--soft); }
+.chip.selected {
+  background: #1f6feb;
+  color: #fff;
+  border-color: #1f6feb;
+}
+.chip-icon { display: inline-flex; align-items: center; font-size: 12px; }
+.chip-label { line-height: 1; }
+.chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 700;
+}
+.chip-x:hover { background: rgba(0, 0, 0, 0.12); }
+.chip.selected .chip-x:hover { background: rgba(255, 255, 255, 0.25); }
+.chip.small { height: 22px; padding: 0 8px; font-size: 11px; }

@@ -1,0 +1,23 @@
+{
+  "id": "chip",
+  "category": "action",
+  "title": "可交互标签",
+  "description": "可点击 / 可关闭 / 可选中的标签。区别于静态 .tag：本身是个 button。1px hairline 边框，6px 圆角，selected 填实 ink 色。",
+  "classContract": ".chip[.selected|.removable] > [.chip-icon] + .chip-label + [.chip-x]",
+  "classes": ["chip", "chip.selected", "chip.removable", "chip-icon", "chip-label", "chip-x"],
+  "dom": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>",
+  "props": {
+    "label": { "type": "string", "required": true, "description": "显示文本" },
+    "onClick": { "type": "string", "description": "点击回调" },
+    "onRemove": { "type": "string", "description": "提供则显示 × 按钮" },
+    "selected": { "type": "boolean", "default": false, "description": "选中态" },
+    "icon": { "type": "node", "description": "前缀图标" },
+    "size": { "type": "enum", "values": ["", "small"], "default": "" }
+  },
+  "tokens": ["--ink", "--paper", "--soft", "--soft-2", "--mid", "--border"],
+  "examples": [
+    { "title": "basic", "html": "<button class=\"chip\"><span class=\"chip-label\">标签</span></button>" },
+    { "title": "selected", "html": "<button class=\"chip selected\"><span class=\"chip-label\">选中</span></button>" },
+    { "title": "removable", "html": "<button class=\"chip removable\"><span class=\"chip-label\">可关</span><span class=\"chip-x\">×</span></button>" }
+  ]
+}

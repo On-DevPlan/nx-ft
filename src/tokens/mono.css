@@ -7,6 +7,7 @@
   --soft-2: #e0e0e0;
   --mid: #909090;
   --bad: #0d0d0d;
+  --accent: #0d0d0d;          /* mono 模式无色相：--accent == --ink */
 
   --border: 1px solid var(--soft-2);
   --row-h: 28px;

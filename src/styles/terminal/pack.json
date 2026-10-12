@@ -2,5 +2,5 @@
   "name": "terminal",
   "label": "terminal · 金融数据终端（全 monospace / 单元格级严格网格 / zebra / 2px 蓝框选中）",
   "extends": null,
-  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg"]
+  "strategies": ["btn", "tag", "card", "colhead", "row", "kv", "toast", "snippet-box", "cli-hint", "dlg", "seg", "empty", "chip", "badge"]
 }
