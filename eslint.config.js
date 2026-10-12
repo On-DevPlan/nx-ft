@@ -80,6 +80,7 @@ export default defineConfig([
     // 新增业务模块记得在 files 与 group 里各补一行（一致性测试盯着）。
     files: [
       'src/modules/studio/**/*.{js,jsx}',
+      'src/modules/svg/**/*.{js,jsx}',
     ],
     rules: {
       'no-restricted-imports': [
@@ -87,7 +88,7 @@ export default defineConfig([
         {
           patterns: [
             {
-              group: ['../studio/*', '../studio/**'],
+              group: ['../studio/*', '../studio/**', '../svg/*', '../svg/**'],
               message: '模块之间不得互相依赖；共享逻辑请下沉到 core/。',
             },
           ],

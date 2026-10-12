@@ -13,4 +13,5 @@ export const VIEWS = [
   { id: 'studio', title: 'Studio', component: lazy(() => import('../modules/studio/view.jsx')) },
   { id: 'catalog', title: '组件目录', component: lazy(() => import('./views/Catalog.jsx')) },
   { id: 'stylelab', title: '风格实验室', component: lazy(() => import('./views/StyleLab.jsx')) },
+  { id: 'svg', title: 'SVG 资产', component: lazy(() => import('../modules/svg/view.jsx')) },
 ];

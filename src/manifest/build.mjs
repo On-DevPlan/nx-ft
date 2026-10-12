@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const STYLES_DIR = join(HERE, '..', 'styles');
 const REGISTRY_DIR = join(HERE, '..', '..', 'registry');
+const SVG_DIR = join(HERE, '..', 'svg');
 const OUT_PATH = join(HERE, 'catalog.json');
 
 async function readJson(p) {
@@ -105,10 +106,31 @@ async function loadRegistry() {
   return out;
 }
 
+// src/svg/<group>/spec.json + *.svg —— 矢量审美资产，按目录自然分组。
+// per-folder 粒度：用户拖一个目录进来 = 一个完整组，无需手写「组注册表」。
+// _template 目录被显式跳过（它只是新组起步模板，不算真资产）。
+async function loadSvg() {
+  if (!existsSync(SVG_DIR)) return [];
+  const out = [];
+  for (const e of await fsp.readdir(SVG_DIR, { withFileTypes: true })) {
+    if (!e.isDirectory() || e.name.startsWith('_')) continue; // 跳过 _template 等
+    const specPath = join(SVG_DIR, e.name, 'spec.json');
+    if (!existsSync(specPath)) continue;
+    const spec = await readJson(specPath);
+    out.push({
+      ...spec,
+      _source: `svg/${e.name}/spec.json`,
+    });
+  }
+  out.sort((a, b) => a.id.localeCompare(b.id));
+  return out;
+}
+
 export async function buildCatalog() {
   const components = await loadComponents();
   const styles = await loadStyles();
   const registry = await loadRegistry();
+  const svg = await loadSvg();
   const catalog = {
     $schema: 'ui-kit/catalog.schema.json',
     version: '0.1.0',
@@ -116,12 +138,14 @@ export async function buildCatalog() {
     components,
     styles,
     registry,
+    svg,
   };
   await fsp.writeFile(OUT_PATH, JSON.stringify(catalog, null, 2), 'utf8');
   return {
     components: components.length,
     styles: Object.keys(styles).length,
     registry: registry.length,
+    svg: svg.length,
   };
 }
 
@@ -130,7 +154,7 @@ if (isMain) {
   buildCatalog()
     .then((r) =>
       console.log(
-        `catalog 已写入: ${OUT_PATH}（${r.components} 个组件 / ${r.styles} 个风格包 / registry ${r.registry} 件）`
+        `catalog 已写入: ${OUT_PATH}（${r.components} 个组件 / ${r.styles} 个风格包 / registry ${r.registry} 件 / svg ${r.svg} 组）`
       )
     )
     .catch((e) => {

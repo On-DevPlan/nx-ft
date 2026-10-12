@@ -13,7 +13,8 @@
     "./styles": "./src/styles",
     "./tokens": "./src/tokens",
     "./layout": "./src/layout",
-    "./components": "./src/styles/paper/components"
+    "./components": "./src/styles/paper/components",
+    "./svg": "./src/svg"
   },
   "files": [
     "bin",

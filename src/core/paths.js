@@ -4,8 +4,11 @@
 // nx-ft / nx-ft / 多风格 UI 组件库 + agent-facing studio / 7881 被替换，其余文件一律引用这些常量。
 // 要加新常量请加在这里，不要在别处写字符串字面量。
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { badInput } from './errors/index.js';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
 
 // ---- 项目标识 ----
 export const APP_NAME = 'nx-ft';
@@ -15,6 +18,12 @@ export const APP_DESC = '多风格 UI 组件库 + agent-facing studio';
 // ---- 数据目录（用户主目录下，可用环境变量覆盖）----
 export const APP_DIR = join(homedir(), '.nx-ft');
 export const STORE_PATH = join(APP_DIR, 'store.json');
+
+// ---- 资产目录 ----
+// SVG 资产：每个子目录是一组（一组一 spec.json，组内放 .svg）。
+// _template 是新组起步模板，被 build.mjs 跳过、不计入 manifest。
+export const SVG_DIR = join(HERE, '..', 'svg');
+export const SVG_TEMPLATE_DIR = join(SVG_DIR, '_template');
 
 // ---- 端口 ----
 // serve 的 HTTP 端口。vite dev server 的端口在 vite.config.js 里单独配。

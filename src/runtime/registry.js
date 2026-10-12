@@ -9,8 +9,9 @@
 //   2. 在下面 import 并加进 MODULES；再到 studio/registry.js 登记视图
 import { cliPathsOf } from './spec.js';
 import studio from '../modules/studio/index.js';
+import svg from '../modules/svg/index.js';
 
-export const MODULES = [studio].sort((a, b) => (a.order ?? 100) - (b.order ?? 100));
+export const MODULES = [studio, svg].sort((a, b) => (a.order ?? 100) - (b.order ?? 100));
 
 export const ACTIONS = MODULES.flatMap((m) =>
   (m.actions || []).map((a) => ({ ...a, module: m.id }))

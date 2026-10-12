@@ -1,6 +1,6 @@
 ---
 name: nx-ft
-description: 当用户需要查阅本 ui-kit 提供的组件契约、tokens、风格包、命令行用法，或请求生成 admin 页面/前端骨架时使用。触发词：ui-kit / 组件清单 / 风格包 / studio manifest / spec → HTML。 不适用：业务逻辑实现、组件源码改动建议。
+description: 当用户需要查阅本 ui-kit 提供的组件契约、tokens、风格包、SVG 资产、命令行用法，或请求生成 admin 页面/前端骨架时使用。触发词：ui-kit / 组件清单 / 风格包 / svg 资产 / studio manifest / spec → HTML。 不适用：业务逻辑实现、组件源码改动建议。
 ---
 
 # nx-ft
@@ -33,6 +33,10 @@ description: 当用户需要查阅本 ui-kit 提供的组件契约、tokens、�
 | `nx-ft studio preview <id> [--style paper]` | 渲染组件 HTML（自包含片段） |
 | `nx-ft studio build` | 从 spec 重建 catalog.json |
 | `nx-ft studio doctor` | spec ↔ css ↔ catalog 一致性自检 |
+| `nx-ft svg list` | SVG 资产组清单 |
+| `nx-ft svg get <group>` | 单组详情：spec + items |
+| `nx-ft svg preview <group> <item>` | 单件：SVG 原文 + 自包含 HTML 文档 |
+| `nx-ft svg build` | 从 spec 重建 catalog（已包含在 `studio build` 链路里） |
 | `nx-ft skill install [--force]` | 把用法装给本机 agent（~/.claude/skills） |
 | `nx-ft skill get [ref]` | 导出 skill 上下文给外部 agent |
 | 任何命令 + `--json` | 机器可读输出 |

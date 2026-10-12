@@ -1,7 +1,7 @@
 {
   "$schema": "ui-kit/catalog.schema.json",
   "version": "0.1.0",
-  "generated": "2026-10-12T11:11:55.028Z",
+  "generated": "2026-10-12T11:42:54.835Z",
   "components": [
     {
       "id": "btn",
@@ -950,6 +950,52 @@
         "--radius-btn": "4px",
         "--font": "Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif"
       }
+    }
+  ],
+  "svg": [
+    {
+      "id": "decorations",
+      "kind": "svg-group",
+      "title": "装饰元素",
+      "description": "用于标题区、卡片间分隔、空状态背景的横向装饰",
+      "viewBox": "0 0 120 12",
+      "items": [
+        {
+          "file": "squiggle.svg",
+          "name": "squiggle",
+          "title": "正弦波浪线",
+          "tags": [
+            "divider",
+            "ornament",
+            "wave"
+          ],
+          "viewBox": "0 0 120 12"
+        },
+        {
+          "file": "wave.svg",
+          "name": "wave",
+          "title": "缓起伏波浪",
+          "tags": [
+            "divider",
+            "ornament",
+            "wave",
+            "soft"
+          ],
+          "viewBox": "0 0 120 12"
+        },
+        {
+          "file": "dots.svg",
+          "name": "dots",
+          "title": "五点分隔",
+          "tags": [
+            "divider",
+            "ornament",
+            "dots"
+          ],
+          "viewBox": "0 0 100 12"
+        }
+      ],
+      "_source": "svg/decorations/spec.json"
     }
   ]
 }

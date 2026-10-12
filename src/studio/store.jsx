@@ -22,6 +22,9 @@ const DEFAULT_UI = {
   docComponent: null,
   docTokens: 'light',
   docStyle: null,
+  // SVG 资产面板：组 + 单件；持久化被删/改后视图会自愈到第一个有效值
+  svgGroup: null,
+  svgItem: null,
 };
 
 function loadUi() {
