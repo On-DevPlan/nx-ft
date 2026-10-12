@@ -26,29 +26,27 @@ pnpm dev    # vite + studio serve，一个 ctrl-c 一起退
 ```
 src/
 ├─ styles/                 「一种风格 = 一套组件」——每 pack 自治
-│  ├─ paper/
+│  ├─ boxed/               4-pack：boxed / hairline / sectioned / terminal
 │  │  ├─ pack.json         name / label / extends / strategies
 │  │  ├─ btn.css · tag.css · card.css · …   10 件 strategy css
 │  │  └─ components/       该 pack 拥有的 React 绑定 + spec
 │  │     ├─ btn.jsx + btn.spec.json
 │  │     └─ …
-│  └─ ledger-offset/       extends paper；只覆盖要变的
-│     ├─ pack.json
-│     ├─ btn.css           ← 4px 硬偏移演示
-│     ├─ tokens.css        ← 想覆盖 palette 默认值时放在这
-│     └─ components/       不覆盖则继承自 paper（spec 是单一真相源）
+│  ├─ hairline/  sectioned/  terminal/
 ├─ tokens/                 palette 轴：light / dark / warm / mono（CSS 变量层）
 ├─ layout/                 layout 原语：shell / sidebar / topbar / grid（CSS-only 契约）
 ├─ manifest/
-│  ├─ build.mjs            从 spec 重建 catalog.json（多包聚合）
+│  ├─ build.mjs            从 spec 重建 catalog.json（多包聚合 + registry 聚合）
 │  └─ catalog.json         agent 离线摸底的真相快照（每个组件带 pack 字段）
+├─ registry/               多平台注册表：registry/<platform>/<id>/（如 flutter/button）
 ├─ modules/studio/    CLI + HTTP + 面板三端同源的 action 域
 │  ├─ index.js        声明 manifest / packs / component / preview / build / doctor / skill
 │  ├─ service.js      业务真相源：catalog 聚合、extends 链解析、HTML 渲染
 │  └─ view.jsx        面板「Studio」tab
 ├─ studio/            面板壳（vite 构建，产物被零依赖 node:http 服务）
-│  ├─ views/{Catalog,ComponentDoc,StyleLab}.jsx
-│  ├─ components/ui.jsx · store.jsx · registry.js · main.jsx · style.css
+│  ├─ views/{Catalog,ComponentDoc,StyleLab,TemplatePreview}.jsx
+│  ├─ components/ui.jsx · FlutterPlayground.jsx · ThemeRenderer.jsx
+│  ├─ store.jsx · registry.js · main.jsx · style.css
 │  └─ App.jsx · layout.css
 ├─ core/              基础设施：paths / store / errors / open
 └─ runtime/           装配：registry / cli / api / server / spec / skill
@@ -86,12 +84,12 @@ CI 自动构建、测试、`npm publish --provenance`（需要 `NPM_TOKEN` secre
 # 把库的契约与用法装给本机 agent（离线）
 nx-se skill install
 
-# 在线拿清单（一个请求摸清整库）
-curl http://127.0.0.1:7881/api/studio/manifest?style=paper | jq
+# 在线拿清单（一个请求摸清整库；?style= 可选，缺省取首个风格包）
+curl http://127.0.0.1:7881/api/studio/manifest?style=boxed | jq
 
 # 单件深读（spec + css）
-curl "http://127.0.0.1:7881/api/studio/component/btn?style=paper&withJsx=1" | jq
+curl "http://127.0.0.1:7881/api/studio/component/btn?style=boxed&withJsx=1" | jq
 
 # 渲染 HTML 片段（自包含，可直接粘贴）
-curl "http://127.0.0.1:7881/api/studio/preview/btn?style=paper" | jq -r .document
+curl "http://127.0.0.1:7881/api/studio/preview/btn?style=boxed" | jq -r .document
 ```

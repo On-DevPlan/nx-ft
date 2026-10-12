@@ -1,7 +1,7 @@
 {
   "$schema": "ui-kit/catalog.schema.json",
   "version": "0.1.0",
-  "generated": "2026-10-10T07:00:59.346Z",
+  "generated": "2026-10-12T07:47:54.320Z",
   "components": [
     {
       "id": "btn",
@@ -844,6 +844,96 @@
       },
       "repo": "https://github.com/On-DevPlan/hx-flutter",
       "code": "HxButton(\n  variant: HxVariant.primary,\n  size: HxSize.md,\n  onPressed: () {},\n  child: Text('确定'),\n)",
+      "preview": {
+        "type": "flutter-web",
+        "entry": "/flutter/"
+      },
+      "theme": {
+        "--ink": "#0b57d0",
+        "--paper": "#ffffff",
+        "--soft": "#f1f4f9",
+        "--soft-2": "#dde3ec",
+        "--mid": "#5a6470",
+        "--bad": "#b3261e",
+        "--btn-h": "36px",
+        "--fs-core": "13px",
+        "--radius-btn": "4px",
+        "--font": "Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif"
+      }
+    },
+    {
+      "id": "card",
+      "platform": "flutter",
+      "archetype": "card",
+      "title": "卡片",
+      "category": "container",
+      "description": "HxCard：通用容器。1px 边框圈出版心，可选头部标题——结构契约与 web 端 card 对齐，视觉由 platform theme 表达。",
+      "props": {
+        "variant": {
+          "type": "enum",
+          "values": [
+            "titled",
+            "plain"
+          ],
+          "default": "titled",
+          "description": "头部：titled 带标题行、plain 纯内容"
+        },
+        "padded": {
+          "type": "boolean",
+          "default": true,
+          "description": "内容区是否留白（14px）"
+        }
+      },
+      "repo": "https://github.com/On-DevPlan/hx-flutter",
+      "code": "HxCard(\n  variant: HxCardVariant.titled,\n  padded: true,\n  child: Text('内容'),\n)",
+      "preview": {
+        "type": "flutter-web",
+        "entry": "/flutter/"
+      },
+      "theme": {
+        "--ink": "#0b57d0",
+        "--paper": "#ffffff",
+        "--soft": "#f1f4f9",
+        "--soft-2": "#dde3ec",
+        "--mid": "#5a6470",
+        "--bad": "#b3261e",
+        "--btn-h": "36px",
+        "--fs-core": "13px",
+        "--radius-btn": "4px",
+        "--font": "Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif"
+      }
+    },
+    {
+      "id": "tag",
+      "platform": "flutter",
+      "archetype": "tag",
+      "title": "标签",
+      "category": "display",
+      "description": "HxTag：状态徽章。圆角胶囊，info/ok/warn/err 四种状态色（theme 的 color-mix 落成具体色值，light/dark 都可读）。",
+      "props": {
+        "variant": {
+          "type": "enum",
+          "values": [
+            "info",
+            "ok",
+            "warn",
+            "err"
+          ],
+          "default": "info",
+          "description": "状态色：info 信息、ok 成功、warn 警告、err 错误"
+        },
+        "size": {
+          "type": "enum",
+          "values": [
+            "md",
+            "sm"
+          ],
+          "default": "md",
+          "description": "尺寸：md 20px、sm 18px 高"
+        }
+      },
+      "repo": "https://github.com/On-DevPlan/hx-flutter",
+      "code": "HxTag(\n  variant: HxVariant.info,\n  size: HxSize.md,\n  label: '进行中',\n)",
       "preview": {
         "type": "flutter-web",
         "entry": "/flutter/"

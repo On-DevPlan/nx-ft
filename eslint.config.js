@@ -17,7 +17,16 @@ const BASE_RULES = {
 };
 
 export default defineConfig([
-  { ignores: ['src/web/public/**', 'src/studio/public/**', 'temp/**', 'node_modules/**'] },
+  { ignores: [
+    'src/web/public/**',
+    'src/studio/public/**',
+    'temp/**',
+    'node_modules/**',
+    // Flutter showcase 的产物与 SDK 缓存（.gitignore 同款清单）：本机跑过
+    // `pnpm showcase:build` 后才有，全是生成/第三方 js，lint 只会刷屏。
+    'tools/flutter-showcase/build/**',
+    'tools/flutter-showcase/.dart_tool/**',
+  ] },
   {
     files: ['**/*.{js,mjs,jsx}'],
     languageOptions: {
@@ -133,6 +142,7 @@ export default defineConfig([
         navigator: 'readonly',
         prompt: 'readonly',
         setTimeout: 'readonly',
+        URLSearchParams: 'readonly',
         window: 'readonly',
       },
     },

@@ -10,15 +10,18 @@ const LS_KEY = 'nx-se-ui';
 
 const DEFAULT_UI = {
   view: 'studio',
-  // StyleLab / Catalog 的跨刷新选择：让用户切到一半能继续
-  catalogStyle: 'paper',
+  // StyleLab / Catalog 的跨刷新选择：让用户切到一半能继续。
+  // pack 类选择一律 null 起步——有效默认由各视图按 packs 清单解析
+  // （catalog 序第一个），这里硬编码 pack 名会在 pack 演化后全部失效
+  // （'paper' 默认值就是这么烂掉的）。
+  catalogPack: null,
   labTokens: 'light',
-  labStyle: 'paper',
+  labStyle: null,
   labComponent: 'btn',
   // ComponentDoc：catalog 点击行后进入的组件文档页
   docComponent: null,
   docTokens: 'light',
-  docStyle: 'paper',
+  docStyle: null,
 };
 
 function loadUi() {

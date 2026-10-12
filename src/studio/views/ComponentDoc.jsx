@@ -58,12 +58,16 @@ export default function ComponentDocView() {
   const { ui, patchUi } = useStore();
   const id = ui.docComponent;
   const tokensAxis = ui.docTokens || 'light';
-  const style = ui.docStyle || 'paper';
 
   const [doc, setDoc] = useState(null);
   const [tokensCss, setTokensCss] = useState('');
   const [packList, setPackList] = useState([]);
   const [err, setErr] = useState('');
+
+  // docStyle 校验：持久化值可能指向已删的 pack（如旧默认 'paper'），直接请求会
+  // NOT_FOUND。对 packs 清单校验，无效时落到首个 pack——与 StyleLab 同一自愈策略；
+  // packs 未到位前 style 为空，下面的 effect 不发请求。
+  const style = packList.some((p) => p.name === ui.docStyle) ? ui.docStyle : (packList[0]?.name || '');
 
   // 风格包清单动态拉取——新增 pack 无需改这份视图
   useEffect(() => {
@@ -73,7 +77,7 @@ export default function ComponentDocView() {
   }, []);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !style) return;
     setDoc(null);
     api(`/api/studio/component/${id}?style=${style}&tokens=${tokensAxis}`)
       .then((d) => {
@@ -87,7 +91,7 @@ export default function ComponentDocView() {
   // 运行时查表——查不到（该 pack 没有自己的绑定）返回 null，PreviewLive 退化为
   // 静态 HTML（class 契约 + spec.example）。绑定沿 extends 链继承：用 doc.sourcePack
   // （service 解析出的 spec 实际归属 pack）查表，而非当前选中的 style——
-  // ledger-offset 这类覆盖包继承 paper 的 spec，渲染它的也是 paper 的绑定。
+  // 覆盖包继承基座 spec 时，渲染基座的绑定。
   // 此前用模板字符串动态 import：glob 表里没有的键会在 render 期同步 throw，
   // 打穿错误边界（面板整页报错），降级注释形同虚设。
   const BINDINGS = import.meta.glob('../../styles/*/components/*.jsx');

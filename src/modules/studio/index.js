@@ -123,7 +123,7 @@ export default {
       summary: '单件深读：spec + 该风格下相关策略 css',
       args: [{ name: 'id', required: true }],
       flags: {
-        style: { type: 'string', default: 'paper', hint: '从哪个风格包加载 css（默认 paper）' },
+        style: { type: 'string', hint: '从哪个风格包加载 css（缺省取 catalog 首个风格包）' },
         tokens: { type: 'string', default: 'light', hint: '从哪个 palette 轴加载 tokens.css（默认 light）' },
         withJsx: { type: 'boolean', default: false, hint: '同时把 React 绑定源码带回来' },
       },
@@ -136,7 +136,7 @@ export default {
       summary: '渲染组件 HTML（class 契约 + 示例填参）',
       args: [{ name: 'id', required: true }],
       flags: {
-        style: { type: 'string', default: 'paper' },
+        style: { type: 'string' },
         tokens: { type: 'string', default: 'light' },
       },
       run: (ctx) => service.preview({ id: ctx.id, style: ctx.style, tokens: ctx.tokens }),

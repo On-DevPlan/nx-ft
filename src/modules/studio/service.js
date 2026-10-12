@@ -21,8 +21,7 @@ const LIB = {
   styles: join(ROOT, 'src', 'styles'),
   tokens: join(ROOT, 'src', 'tokens'),
   layout: join(ROOT, 'src', 'layout'),
-  // components 现在归每个 pack 自己拥有：src/styles/<pack>/components/<id>.{jsx,spec.json}
-  styles: join(ROOT, 'src', 'styles'),
+  // components 归每个 pack 自己拥有：src/styles/<pack>/components/<id>.{jsx,spec.json}
   manifest: join(ROOT, 'src', 'manifest'),
 };
 const PACKAGE_JSON = join(ROOT, 'package.json');
@@ -41,6 +40,21 @@ async function readCatalog() {
     throw notFound('catalog.json 未生成——先跑 `{{name}} studio build`'.replace('{{name}}', APP_NAME));
   }
   return readJson(p);
+}
+
+// style 缺省（CLI 不带 --style、HTTP 不带 ?style=）→ catalog 序第一个 pack。
+// 默认名不硬编码：pack 集合会演化（paper→4-pack 迁移后，写死的 'paper' 让
+// 无参调用全端 404），动态解析让「缺省 = 库里第一个」永远成立。
+function firstPack(cat) {
+  return Object.keys(cat.styles)[0] || null;
+}
+
+// 校验 style 参数：未知 pack 直接报用法错并列出可用项——静默返回空集会让
+// agent 以为「库里没有组件」，把环境问题误判成数据问题。
+function assertStyle(cat, style) {
+  if (style && !cat.styles[style]) {
+    throw badInput(`未知风格包: ${style}（可用: ${Object.keys(cat.styles).join(' | ')}）`);
+  }
 }
 
 // ---- bootstrap ----
@@ -65,6 +79,7 @@ export async function bootstrap() {
 
 export async function manifest({ style } = {}) {
   const cat = await readCatalog();
+  assertStyle(cat, style);
   let components = cat.components;
   let chain = null;
   if (style) {
@@ -123,9 +138,8 @@ export async function packs() {
 
 // ---- pack chain：沿 extends 链向上找文件 ----
 //
-// 「一种风格 = 一套组件」：每个 pack 自己拥有 components/。
-// ledger-offset extends paper 时，只需放「想要覆盖」的文件，未覆盖的
-// 文件会沿链向上回溯（paper 是缺省基石）。
+// 「一种风格 = 一套组件」：每个 pack 自己拥有 components/。pack 可声明
+// extends 形成覆盖链——只需放「想要覆盖」的文件，未覆盖的沿链向上回溯。
 async function resolveInPackChain(packName, fileName, cat) {
   let cur = packName;
   while (cur) {
@@ -139,17 +153,20 @@ async function resolveInPackChain(packName, fileName, cat) {
 
 // ---- component：单件深读 ----
 
-export async function component({ id, style = 'paper', withJsx = false, tokens: tokensAxis = 'light' } = {}) {
+export async function component({ id, style, withJsx = false, tokens: tokensAxis = 'light' } = {}) {
   if (!id) throw badInput('缺少组件 id');
   const cat = await readCatalog();
-  const resolved = await resolveInPackChain(style, `${id}.spec.json`, cat);
-  if (!resolved) throw notFound(`组件不存在: ${id}（pack: ${style}）`);
+  assertStyle(cat, style);
+  const pack = style || firstPack(cat);
+  if (!pack) throw notFound('库里没有任何风格包——先在 src/styles/ 下建 pack');
+  const resolved = await resolveInPackChain(pack, `${id}.spec.json`, cat);
+  if (!resolved) throw notFound(`组件不存在: ${id}（pack: ${pack}）`);
   const spec = await readJson(resolved.path);
 
   const css = {};
   for (const cls of spec.classes || []) {
     const head = cls.split(/\s|\./)[0];
-    const file = join(LIB.styles, style, `${head}.css`);
+    const file = join(LIB.styles, pack, `${head}.css`);
     if (existsSync(file)) {
       css[head] = await readFile(file, 'utf8');
     }
@@ -157,7 +174,7 @@ export async function component({ id, style = 'paper', withJsx = false, tokens: 
   // tokens 来源：pack 自带 palette（styles/<pack>/tokens.css）优先；
   // 没有自带的 pack 才走 palette 轴（src/tokens/<axis>.css）。
   // 同一 pack × 不同 palette = 不同外观的正交性，对无自带 palette 的 pack 依然成立。
-  const packTokensPath = join(LIB.styles, style, 'tokens.css');
+  const packTokensPath = join(LIB.styles, pack, 'tokens.css');
   const tokensSource = existsSync(packTokensPath) ? 'pack' : 'axis';
   const tokensPath = tokensSource === 'pack'
     ? packTokensPath
@@ -166,13 +183,13 @@ export async function component({ id, style = 'paper', withJsx = false, tokens: 
 
   let jsx = null;
   if (withJsx) {
-    const jsxResolved = await resolveInPackChain(style, `${id}.jsx`, cat);
+    const jsxResolved = await resolveInPackChain(pack, `${id}.jsx`, cat);
     if (jsxResolved) jsx = await readFile(jsxResolved.path, 'utf8');
   }
 
   return {
     id,
-    style,
+    style: pack,
     tokensAxis,
     tokensSource,
     spec,
@@ -188,9 +205,10 @@ export async function component({ id, style = 'paper', withJsx = false, tokens: 
 // 设计要点：组件是 class-contract 而不是 React 组件——这意味着我们
 // 不需要 jsdom 也不需要 React renderer 就能拼出 HTML 片段。
 // 样例拿首条 examples[0]，把它包到 <style> + 该 strategy css 里。
-export async function preview({ id, style = 'paper', tokens: tokensAxis = 'light' } = {}) {
+export async function preview({ id, style, tokens: tokensAxis = 'light' } = {}) {
   if (!id) throw badInput('缺少组件 id');
   const c = await component({ id, style, tokensAxis });
+  const pack = c.style; // component 已解析缺省 pack
   const ex = c.spec.examples && c.spec.examples[0];
   if (!ex) throw notFound(`组件 ${id} 没有 examples`);
 
@@ -201,7 +219,7 @@ export async function preview({ id, style = 'paper', tokens: tokensAxis = 'light
 
   return {
     id,
-    style,
+    style: pack,
     tokensAxis,
     html: ex.html,
     css: cssText,
@@ -210,7 +228,7 @@ export async function preview({ id, style = 'paper', tokens: tokensAxis = 'light
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>${id} · ${style}/${tokensAxis}</title>
+<title>${id} · ${pack}/${tokensAxis}</title>
 <style>
 ${tokensBlock}
 ${cssText}
@@ -240,8 +258,8 @@ export async function build() {
 // tokens 检查走 palette 轴（src/tokens/<axis>.css），与 pack 正交——
 // 任何一个 palette 文件里定义了 spec 引用的变量即可。
 //
-// 每个组件自检走自己的 pack 的 strategy css（沿 extends 链回溯）；
-// 这意味着 paper 改了 spec 影响所有派生 pack 的 doctor 输出。
+// 每个组件自检走自己 pack 的 strategy css（沿 extends 链回溯）——
+// 基座 pack 改了 spec 会体现在所有继承它的派生 pack 的 doctor 输出里。
 export async function doctor() {
   const issues = [];
   const cat = await readCatalog();

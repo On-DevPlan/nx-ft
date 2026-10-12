@@ -1,0 +1,24 @@
+{
+  "id": "card",
+  "platform": "flutter",
+  "archetype": "card",
+  "title": "卡片",
+  "category": "container",
+  "description": "HxCard：通用容器。1px 边框圈出版心，可选头部标题——结构契约与 web 端 card 对齐，视觉由 platform theme 表达。",
+  "props": {
+    "variant": {
+      "type": "enum",
+      "values": ["titled", "plain"],
+      "default": "titled",
+      "description": "头部：titled 带标题行、plain 纯内容"
+    },
+    "padded": {
+      "type": "boolean",
+      "default": true,
+      "description": "内容区是否留白（14px）"
+    }
+  },
+  "repo": "https://github.com/On-DevPlan/hx-flutter",
+  "preview": { "type": "flutter-web", "entry": "/flutter/" },
+  "code": "HxCard(\n  variant: HxCardVariant.titled,\n  padded: true,\n  child: Text('内容'),\n)"
+}

@@ -68,19 +68,24 @@ async function loadComponents() {
 // registry/<platform>/<id>/{spec.json, theme.json} —— 多平台组件注册表。
 // 组件级隔离：一目录一组件，目录间零引用；theme 是 nx tokens 词汇的设计变量，
 // 面板用它驱动 archetype 渲染（不依赖任何平台工具链、不生成图片）。
+//
+// theme 两级：registry/<platform>/theme.json 是平台默认（同一平台共享一套
+// tokens 词汇），组件级 theme.json 按键覆盖——只有平台内真有差异时才需要组件级。
 async function loadRegistry() {
   if (!existsSync(REGISTRY_DIR)) return [];
   const out = [];
   for (const p of await fsp.readdir(REGISTRY_DIR, { withFileTypes: true })) {
     if (!p.isDirectory()) continue;
     const platDir = join(REGISTRY_DIR, p.name);
+    const platThemePath = join(platDir, 'theme.json');
+    const platTheme = existsSync(platThemePath) ? (await readJson(platThemePath)).vars || {} : {};
     for (const c of await fsp.readdir(platDir, { withFileTypes: true })) {
       if (!c.isDirectory()) continue;
       const specPath = join(platDir, c.name, 'spec.json');
       if (!existsSync(specPath)) continue;
       const spec = await readJson(specPath);
       const themePath = join(platDir, c.name, 'theme.json');
-      const theme = existsSync(themePath) ? await readJson(themePath) : null;
+      const ownTheme = existsSync(themePath) ? (await readJson(themePath)).vars || {} : {};
       out.push({
         id: spec.id || c.name,
         platform: spec.platform || p.name,
@@ -92,7 +97,7 @@ async function loadRegistry() {
         repo: spec.repo || null,
         code: spec.code || null,
         preview: spec.preview || null,
-        theme: theme?.vars || {},
+        theme: { ...platTheme, ...ownTheme },
       });
     }
   }

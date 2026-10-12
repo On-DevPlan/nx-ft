@@ -95,11 +95,9 @@ export default function CatalogView() {
   }, [manifest, chainOf]);
 
   // 选中态进 store（持久化）：catalogPack / catalogCat / docTokens（palette 轴）。
-  // 未选过时默认基座包 paper（多数 pack 的 spec 源头），而非字母序第一个。
+  // 未选过（或持久化指向已删的 pack，如旧默认 'paper'）→ 取 catalog 序第一个。
   const packs = Object.keys(manifest?.styles || {});
-  const activePack = byPack[ui.catalogPack]
-    ? ui.catalogPack
-    : (byPack.paper ? 'paper' : packs[0]);
+  const activePack = byPack[ui.catalogPack] ? ui.catalogPack : packs[0];
   const cats = byPack[activePack] || {};
   const catKeys = Object.keys(cats);
   // 「模板」tag：整页预览，不属于任何组件分类（保留值 @tpl）
@@ -204,7 +202,8 @@ export default function CatalogView() {
 
             {/* 真实渲染：Flutter Web playground（懒加载——选中本组件才挂 iframe）。
                 单 playground 模式：key 稳定 + 永不刷 src，组件/变体切换走 postMessage，
-                Flutter 端状态切换、引擎不重载。当前已实现 button 与 tag。 */}
+                Flutter 端状态切换、引擎不重载。当前已实现 button / tag / card，
+                控件条由 spec.props 驱动。 */}
             {activeRegistry.preview?.type === 'flutter-web' && (
               <div className="card" style={{ overflow: 'hidden' }}>
                 <div className="colhead">

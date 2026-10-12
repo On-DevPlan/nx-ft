@@ -41,6 +41,7 @@ class _Showcase extends StatefulWidget {
 
 class _ShowcaseState extends State<_Showcase> {
   String _id = '';
+  String _title = ''; // 组件展示名（payload.title / URL title 参数），label 用它而非 id
   Map<String, String> _props = {};
 
   @override
@@ -73,6 +74,7 @@ class _ShowcaseState extends State<_Showcase> {
       if (payload is! Map) return;
       setState(() {
         _id = (payload['component'] as String?) ?? _id;
+        _title = (payload['title'] as String?) ?? _title;
         _props = (payload['props'] as Map?)?.map(
               (k, v) => MapEntry(k.toString(), v.toString()),
             ) ??
@@ -89,12 +91,16 @@ class _ShowcaseState extends State<_Showcase> {
     final m = RegExp(r'#/preview/([\w-]+)\?([^#]*)').firstMatch(url);
     if (m == null) return;
     _id = m.group(1)!;
-    _props = Uri.splitQueryString(m.group(2) ?? '');
+    final q = Uri.splitQueryString(m.group(2) ?? '');
+    _props = q;
+    _title = q['title'] ?? _id;
   }
 
   void _syncTitle() {
-    // 状态外显：面板/自动化可直接读 iframe 的 document.title 观测渲染态
-    document.title = _id.isEmpty ? 'HxShowcase · ready' : 'HxShowcase · $_id (${_props['variant'] ?? ''})';
+    // 状态外显：面板/自动化可直接读 iframe 的 document.title 观测渲染态。
+    // 带上全部 props（而非只 variant）——任何控件变化在这里都可观测。
+    final state = _props.isEmpty ? '' : _props.entries.map((e) => '${e.key}=${e.value}').join(' · ');
+    document.title = _id.isEmpty ? 'HxShowcase · ready' : 'HxShowcase · $_id ($state)';
   }
 
   @override
@@ -103,26 +109,32 @@ class _ShowcaseState extends State<_Showcase> {
     return Scaffold(
       body: SafeArea(
         child: Center(
-          child: _id.isEmpty ? const _Ready() : _dispatch(_id, _props),
+          child: _id.isEmpty ? const _Ready() : _dispatch(_id, _title, _props),
         ),
       ),
     );
   }
 
-  Widget _dispatch(String id, Map<String, String> p) {
+  Widget _dispatch(String id, String title, Map<String, String> p) {
     return switch (id) {
       'button' => HxButton(
         variant: p['variant'] ?? 'primary',
         size: p['size'] ?? 'md',
         disabled: p['disabled'] == 'true',
-        label: id,
+        label: title,
       ),
       'tag' => HxTag(
         variant: p['variant'] ?? 'info',
         size: p['size'] ?? 'md',
-        label: id,
+        label: title,
       ),
-      _ => _Placeholder(reason: '组件 $id 尚未在本 showcase 中实现（dispatch 已知 id：button / tag）'),
+      'card' => HxCard(
+        variant: p['variant'] ?? 'titled',
+        padded: p['padded'] != 'false',
+        title: p['head'] ?? '标题',
+        child: 'HxCard 内容区——1px 边框圈出版心，结构契约与 web 端 card 对齐。',
+      ),
+      _ => _Placeholder(reason: '组件 $id 尚未在本 showcase 中实现（dispatch 已知 id：button / tag / card）'),
     };
   }
 }

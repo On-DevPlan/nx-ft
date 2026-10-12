@@ -79,19 +79,19 @@ export default function StudioHome() {
       <div className="card">
         <div className="colhead">Agent I/O 入口</div>
         <div className="row">
-          <div className="name mono">GET /api/studio/manifest[?style=paper]</div>
+          <div className="name mono">GET /api/studio/manifest[?style=boxed]</div>
           <div className="desc muted">机器可读清单——agent 一个请求摸清整库（多包聚合，每个组件带 pack 字段）</div>
         </div>
         <div className="row">
-          <div className="name mono">{`GET /api/studio/component/<id>?style=paper&tokens=light`}</div>
-          <div className="desc muted">单件深读：spec + 该 pack 的 css + 继承自 extends 链的 React 绑定</div>
+          <div className="name mono">{`GET /api/studio/component/<id>[?style=boxed&tokens=light]`}</div>
+          <div className="desc muted">单件深读：spec + 该 pack 的 css + 继承自 extends 链的 React 绑定（style 缺省取首个风格包）</div>
         </div>
         <div className="row">
           <div className="name mono">GET /api/studio/packs</div>
           <div className="desc muted">已安装风格包清单（含 extends 关系）</div>
         </div>
         <div className="row">
-          <div className="name mono">{`GET /api/studio/preview/<id>?style=paper`}</div>
+          <div className="name mono">GET /api/studio/preview/&lt;id&gt;?style=boxed</div>
           <div className="desc muted">渲染好的自包含 HTML 片段（无浏览器依赖）</div>
         </div>
         <CliHints command="{name} skill install" note="离线通道：把库的契约与用法装给本机 agent" />

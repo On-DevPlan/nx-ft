@@ -1,0 +1,25 @@
+{
+  "id": "tag",
+  "platform": "flutter",
+  "archetype": "tag",
+  "title": "标签",
+  "category": "display",
+  "description": "HxTag：状态徽章。圆角胶囊，info/ok/warn/err 四种状态色（theme 的 color-mix 落成具体色值，light/dark 都可读）。",
+  "props": {
+    "variant": {
+      "type": "enum",
+      "values": ["info", "ok", "warn", "err"],
+      "default": "info",
+      "description": "状态色：info 信息、ok 成功、warn 警告、err 错误"
+    },
+    "size": {
+      "type": "enum",
+      "values": ["md", "sm"],
+      "default": "md",
+      "description": "尺寸：md 20px、sm 18px 高"
+    }
+  },
+  "repo": "https://github.com/On-DevPlan/hx-flutter",
+  "preview": { "type": "flutter-web", "entry": "/flutter/" },
+  "code": "HxTag(\n  variant: HxVariant.info,\n  size: HxSize.md,\n  label: '进行中',\n)"
+}
