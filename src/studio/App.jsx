@@ -41,7 +41,7 @@ export default function App() {
   }, [patchUi]);
 
   const current = views.find((v) => v.id === ui.view) || views[0];
-  const appName = boot?.app?.name || 'nx-se';
+  const appName = boot?.app?.name || 'nx-ft';
 
   return (
     <>

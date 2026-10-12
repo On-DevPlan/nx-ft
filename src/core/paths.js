@@ -1,19 +1,19 @@
 // 路径与安全校验：项目里所有「东西放哪」都从这里取，不在别处拼字符串。
 //
 // ⚠️ 本文件是生成器的**参数化中心**——新项目由模板生成时，只有这里的
-// nx-se / nx-se / 多风格 UI 组件库 + agent-facing studio / 7881 被替换，其余文件一律引用这些常量。
+// nx-ft / nx-ft / 多风格 UI 组件库 + agent-facing studio / 7881 被替换，其余文件一律引用这些常量。
 // 要加新常量请加在这里，不要在别处写字符串字面量。
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { badInput } from './errors/index.js';
 
 // ---- 项目标识 ----
-export const APP_NAME = 'nx-se';
-export const APP_TITLE = 'nx-se';
+export const APP_NAME = 'nx-ft';
+export const APP_TITLE = 'nx-ft';
 export const APP_DESC = '多风格 UI 组件库 + agent-facing studio';
 
 // ---- 数据目录（用户主目录下，可用环境变量覆盖）----
-export const APP_DIR = join(homedir(), '.nx-se');
+export const APP_DIR = join(homedir(), '.nx-ft');
 export const STORE_PATH = join(APP_DIR, 'store.json');
 
 // ---- 端口 ----
@@ -21,7 +21,7 @@ export const STORE_PATH = join(APP_DIR, 'store.json');
 export const DEFAULT_PORT = 7881;
 
 // 测试必须能指向临时目录，否则会写脏用户的真实数据。
-export const STORE_ENV = 'NX_SE_STORE';
+export const STORE_ENV = 'NX_FT_STORE';
 
 export function storePathFromEnv() {
   return process.env[STORE_ENV] || STORE_PATH;

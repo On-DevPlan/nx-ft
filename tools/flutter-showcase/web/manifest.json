@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "On-DevPlan HxButton showcase (nx-se Flutter registry component)",
+    "description": "On-DevPlan HxButton showcase (nx-ft Flutter registry component)",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const exec = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const BIN = join(ROOT, 'bin', 'se.mjs');
+const BIN = join(ROOT, 'bin', 'ft.mjs');
 
 function run(cmdline, env = {}) {
   // execFile 不走 shell，必须把命令串拆成 token 数组——
@@ -24,13 +24,13 @@ function run(cmdline, env = {}) {
 
 // 每个测试独立的 store，防写脏真实数据
 function isolatedEnv() {
-  const dir = mkdtempSync(join(tmpdir(), 'nx-se-smoke-'));
-  // 用方括号 + 字符串字面量：TS 不会试图把 NX_SE 解析成标识符，
-  // 生成器替换后仍得到合法的属性名（'NX_SE_STORE' → 'NX_SE_STORE'）。
-  return { env: { ['NX_SE_STORE']: join(dir, 'store.json') }, dir };
+  const dir = mkdtempSync(join(tmpdir(), 'nx-ft-smoke-'));
+  // 用方括号 + 字符串字面量：TS 不会试图把 NX_FT 解析成标识符，
+  // 生成器替换后仍得到合法的属性名（'NX_FT_STORE' → 'NX_FT_STORE'）。
+  return { env: { ['NX_FT_STORE']: join(dir, 'store.json') }, dir };
 }
 
-test(`version 输出裸版本号（可被 V=$(nx-se version) 消费）`, async () => {
+test(`version 输出裸版本号（可被 V=$(nx-ft version) 消费）`, async () => {
   const { stdout } = await run('version');
   assert.match(stdout.trim(), /^\d+\.\d+\.\d+$/);
 });

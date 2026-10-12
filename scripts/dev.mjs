@@ -17,8 +17,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = dirname(fileURLToPath(import.meta.url)).replace(/[\\/]scripts$/, '');
 const NODE = process.execPath;
 
-const BACKEND_PORT = Number(process.env.NX_SE_PORT) || 7881;
-const VITE_PORT = Number(process.env.NX_SE_VITE_PORT) || 7882;
+const BACKEND_PORT = Number(process.env.NX_FT_PORT) || 7881;
+const VITE_PORT = Number(process.env.NX_FT_VITE_PORT) || 7882;
 
 const VITE_BIN = join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
 if (!existsSync(VITE_BIN)) {
@@ -92,8 +92,8 @@ if (!ready) {
   );
 }
 
-start('serve', [join(ROOT, 'bin', 'se.mjs'), 'serve', '--no-open'], {
-  NX_SE_PORT: String(BACKEND_PORT),
+start('serve', [join(ROOT, 'bin', 'ft.mjs'), 'serve', '--no-open'], {
+  NX_FT_PORT: String(BACKEND_PORT),
 });
 
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {

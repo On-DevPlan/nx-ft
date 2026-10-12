@@ -6,7 +6,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api } from './api/client.js';
 
-const LS_KEY = 'nx-se-ui';
+const LS_KEY = 'nx-ft-ui';
 
 const DEFAULT_UI = {
   view: 'studio',

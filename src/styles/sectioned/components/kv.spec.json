@@ -16,6 +16,6 @@
   },
   "tokens": ["--ink", "--mid", "--soft-2"],
   "examples": [
-    { "title": "basic", "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>" }
+    { "title": "basic", "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-ft</dd></div></dl>" }
   ]
 }

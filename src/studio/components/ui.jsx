@@ -138,7 +138,7 @@ export class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('[nx-se] 视图渲染失败:', error, info);
+    console.error('[nx-ft] 视图渲染失败:', error, info);
   }
 
   render() {

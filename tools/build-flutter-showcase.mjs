@@ -11,8 +11,8 @@ import { readFileSync, writeFileSync, rmSync, cpSync, existsSync } from 'node:fs
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const HERE = dirname(fileURLToPath(import.meta.url)); // nx-se/tools
-const ROOT = resolve(HERE, '..'); // nx-se（HERE 已在 tools/ 里，上退一级即仓库根）
+const HERE = dirname(fileURLToPath(import.meta.url)); // nx-ft/tools
+const ROOT = resolve(HERE, '..'); // nx-ft（HERE 已在 tools/ 里，上退一级即仓库根）
 const SHOWCASE = join(HERE, 'flutter-showcase');
 const OUT = join(ROOT, 'src', 'studio', 'public', 'flutter');
 

@@ -1,4 +1,4 @@
-# nx-se
+# nx-ft
 
 多风格 UI 组件库 + agent-facing studio
 
@@ -14,12 +14,12 @@ pnpm dev    # vite + studio serve，一个 ctrl-c 一起退
 
 | | |
 | --- | --- |
-| **CLI 命令表** | `nx-se help`（或 `routes` 看命令 ↔ 路由对照） |
+| **CLI 命令表** | `nx-ft help`（或 `routes` 看命令 ↔ 路由对照） |
 | **Web 面板** | `pnpm dev` 后打开 `http://127.0.0.1:7881` |
 | **Agent I/O** | `GET /api/studio/manifest`（机器可读清单） · `GET /api/studio/component/:id`（单件深读） · `GET /api/studio/preview/:id`（HTML 片段） |
-| **离线通道** | `nx-se skill install` → `~/.claude/skills/<name>/` |
-| **数据** | `~/.nx-se/store.json`（环境变量 `NX_SE_STORE` 覆盖） |
-| **自检** | `nx-se health` · `nx-se studio doctor` |
+| **离线通道** | `nx-ft skill install` → `~/.claude/skills/<name>/` |
+| **数据** | `~/.nx-ft/store.json`（环境变量 `NX_FT_STORE` 覆盖） |
+| **自检** | `nx-ft health` · `nx-ft studio doctor` |
 
 ## 结构
 
@@ -82,7 +82,7 @@ CI 自动构建、测试、`npm publish --provenance`（需要 `NPM_TOKEN` secre
 
 ```bash
 # 把库的契约与用法装给本机 agent（离线）
-nx-se skill install
+nx-ft skill install
 
 # 在线拿清单（一个请求摸清整库；?style= 可选，缺省取首个风格包）
 curl http://127.0.0.1:7881/api/studio/manifest?style=boxed | jq

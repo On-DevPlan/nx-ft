@@ -1,6 +1,6 @@
 # hx_showcase
 
-On-DevPlan HxButton showcase (nx-se Flutter registry component)
+On-DevPlan HxButton showcase (nx-ft Flutter registry component)
 
 ## Getting Started
 

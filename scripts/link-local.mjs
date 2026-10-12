@@ -1,13 +1,13 @@
-// 本地开发 shim：把全局 `nx-se` 指向本仓库，改完代码立刻生效，不用发版。
+// 本地开发 shim：把全局 `nx-ft` 指向本仓库，改完代码立刻生效，不用发版。
 //
 // 为什么要脚本而不是让人手敲 `npm link`：
 //   Windows 上 npm link 会在 npm 全局 prefix 下建一个 cmd shim，而这个 prefix
 //   不一定在用户真实 PATH 上（WorkBuddy 注入的 PATH 与注册表那份不同）——
-//   link 完 `nx-se` 在用户自己的终端里仍然 command not found，而且没人会注意到。
+//   link 完 `nx-ft` 在用户自己的终端里仍然 command not found，而且没人会注意到。
 //   脚本把这件事显式化：先探测现状，再选一条能真正生效的路子。
 //
 // 覆盖式 shim（默认）：
-//   用户敲 `nx-se` 解析到的真实落点（比如 volta\bin\nx-se.cmd）本来就在 PATH 上，
+//   用户敲 `nx-ft` 解析到的真实落点（比如 volta\bin\nx-ft.cmd）本来就在 PATH 上，
 //   把那里的启动器备份后原地替换成转发器。PATH 一字不动，已开着的终端立即生效；
 //   volta / npm / pnpm 管的文本 shim 一视同仁，跟包管理器无关。
 //   覆盖唯一的病根风险是「原件丢了」——覆盖前把原内容逐字节存进安装清单（RECEIPT），
@@ -55,13 +55,13 @@ function samePath(a, b) {
 
 function detect() {
   // 不用 `where`/`which`：解析输出在不同 shell 下格式不一。
-  // 更可靠的是直接看 PATH 上的候选目录里有没有 nx-se 可执行文件。
+  // 更可靠的是直接看 PATH 上的候选目录里有没有 nx-ft 可执行文件。
   const exts = IS_WIN ? ['.cmd', '.exe', '.bat', ''] : [''];
   const dirs = (process.env.PATH || '').split(IS_WIN ? ';' : ':').filter(Boolean);
   const paths = [];
   for (const d of dirs) {
     for (const ext of exts) {
-      const f = join(d, 'nx-se' + ext);
+      const f = join(d, 'nx-ft' + ext);
       if (existsSync(f)) { paths.push(f); break; }
     }
   }
@@ -177,19 +177,19 @@ function voltaInstall() {
 
 // ─── 路子二（默认）：覆盖式 shim —— 原地替换命令的真实落点 ─────────
 
-const SHIM_TAG = 'nx-se-local-shim';
+const SHIM_TAG = 'nx-ft-local-shim';
 
-// dev 工件目录：`~/.nx-se/dev/`。清单与兜底 shim 都放这里——应用数据根目录本就存在
+// dev 工件目录：`~/.nx-ft/dev/`。清单与兜底 shim 都放这里——应用数据根目录本就存在
 // （paths.js 的 appHome），不再为 dev shim 在用户空间另声明一个顶层目录。
-// 刻意不走 appHome()（不随 NX_SE_HOME 漂移）：清单记录的是**机器级** shim 状态，
-// 归属这台机器的 `~/nx-se/`，不归属某个会话的数据目录。
+// 刻意不走 appHome()（不随 NX_FT_HOME 漂移）：清单记录的是**机器级** shim 状态，
+// 归属这台机器的 `~/nx-ft/`，不归属某个会话的数据目录。
 function devDir() {
   const home = process.env.USERPROFILE || process.env.HOME || '';
   return join(home, pkg.name, 'dev');
 }
 
-// 按 PATH 顺序找 nx-se 的真实落点：第一个含有任何 nx-se 变体的目录，
-// 就是用户敲 `nx-se` 时实际命中的那个。返回该目录下所有可文本覆盖的启动器变体
+// 按 PATH 顺序找 nx-ft 的真实落点：第一个含有任何 nx-ft 变体的目录，
+// 就是用户敲 `nx-ft` 时实际命中的那个。返回该目录下所有可文本覆盖的启动器变体
 // （无扩展名 / .cmd / .ps1 / .bat，分别覆盖 cmd、PowerShell、Git Bash 三种调用方）。
 // 只碰文本启动器；只有 .exe 的目录没法文本转发，单独报告给上层走兜底。
 function resolveTargets() {
@@ -197,9 +197,9 @@ function resolveTargets() {
   for (const d of dirs) {
     if (/%[^%]+%/.test(d) || /WindowsApps/i.test(d)) continue; // 变量无法保证解析 / 商店 reparse 点，不碰
     const textExts = IS_WIN ? ['', '.cmd', '.ps1', '.bat'] : [''];
-    const files = textExts.map((e) => join(d, 'nx-se' + e)).filter(existsSync);
+    const files = textExts.map((e) => join(d, 'nx-ft' + e)).filter(existsSync);
     if (files.length) return { type: 'text', dir: d, files };
-    const exe = join(d, 'nx-se.exe');
+    const exe = join(d, 'nx-ft.exe');
     if (existsSync(exe)) return { type: 'exe', dir: d, file: exe };
   }
   return null;
@@ -223,7 +223,7 @@ function realNodePath() {
 }
 
 function shimBodyFor(file) {
-  const bin = join(ROOT, 'bin', 'nx-se.mjs').replace(/\\/g, '/');
+  const bin = join(ROOT, 'bin', 'nx-ft.mjs').replace(/\\/g, '/');
   const nodeExe = realNodePath();
   // 回退是必须的：node 升级会换版本目录（…/image/node/24.18.0/node.exe），
   // 写死的路径就失效了。失效时退回 PATH 上的 node —— 至少保持可用（代价是多行
@@ -247,10 +247,10 @@ function shimInstall() {
   // --auto（build 链路）：没有现成落点就什么都不做——不新建目录、不动 PATH
   if (!found) {
     if (auto) {
-      console.log('[link:local] --auto：PATH 上没有现成的 nx-se，跳过（不新建、不动 PATH）。');
+      console.log('[link:local] --auto：PATH 上没有现成的 nx-ft，跳过（不新建、不动 PATH）。');
       return true;
     }
-    console.log('[link:local] PATH 上没有现成的 nx-se 可覆盖。');
+    console.log('[link:local] PATH 上没有现成的 nx-ft 可覆盖。');
     return shimInstallFallback();
   }
   if (found.type === 'exe') {
@@ -300,15 +300,15 @@ function shimInstall() {
   }
   writeReceipt(receipt);
 
-  console.log(`[link:local] 验证: nx-se version   # 应显示 v${pkg.version}（无需重开终端）`);
+  console.log(`[link:local] 验证: nx-ft version   # 应显示 v${pkg.version}（无需重开终端）`);
   console.log('[link:local] 还原: pnpm run unlink:local');
   return true;
 }
 
-// 兜底落点（只在 PATH 上没有可覆盖的 nx-se 时使用）：**绝不写进包管理器自己的目录。**
+// 兜底落点（只在 PATH 上没有可覆盖的 nx-ft 时使用）：**绝不写进包管理器自己的目录。**
 // 那里的文件归包管理器管，更新时可能被清掉或冲突。优先级：
 //   1. 用户 PATH 上排在现有条目前的既有干净目录（不改注册表）
-//   2. 新建 ~/nx-se/dev + 插到用户 PATH 最前面（走防御性 addToUserPath）
+//   2. 新建 ~/nx-ft/dev + 插到用户 PATH 最前面（走防御性 addToUserPath）
 function pickShimDir() {
   const home = process.env.USERPROFILE || process.env.HOME || '';
   if (!IS_WIN) {
@@ -342,8 +342,8 @@ function pickShimDir() {
 
 function shimInstallFallback() {
   const { dir, onPath, source, needPathEdit } = pickShimDir();
-  const cmdFile = join(dir, 'nx-se.cmd');
-  const shFile = join(dir, 'nx-se');
+  const cmdFile = join(dir, 'nx-ft.cmd');
+  const shFile = join(dir, 'nx-ft');
   console.log(`[link:local] 兜底落点：${source}`);
   console.log(`  ${cmdFile}   (cmd / PowerShell)`);
   console.log(`  ${shFile}    (Git Bash)`);
@@ -374,7 +374,7 @@ function shimInstallFallback() {
     installedAt: new Date().toISOString(),
   });
 
-  console.log(`[link:local] 验证: nx-se version   # 应显示 v${pkg.version}`);
+  console.log(`[link:local] 验证: nx-ft version   # 应显示 v${pkg.version}`);
   console.log('[link:local] 还原: pnpm run unlink:local');
   return pathOk;
 }
@@ -463,7 +463,7 @@ function shimUnlink() {
     // 兜底：从清单的默认目录位置找一次
     const guess = devDir();
     let removed = 0;
-    for (const f of [join(guess, 'nx-se.cmd'), join(guess, 'nx-se')]) {
+    for (const f of [join(guess, 'nx-ft.cmd'), join(guess, 'nx-ft')]) {
       if (existsSync(f) && readFileSync(f, 'utf8').includes(SHIM_TAG)) {
         rmSync(f); removed++;
         console.log(`[link:local] 兜底删除: ${f}`);
@@ -493,7 +493,7 @@ function shimUnlink() {
   }
   if (receipt.pathEdit) removeFromUserPath(receipt.pathEdit);
   clearReceipt();
-  console.log('[link:local] 还原完成。nx-se 回到安装前的原件（PATH 从未动过）。');
+  console.log('[link:local] 还原完成。nx-ft 回到安装前的原件（PATH 从未动过）。');
   return true;
 }
 
@@ -502,7 +502,7 @@ function shimUnlink() {
 const state = detect();
 
 console.log(`仓库:      ${ROOT}  (v${pkg.version})`);
-console.log(`当前 nx-se: ${state.paths.join('\n            ') || '(PATH 上找不到)'}`);
+console.log(`当前 nx-ft: ${state.paths.join('\n            ') || '(PATH 上找不到)'}`);
 if (state.voltaVersion) console.log(`volta 装的是: v${state.voltaVersion}`);
 console.log(`是否已指向本仓库: ${state.isLocal ? '是' : '否'}`);
 console.log('');

@@ -74,8 +74,8 @@ test('view.jsx 只 import 前端壳与 react（不拖 node 侧代码进浏览器
 // 与模板 id 同名的 SKILL.md 目录若被改名，这里会先红。
 
 test('SKILL.md 存在且速查表覆盖核心命令', () => {
-  const skillPath = join(ROOT, 'assets', 'nx-se', 'SKILL.md');
-  assert.ok(existsSync(skillPath), `缺随包 skill：assets/nx-se/SKILL.md（skill install 会 NOT_FOUND）`);
+  const skillPath = join(ROOT, 'assets', 'nx-ft', 'SKILL.md');
+  assert.ok(existsSync(skillPath), `缺随包 skill：assets/nx-ft/SKILL.md（skill install 会 NOT_FOUND）`);
   const doc = readFileSync(skillPath, 'utf8');
   for (const cmd of ['routes', 'help', 'health', 'studio']) {
     assert.ok(

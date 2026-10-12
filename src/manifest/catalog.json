@@ -1,7 +1,7 @@
 {
   "$schema": "ui-kit/catalog.schema.json",
   "version": "0.1.0",
-  "generated": "2026-10-12T07:47:54.320Z",
+  "generated": "2026-10-12T11:11:55.028Z",
   "components": [
     {
       "id": "btn",
@@ -141,7 +141,7 @@
       "examples": [
         {
           "title": "basic",
-          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
+          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-ft</dd></div></dl>"
         }
       ],
       "pack": "boxed",
@@ -325,7 +325,7 @@
       "examples": [
         {
           "title": "basic",
-          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
+          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-ft</dd></div></dl>"
         }
       ],
       "pack": "hairline",
@@ -509,7 +509,7 @@
       "examples": [
         {
           "title": "basic",
-          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
+          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-ft</dd></div></dl>"
         }
       ],
       "pack": "sectioned",
@@ -693,7 +693,7 @@
       "examples": [
         {
           "title": "basic",
-          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-se</dd></div></dl>"
+          "html": "<dl class=\"kv\"><div class=\"kv-row\"><dt>名称</dt><dd>nx-ft</dd></div></dl>"
         }
       ],
       "pack": "terminal",
