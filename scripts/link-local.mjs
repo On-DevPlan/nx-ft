@@ -34,6 +34,14 @@ const modeArg = argv.find((a) => a.startsWith('--mode='))?.slice(7);
 
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
+// 转发器要指向**真正的 CLI 入口**。路径从 package.json 的 bin 字段推导，不写死文件名。
+//
+// 这里原先写死 `bin/nx-ft.mjs`，而这个仓库的入口是 `bin/ft.mjs`——装出来的全局命令
+// 指向一个不存在的文件，一敲就是 MODULE_NOT_FOUND，而报错信息完全不指向本脚本。
+// 一份事实写两遍必然分叉，代价就是「shim 装上了，但用不了」。
+const BIN_REL = typeof pkg.bin === 'string' ? pkg.bin : (pkg.bin || {})[pkg.name] || '';
+const BIN_ABS = BIN_REL ? join(ROOT, BIN_REL) : '';
+
 function dirname0(url) {
   return new URL('.', url).pathname.replace(/^\/([A-Za-z]:)/, '$1').replace(/\/$/, '');
 }
@@ -223,7 +231,7 @@ function realNodePath() {
 }
 
 function shimBodyFor(file) {
-  const bin = join(ROOT, 'bin', 'nx-ft.mjs').replace(/\\/g, '/');
+  const bin = BIN_ABS.replace(/\\/g, '/');
   const nodeExe = realNodePath();
   // 回退是必须的：node 升级会换版本目录（…/image/node/24.18.0/node.exe），
   // 写死的路径就失效了。失效时退回 PATH 上的 node —— 至少保持可用（代价是多行
@@ -515,6 +523,14 @@ if (unlink) {
 }
 
 if (!yes) console.log('[link:local] 预览模式（--dry-run）——不会改动任何文件。\n');
+
+// 安装前先确认入口真的存在：宁可什么都不装，也不装一个注定报错的全局命令。
+// （--unlink 不受影响——还原不需要入口文件。）
+if (!unlink && !(BIN_ABS && existsSync(BIN_ABS))) {
+  console.error(`[link:local] 中止：package.json 的 bin 指向 "${BIN_REL || '(缺失)'}"，但仓库里没有这个文件。`);
+  console.error('  装一个指向不存在文件的 shim，只会得到一个「一敲就报错」的全局命令。');
+  process.exit(1);
+}
 
 const ok = unlink ? shimUnlink() : (mode === 'volta' ? voltaInstall() : shimInstall());
 if (!unlink && !yes) {

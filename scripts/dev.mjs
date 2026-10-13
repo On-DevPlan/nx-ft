@@ -81,6 +81,36 @@ async function waitForPort(port, { tries = 60, gapMs = 250 } = {}) {
   return false;
 }
 
+// 起进程之前先查端口。
+//
+// 端口被占时子进程会立刻退出，而本脚本只会含糊地报「某个子进程退出了」——
+// 用户看到的是「链路不通」，却完全找不到原因。实测踩过：上一次 serve 没退干净
+// 占着 7869，新的 dev 一起来就崩，而报错一个字都没提端口。
+// 提前查清、指名端口，比事后猜要省事得多。
+async function portBusy(port) {
+  const net = await import('node:net');
+  return new Promise((resolve) => {
+    const srv = net.createServer();
+    srv.once('error', (e) => resolve(e.code === 'EADDRINUSE'));
+    srv.once('listening', () => srv.close(() => resolve(false)));
+    srv.listen(port, '127.0.0.1');
+  });
+}
+
+for (const [port, label] of [
+  [BACKEND_PORT, '后端 serve'],
+  [VITE_PORT, 'vite dev server'],
+]) {
+  if (await portBusy(port)) {
+    console.error(`[dev] 端口 ${port} 被占用（${label}），已中止。`);
+    console.error(`      多半是上一次的 nx-ft serve / pnpm dev 没退干净。`);
+    console.error(`      查占用进程:  netstat -ano | findstr :${port}     （Windows）`);
+    console.error(`                   lsof -i :${port}                    （macOS / Linux）`);
+    console.error(`      或换一组端口:  NX_FT_PORT=${BACKEND_PORT + 100} NX_FT_VITE_PORT=${VITE_PORT + 100} pnpm dev`);
+    process.exit(1);
+  }
+}
+
 start('vite', [VITE_BIN, '--host', '127.0.0.1', '--strictPort', '--port', String(VITE_PORT)]);
 const ready = await waitForPort(VITE_PORT);
 
