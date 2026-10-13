@@ -59,8 +59,20 @@ jobs:
           git tag -a "${{ steps.pkg.outputs.tag }}" -m "Release ${{ steps.pkg.outputs.tag }}"
           git push origin "${{ steps.pkg.outputs.tag }}"
 
-      - name: 发布
+      - name: 升级 npm（staged 发布命令需要新版权 npm；node 20 自带的 npm 10 没有 npm stage）
+        run: npm install -g npm@latest
+
+      - name: 暂存发布
+        # NPM_TOKEN 是新式粒度令牌：注册表只允许它做 staged 发布（直接 publish 会 403 E_STAGE_REQUIRED）。
+        # 本步骤把版本上传到暂存区；去 npmjs.com 批准后才会真正上线。
         if: steps.check.outputs.published == 'false'
-        run: npm publish --provenance --access public
+        run: npm stage publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: 提示批准
+        if: steps.check.outputs.published == 'false'
+        run: |
+          echo "版本已提交到 npm 暂存区（staged）。"
+          echo "批准方式：npmjs.com → 包页 → Staged 标签页点 Approve；"
+          echo "或在已登录的终端执行：npm stage approve ${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}"
