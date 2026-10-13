@@ -28,13 +28,20 @@ export const ICON_SPEC = {
 };
 
 // 归一化档位：
-//   color   —— 只统一「几何容器 + 颜色」（viewBox / 去掉写死宽高 / currentColor）
-//   line    —— 在 color 基础上，补齐线性图标该有的根属性（fill=none / stroke / 线宽 / 线帽）
+//   auto    —— **默认**：按资源的实际形态自动判档（见 detectProfile）。
+//              用图标尺子量动画/插画会报一堆改不掉的问题，所以默认不套图标那套。
+//   line    —— 单色线性图标：全部颜色 → currentColor + 补齐描边根属性
 //   duotone —— 双色图标：**其中一个色是主题色**（换成 currentColor，跟着主题切换），
 //              其余色值是有意的点缀色，保留不动。用 --accent 指定哪个色值是主题色。
-// 分档是因为不是所有资源都是单色图标：一张插画不该被强行改成描边风格，
-// 一枚双色图标也不该被压成单色——那等于把设计意图抹掉。
-export const PROFILES = ['color', 'line', 'duotone'];
+//   color   —— 插画 / 品牌标 / 带动画的图形：颜色与线宽全部保留，只统一几何容器
+export const PROFILES = ['auto', 'line', 'duotone', 'color'];
+
+// 把档位落到具体一档：auto 交给 detectProfile（定义在下方，这里只做字符串归一）
+function resolveProfile(profile, src) {
+  const p = String(profile ?? 'auto');
+  if (p === 'auto') return detectProfile(src);
+  return PROFILES.includes(p) ? p : 'auto';
+}
 
 // 这些颜色值不算「写死」——它们本身就是「跟随外部/无填充」的意思。
 const INHERENT_COLORS = new Set([
@@ -166,8 +173,9 @@ export function parseSvg(code) {
 //
 // 每条 issue 都带 code（机器分支用）、level（error 阻断 / warn 提示）、
 // message（人读）与 hint（怎么改）。看板与 CLI 都只渲染这三样，不各自拼文案。
-export function auditSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) {
+export function auditSvg(code, { spec = ICON_SPEC, profile = 'auto' } = {}) {
   const meta = parseSvg(code);
+  profile = resolveProfile(profile, code);
   const issues = [];
   const add = (level, code, message, hint) => issues.push({ level, code, message, hint });
   // 线宽按「属性值 × 内容缩放」判定：32pt 网格迁到 24pt 时内容包在 scale(0.75) 里，
@@ -181,12 +189,24 @@ export function auditSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) {
     return { ok: false, issues, meta };
   }
 
-  if (meta.viewBox !== spec.viewBox) {
+  // 几何容器：图标要求「24pt 网格」；color 档（插画 / 动画）只要求**有** viewBox
+  // ——800×600 是画面尺寸，不是「没对齐的图标网格」，拿 24 去比就是莫名其妙的提醒。
+  const vbRequired = profile !== 'color';
+  if (vbRequired) {
+    if (meta.viewBox !== spec.viewBox) {
+      add(
+        'warn',
+        'viewbox',
+        meta.viewBox ? `viewBox 是 "${meta.viewBox}"，规范为 "${spec.viewBox}"` : '缺少 viewBox',
+        `svg spec fix 可批量补齐为 viewBox="${spec.viewBox}"`
+      );
+    }
+  } else if (!meta.viewBox) {
     add(
       'warn',
       'viewbox',
-      meta.viewBox ? `viewBox 是 "${meta.viewBox}"，规范为 "${spec.viewBox}"` : '缺少 viewBox',
-      `svg spec fix 可批量补齐为 viewBox="${spec.viewBox}"`
+      '缺少 viewBox，图形无法按容器缩放',
+      `补一个 viewBox="0 0 <内容宽> <内容高>"`
     );
   }
 
@@ -398,13 +418,18 @@ export function wrapScaleOf(src) {
 
 const round4 = (n) => Number(Number(n).toFixed(4));
 
-export function normalizeSvg(code, { spec = ICON_SPEC, profile = 'line', accent } = {}) {
+export function normalizeSvg(code, { spec = ICON_SPEC, profile = 'auto', accent } = {}) {
   const src = String(code ?? '');
   const before = parseSvg(src);
   if (!before.ok) {
     return { ok: false, error: before.error, code: src, changed: [] };
   }
-  if (profile === 'duotone' && !accent) {
+  const explicitProfile = String(profile ?? 'auto');
+  profile = resolveProfile(explicitProfile, src);
+  // 双色档要指定主题色才改得动；auto 判出双色却没给 accent 时**不改颜色**——
+  // 工具无从判断该换哪一色，猜就是破坏（明确传 --profile duotone 才是调用方要它改）。
+  const duotoneNeedsAccent = profile === 'duotone' && !accent;
+  if (duotoneNeedsAccent && explicitProfile === 'duotone') {
     return {
       ok: false,
       error: '双色档需要 --accent 指定哪个色值是主题色（例：--accent "#5B7CFA"）',
@@ -417,21 +442,25 @@ export function normalizeSvg(code, { spec = ICON_SPEC, profile = 'line', accent 
 
   // 0) 坐标系先算：缩放同时作用在线宽上，所以线宽目标要除以总缩放。
   //    总缩放 = 已有的 scale 包裹（重复归一化）× 本次映射（换 viewBox）。
+  //    color 档（插画 / 动画）**不迁 viewBox**：800×600 是画面尺寸，不是待对齐的图标网格。
   const target = parseViewBox(spec.viewBox);
   const from = sourceRect(before);
   let mapping = null;
-  const vbDiffers = before.viewBox !== spec.viewBox;
+  const vbDiffers = profile !== 'color' && before.viewBox !== spec.viewBox;
   if (target && from && vbDiffers) mapping = transformBetween(from, target);
   const k = round4(wrapScaleOf(out) * (mapping ? mapping.scale : 1));
   const swTarget = round4(spec.strokeWidth / k);
 
   // 1) 颜色
   if (profile === 'duotone') {
-    const c = unifyColors(out, spec.color, { only: accent });
-    if (c.hits) {
-      out = c.src;
-      changed.push(`主题色 ${accent} → ${spec.color}（${c.hits} 处，其余配色保留）`);
+    if (accent) {
+      const c = unifyColors(out, spec.color, { only: accent });
+      if (c.hits) {
+        out = c.src;
+        changed.push(`主题色 ${accent} → ${spec.color}（${c.hits} 处，其余配色保留）`);
+      }
     }
+    // 没给 accent：不动颜色（不知道哪一色是主题色，猜就是破坏）
   } else if (profile === 'line') {
     const c = unifyColors(out, spec.color);
     if (c.hits) {
@@ -467,7 +496,6 @@ export function normalizeSvg(code, { spec = ICON_SPEC, profile = 'line', accent 
   } else if (vbDiffers) {
     changed.push(`viewBox 保持 ${before.viewBox}（长宽比与规范不一致，强行替换会把图形压扁）`);
   }
-
   // 4) 根元素属性
   out = out.replace(/<svg\b[^>]*>/i, (tag) => {
     let t = tag;

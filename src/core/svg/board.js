@@ -25,9 +25,9 @@ function auditOf(svg) {
       meta: null,
     };
   }
-  // 按图标自身的形态选档位：双色图标（主题色 + 点缀色）不该被当成「写死了颜色」报错，
-  // 那是它的设计意图。档位判定见 spec.js 的 detectProfile。
-  return auditSvg(svg, { profile: detectProfile(svg) });
+  // 档位按资源形态自动判定（auditSvg 默认 auto）：双色图标的点缀色、插画与动画的
+  // 配色/线宽都是设计意图，不该被当成「写死了颜色」。档位规则见 spec.js 的 detectProfile。
+  return auditSvg(svg);
 }
 
 export function buildBoard(kind, { search = '', tags = [] } = {}) {
@@ -92,6 +92,7 @@ export function buildAssetDetail(kind, { group, name }) {
       svg,
       css: code.css || '',
       js: code.js || '',
+      profile: svg ? detectProfile(svg) : 'line',
       audit: { ok: audit.ok, issues: audit.issues },
     };
   });

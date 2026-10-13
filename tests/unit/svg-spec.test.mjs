@@ -50,7 +50,9 @@ test('auditSvg：合规图标零问题', () => {
 });
 
 test('auditSvg：逐条报出违规（viewBox / 写死尺寸 / 颜色 / 线宽）', () => {
-  const r = auditSvg(BAD);
+  // 显式 line 档：默认档是 auto（按形态判），这里的样本是「写死颜色的图标」，
+  // auto 会把它当纯配色图形——想按图标尺子量要明说，这正是 --profile 的用途。
+  const r = auditSvg(BAD, { profile: 'line' });
   const c = codes(r.issues);
   for (const want of ['viewbox', 'fixed-size', 'hardcoded-color', 'stroke-width']) {
     assert.ok(c.includes(want), `应报出 ${want}，实际: ${c.join(', ')}`);
@@ -95,7 +97,8 @@ test('collectColors：跳过 none / currentColor / url() / var()，抓到属性�
 test('auditSvg：子图元上的写死颜色也要报（根元素看着合规的那种）', () => {
   const src =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path fill="#5B7CFA" d="M4 12h16"/></svg>';
-  assert.ok(codes(auditSvg(src).issues).includes('hardcoded-color'));
+  // 显式 line 档：auto 会判成 duotone（有主题色 + 点缀色），那时点缀色是合法的
+  assert.ok(codes(auditSvg(src, { profile: 'line' }).issues).includes('hardcoded-color'));
 });
 
 test('线宽：var(--x) 是刻意的主题变量，不算不规范（否则永远修不掉）', () => {
@@ -136,7 +139,7 @@ test('审计与归一化对称（反向）：fix 不该动审计没报过的东�
 });
 
 test('normalizeSvg：换 viewBox 必须等比缩放内容，否则图标会放大 33%', () => {
-  const r = normalizeSvg(BAD);
+  const r = normalizeSvg(BAD, { profile: 'line' });
   assert.equal(r.ok, true);
   assert.match(r.code, /viewBox="0 0 24 24"/);
   assert.match(r.code, /<g transform="scale\(0\.75\)">/, '内容应被包进 ×0.75 的变换');
@@ -204,16 +207,40 @@ test('color 档不改颜色、不查线宽（插画 / 动画的配色与线宽�
   const codes = auditSvg(illo, { profile: 'color' }).issues.map((i) => i.code);
   assert.ok(!codes.includes('hardcoded-color'), 'color 档不该报写死颜色');
   assert.ok(!codes.includes('stroke-width'), 'color 档不该报线宽');
-  assert.ok(codes.includes('viewbox') || codes.includes('fixed-size'), '几何容器规则仍然查');
+  assert.ok(!codes.includes('viewbox'), '32×32 是画面尺寸，不是没对齐的图标网格');
 
-  // 归一化：只动几何容器，颜色与线宽原样
+  // 归一化：颜色、线宽、viewBox 全部原样（只保证「有 viewBox 能缩放」）
   const n = normalizeSvg(illo, { profile: 'color' });
   assert.equal(n.ok, true);
   assert.ok(n.code.includes('#f00') && n.code.includes('#0f0'), '配色必须保留');
   assert.ok(!n.code.includes('currentColor'), '不该塞 currentColor');
-  assert.equal(n.code.includes('viewBox="0 0 24 24"'), true, 'viewBox 仍按规范归一');
+  assert.ok(n.code.includes('viewBox="0 0 32 32"'), 'viewBox 保持原样');
 
   // 对照：line 档会把同一份内容改成描边风格
   const asLine = normalizeSvg(illo, { profile: 'line' });
   assert.ok(asLine.code.includes('currentColor'), 'line 档才统一成 currentColor');
+});
+
+test('默认档（auto）：动画不被图标尺子量（真实案例：SVG 动画被报一堆改不掉的问题）', () => {
+  const anim = [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">',
+    '<rect width="800" height="600" fill="#eaf4fb"/>',
+    '<g><animateTransform attributeName="transform" type="translate" from="0 0" to="-800 0" dur="24s" repeatCount="indefinite"/></g>',
+    '<line x1="0" y1="555" x2="800" y2="555" stroke="#b9c7d1" stroke-width="6"/>',
+    '</svg>',
+  ].join('');
+
+  // 不传 profile 时：动画按 color 档审——不该报写死颜色 / 线宽，也不该建议「按规范修复」
+  const auto = auditSvg(anim);
+  const codes = auto.issues.map((i) => i.code);
+  assert.ok(!codes.includes('hardcoded-color'), '动画的配色是内容，不该报');
+  assert.ok(!codes.includes('stroke-width'), '动画的线宽是内容，不该报');
+  assert.ok(!codes.includes('viewbox'), '800×600 是画面尺寸，不是没对齐的图标网格');
+
+  // 归一化也不该动它（auto 判 color：只统一几何容器，而它已经没有写死宽高）
+  const n = normalizeSvg(anim);
+  assert.equal(n.ok, true);
+  assert.deepEqual(n.changed, [], '不该有任何改动');
+  assert.ok(n.code.includes('#eaf4fb'), '配色原样保留');
+  assert.ok(n.code.includes('stroke-width="6"'), '线宽原样保留');
 });

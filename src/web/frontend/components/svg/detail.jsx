@@ -161,13 +161,18 @@ export default function Detail({ group, name }) {
               </div>
               <div className="detail-ident-meta">
                 <span className="tag">{data.stats.styles} 个风格</span>
-                {data.stats.issues ? (
+                {cur?.profile === 'color' ? (
+                  // 插画 / 品牌标 / 带动画的图形：不套图标那套判据
+                  <span className="tag">原色图形</span>
+                ) : data.stats.issues ? (
                   <span className="tag">{data.stats.issues} 项待规范</span>
                 ) : (
                   <span className="tag">全部合规</span>
                 )}
                 <span className="muted">
-                  规范 {data.spec.grid}pt · stroke {data.spec.strokeWidth} · {data.spec.color}
+                  {cur?.profile === 'color'
+                    ? '此类资源不套图标规范（配色与线宽原样保留，只校验几何容器）'
+                    : `规范 ${data.spec.grid}pt · stroke ${data.spec.strokeWidth} · ${data.spec.color}`}
                 </span>
               </div>
               <TagBar tags={data.tags} onAdd={ops.addTags} onRemove={ops.removeTag} />

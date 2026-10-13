@@ -31,7 +31,7 @@ function targetGroups(kind, group) {
   };
 }
 
-export function checkLibrary(kind, { group, profile = 'line', accent } = {}) {
+export function checkLibrary(kind, { group, profile = 'auto', accent } = {}) {
   assertKind(kind);
   if (!PROFILES.includes(profile)) throw badInput(`未知档位: ${profile}（可用: ${PROFILES.join(' | ')}）`);
   const { groups, hint } = targetGroups(kind, group);
@@ -63,7 +63,7 @@ export function checkLibrary(kind, { group, profile = 'line', accent } = {}) {
   return { status: 'ok', group: group || null, profile, spec: ICON_SPEC, stats, flagged: out };
 }
 
-export function fixLibrary(kind, { group, style, profile = 'line', accent, dryRun = false } = {}) {
+export function fixLibrary(kind, { group, style, profile = 'auto', accent, dryRun = false } = {}) {
   assertKind(kind);
   const { groups, hint } = targetGroups(kind, group);
   if (hint) return { status: 'ok', group, hint, changed: [], unchanged: 0, skipped: 0 };
