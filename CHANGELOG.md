@@ -2,6 +2,20 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.4.1
+
+### 发布流水线：修好 OIDC 发布（仅 CI，无功能改动）
+
+- npmjs.com 上为 `nx-ft` 配好 Trusted Publisher，发版由 GitHub OIDC 换票完成，
+  不再需要 `NPM_TOKEN` 秘密
+- 此前每次发布都失败在 registry 换票（`OIDC token exchange error - package not found`），
+  而 npm 把换票异常静默吞掉、面上只剩 `ENEEDAUTH`：之前那些「发布成功」都是
+  人工先手工 `npm publish`、流水线再因幂等跳过发布而空跑出来的假绿
+- 新增 OIDC 预检步骤：走 npm 原生取票路径（`npm publish --dry-run`）验证信任关系，
+  要发布时失败即硬失败；`workflow_dispatch` 可手动触发验证，不必等下次发版
+- actions 升到 node24 运行时（checkout v7 / setup-node v7 / pnpm-action-setup v6），
+  消掉 Node 20 降级告警
+
 ## 0.4.0
 
 ### 面板：HTML / SVG 两个 tab 统一为网盘式浏览
