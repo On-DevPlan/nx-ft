@@ -66,6 +66,17 @@ jobs:
       - name: 升级 npm（Trusted Publishing 需 npm ≥ 11.5.1）
         run: npm install -g npm@latest
 
+      - name: OIDC 预检（Trusted Publishing 排查用；不打印令牌本体）
+        run: |
+          echo "npm 版本: $(npm --version)"
+          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+            echo "::error::OIDC 环境缺失（检查 permissions: id-token: write）"
+          else
+            echo "OIDC 环境: 已注入"
+            LEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" | wc -c)
+            if [ "$LEN" -gt 50 ]; then echo "ID token 获取: 成功"; else echo "::error::ID token 获取失败"; fi
+          fi
+
       - name: 发布（OIDC，无 token）
         if: steps.check.outputs.published == 'false'
         run: npm publish --provenance --access public
