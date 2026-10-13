@@ -31,7 +31,7 @@ function targetGroups(kind, group) {
   };
 }
 
-export function checkLibrary(kind, { group, profile = 'line' } = {}) {
+export function checkLibrary(kind, { group, profile = 'line', accent } = {}) {
   assertKind(kind);
   if (!PROFILES.includes(profile)) throw badInput(`未知档位: ${profile}（可用: ${PROFILES.join(' | ')}）`);
   const { groups, hint } = targetGroups(kind, group);
@@ -42,7 +42,7 @@ export function checkLibrary(kind, { group, profile = 'line' } = {}) {
     for (const a of g.assets) {
       const style = a.activeStyle || Object.keys(a.styles)[0];
       const svg = style ? st.readCodeFiles(kind, g.path, a.name, style, SLOTS).svg || '' : '';
-      const audit = auditSvg(svg, { profile });
+      const audit = auditSvg(svg, { profile, accent });
       stats.assets++;
       stats.issues += audit.issues.length;
       if (audit.issues.length) stats.flagged++;
@@ -63,7 +63,7 @@ export function checkLibrary(kind, { group, profile = 'line' } = {}) {
   return { status: 'ok', group: group || null, profile, spec: ICON_SPEC, stats, flagged: out };
 }
 
-export function fixLibrary(kind, { group, style, profile = 'line', dryRun = false } = {}) {
+export function fixLibrary(kind, { group, style, profile = 'line', accent, dryRun = false } = {}) {
   assertKind(kind);
   const { groups, hint } = targetGroups(kind, group);
   if (hint) return { status: 'ok', group, hint, changed: [], unchanged: 0, skipped: 0 };
@@ -83,7 +83,7 @@ export function fixLibrary(kind, { group, style, profile = 'line', dryRun = fals
         continue;
       }
       const before = st.readCodeFiles(kind, g.path, a.name, targetStyle, SLOTS).svg || '';
-      const norm = normalizeSvg(before, { profile });
+      const norm = normalizeSvg(before, { profile, accent });
       if (!norm.ok) {
         failed.push({ group: g.path, name: a.name, reason: norm.error });
         continue;

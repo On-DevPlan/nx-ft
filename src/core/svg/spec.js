@@ -28,10 +28,13 @@ export const ICON_SPEC = {
 };
 
 // 归一化档位：
-//   color —— 只统一「几何容器 + 颜色」（viewBox / 去掉写死宽高 / currentColor）
-//   line  —— 在 color 基础上，补齐线性图标该有的根属性（fill=none / stroke / 线宽 / 线帽）
-// 分两档是因为不是所有资源都是图标：一张插画图形不该被强行改成描边风格。
-export const PROFILES = ['color', 'line'];
+//   color   —— 只统一「几何容器 + 颜色」（viewBox / 去掉写死宽高 / currentColor）
+//   line    —— 在 color 基础上，补齐线性图标该有的根属性（fill=none / stroke / 线宽 / 线帽）
+//   duotone —— 双色图标：**其中一个色是主题色**（换成 currentColor，跟着主题切换），
+//              其余色值是有意的点缀色，保留不动。用 --accent 指定哪个色值是主题色。
+// 分档是因为不是所有资源都是单色图标：一张插画不该被强行改成描边风格，
+// 一枚双色图标也不该被压成单色——那等于把设计意图抹掉。
+export const PROFILES = ['color', 'line', 'duotone'];
 
 // 这些颜色值不算「写死」——它们本身就是「跟随外部/无填充」的意思。
 const INHERENT_COLORS = new Set([
@@ -167,6 +170,11 @@ export function auditSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) {
   const meta = parseSvg(code);
   const issues = [];
   const add = (level, code, message, hint) => issues.push({ level, code, message, hint });
+  // 线宽按「属性值 × 内容缩放」判定：32pt 网格迁到 24pt 时内容包在 scale(0.75) 里，
+  // 里面写 2.4 渲染出来才是规范的 1.8。
+  const wrapK = wrapScaleOf(code);
+  const effSw = (v) => round4(Number(v) * wrapK);
+  const isSwOk = (v) => Math.abs(effSw(v) - spec.strokeWidth) < 1e-3;
 
   if (!meta.ok) {
     add('error', 'no-root', meta.error, '确保源码里有一个 <svg …> 根元素');
@@ -191,7 +199,19 @@ export function auditSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) {
     );
   }
 
-  if (meta.colors.length) {
+  if (profile === 'duotone') {
+    // 双色档：点缀色是有意保留的，不再报 hardcoded-color；
+    // 但**必须有一处 currentColor**——那是「主题色」，没有它这枚图标不会跟主题走。
+    const hasThemeColor = propHasCurrentColor(code);
+    if (!hasThemeColor) {
+      add(
+        'warn',
+        'no-theme-color',
+        '双色图标里没有 currentColor，主题色无处可跟',
+        `把作为主题色的那一色改成 ${spec.color}（svg spec fix --profile duotone --accent "#xxxxxx"）`
+      );
+    }
+  } else if (meta.colors.length) {
     add(
       'warn',
       'hardcoded-color',
@@ -216,19 +236,21 @@ export function auditSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) {
       add('warn', 'stroke', `根元素 stroke 应为 ${spec.color}（当前 ${meta.root.stroke ?? '未设置'}）`, '归一化会补上');
     }
     const sw = meta.root['stroke-width'];
-    if (sw !== undefined && !isVarRef(sw) && Number(sw) !== spec.strokeWidth) {
+    if (sw !== undefined && !isVarRef(sw) && !isSwOk(sw)) {
       add('warn', 'stroke-width', `stroke-width 是 ${sw}，规范为 ${spec.strokeWidth}`, '统一线宽是全组「看起来齐」的关键');
     }
   }
 
   // 线宽检查是全文档的，不属于任何档位：只要哪个图元比规范粗/细，
   // 放回一组图标里就会显出来——哪怕根元素写得完全合规。
-  const offSpec = (meta.strokeWidths || []).filter((v) => v !== String(spec.strokeWidth));
+  const offSpec = (meta.strokeWidths || []).filter((v) => !isSwOk(v));
   if (offSpec.length) {
     add(
       'warn',
       'stroke-width',
-      `有图元线宽为 ${offSpec.join(' / ')}，规范为 ${spec.strokeWidth}`,
+      wrapK === 1
+        ? `有图元线宽为 ${offSpec.join(' / ')}，规范为 ${spec.strokeWidth}`
+        : `有图元线宽为 ${offSpec.join(' / ')}（内容 ×${wrapK} 后渲染为 ${round4(Number(offSpec[0]) * wrapK)}），规范为 ${spec.strokeWidth}`,
       'svg spec fix 会把全文档的 stroke-width 统一为规范值'
     );
   }
@@ -248,15 +270,41 @@ function delAttr(tag, name) {
   return tag.replace(new RegExp('\\s' + name + '\\s*=\\s*("[^"]*"|\'[^\']*\')', 'gi'), '');
 }
 
+// 文档里是否有任何一处用了 currentColor（双色档的「主题色」判据）。
+function propHasCurrentColor(src) {
+  let hit = false;
+  String(src).replace(propRe(COLOR_PROP), (whole, raw) => {
+    if (unquote(raw).toLowerCase() === 'currentcolor') hit = true;
+    return whole;
+  });
+  return hit;
+}
+
+// 自动识别一枚图标属于哪个档位——面板/看板不能要求用户每次手动指定：
+//   duotone  有 currentColor（主题色）**且**还留着点缀色 → 双色图标，点缀色是有意的
+//   color    只有写死的色值，没有 currentColor → 纯配色图形（插画 / 品牌标）
+//   line     颜色全走 currentColor（或压根没写颜色）→ 单色线性图标
+export function detectProfile(src) {
+  const colors = collectColors(src);
+  const hasTheme = propHasCurrentColor(src);
+  if (colors.length && hasTheme) return 'duotone';
+  if (colors.length) return 'color';
+  return 'line';
+}
+
 // 把写死的颜色统一换成 currentColor。只动 fill / stroke / color 三处，
 // 且跳过 none / currentColor / url(#grad) / var(...) —— 误改这几类会直接改变图形语义。
 // 属性名与取值的模式与 collectColors 共用（见文件上方「定义只此一处」）。
-function unifyColors(src, target) {
+//
+// only：只替换等于这个值的颜色（双色档用——主题色换成 currentColor，点缀色原样保留）。
+function unifyColors(src, target, { only } = {}) {
   let hits = 0;
+  const want = only ? String(only).trim().toLowerCase() : null;
   const out = src.replace(propRe(COLOR_PROP), (whole, raw) => {
     const quote = /^["']/.test(raw) ? raw[0] : '';
     const v = unquote(raw);
     if (isInherentValue(v)) return whole;
+    if (want && v.toLowerCase() !== want) return whole; // 非主题色：保留
     hits++;
     return whole.replace(raw, `${quote}${target}${quote}`);
   });
@@ -328,46 +376,85 @@ function transformBetween(from, to) {
   return { scale: sx, transform: parts.join(' ') || null };
 }
 
-export function normalizeSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) {
+// 归一化会把内容包进 `<g transform="scale(k)">`（32pt 网格 → 24pt 时 k=0.75）。
+// 这个缩放同时作用在**线宽**上：里面写 2.4、渲染出来才是 1.8。
+// 所以「线宽是否合规」必须按「属性值 × 缩放」判定，否则会出现
+// 审计说合规、归一化却把它改细（真实踩过：29 枚图标渲染线宽只有 1.35）。
+export function wrapScaleOf(src) {
+  const m = String(src).match(/<svg\b[^>]*>\s*<g[^>]*transform\s*=\s*"[^"]*scale\(\s*([\d.]+)\s*\)/i);
+  const k = m ? Number(m[1]) : 1;
+  return Number.isFinite(k) && k > 0 ? k : 1;
+}
+
+const round4 = (n) => Number(Number(n).toFixed(4));
+
+export function normalizeSvg(code, { spec = ICON_SPEC, profile = 'line', accent } = {}) {
   const src = String(code ?? '');
   const before = parseSvg(src);
   if (!before.ok) {
     return { ok: false, error: before.error, code: src, changed: [] };
   }
+  if (profile === 'duotone' && !accent) {
+    return {
+      ok: false,
+      error: '双色档需要 --accent 指定哪个色值是主题色（例：--accent "#5B7CFA"）',
+      code: src,
+      changed: [],
+    };
+  }
   const changed = [];
   let out = src;
 
-  // 1) 颜色
-  const colors = unifyColors(out, spec.color);
-  if (colors.hits) {
-    out = colors.src;
-    changed.push(`颜色 → ${spec.color}（${colors.hits} 处）`);
-  }
-
-  // 2) 线宽（全文档，含子图元）
-  if (profile === 'line') {
-    const sw = unifyStrokeWidth(out, spec.strokeWidth);
-    if (sw.hits) {
-      out = sw.src;
-      changed.push(`stroke-width → ${spec.strokeWidth}（${sw.hits} 处）`);
-    }
-  }
-
-  // 3) 坐标系：换 viewBox 的同时必须把内容做等效变换（见 wrapContent 注释）。
+  // 0) 坐标系先算：缩放同时作用在线宽上，所以线宽目标要除以总缩放。
+  //    总缩放 = 已有的 scale 包裹（重复归一化）× 本次映射（换 viewBox）。
   const target = parseViewBox(spec.viewBox);
   const from = sourceRect(before);
   let mapping = null;
   const vbDiffers = before.viewBox !== spec.viewBox;
-  if (target && from && vbDiffers) {
-    mapping = transformBetween(from, target);
-    if (mapping) {
-      const label = before.viewBox
-        ? `viewBox ${before.viewBox} → ${spec.viewBox}`
-        : `补 viewBox ${spec.viewBox}`;
-      changed.push(mapping.scale === 1 ? `${label}（尺寸一致，无需缩放）` : `${label}（内容整体 ×${Number(mapping.scale.toFixed(4))}）`);
-    } else {
-      changed.push(`viewBox 保持 ${before.viewBox}（长宽比与规范不一致，强行替换会把图形压扁）`);
+  if (target && from && vbDiffers) mapping = transformBetween(from, target);
+  const k = round4(wrapScaleOf(out) * (mapping ? mapping.scale : 1));
+  const swTarget = round4(spec.strokeWidth / k);
+
+  // 1) 颜色
+  if (profile === 'duotone') {
+    const c = unifyColors(out, spec.color, { only: accent });
+    if (c.hits) {
+      out = c.src;
+      changed.push(`主题色 ${accent} → ${spec.color}（${c.hits} 处，其余配色保留）`);
     }
+  } else {
+    const c = unifyColors(out, spec.color);
+    if (c.hits) {
+      out = c.src;
+      changed.push(`颜色 → ${spec.color}（${c.hits} 处）`);
+    }
+  }
+
+  // 2) 线宽（全文档，含子图元）：line / duotone 都统一，目标值按缩放折算
+  if (profile === 'line' || profile === 'duotone') {
+    const sw = unifyStrokeWidth(out, swTarget);
+    if (sw.hits) {
+      out = sw.src;
+      changed.push(
+        k === 1
+          ? `stroke-width → ${swTarget}（${sw.hits} 处）`
+          : `stroke-width → ${swTarget}（${sw.hits} 处，内容 ×${k} 折算后渲染为 ${spec.strokeWidth}）`
+      );
+    }
+  }
+
+  // 3) viewBox 变更记录
+  if (mapping) {
+    const label = before.viewBox
+      ? `viewBox ${before.viewBox} → ${spec.viewBox}`
+      : `补 viewBox ${spec.viewBox}`;
+    changed.push(
+      mapping.scale === 1
+        ? `${label}（尺寸一致，无需缩放）`
+        : `${label}（内容整体 ×${Number(mapping.scale.toFixed(4))}）`
+    );
+  } else if (vbDiffers) {
+    changed.push(`viewBox 保持 ${before.viewBox}（长宽比与规范不一致，强行替换会把图形压扁）`);
   }
 
   // 4) 根元素属性
@@ -392,13 +479,21 @@ export function normalizeSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) 
         changed.push(`stroke="${spec.color}"`);
       }
       if (cur['stroke-width'] === undefined) {
-        t = setAttr(t, 'stroke-width', String(spec.strokeWidth));
-        changed.push(`stroke-width="${spec.strokeWidth}"`);
+        t = setAttr(t, 'stroke-width', String(swTarget));
+        changed.push(`stroke-width="${swTarget}"`);
       }
       if (cur['stroke-linecap'] === undefined) t = setAttr(t, 'stroke-linecap', spec.strokeLinecap);
       if (cur['stroke-linejoin'] === undefined) t = setAttr(t, 'stroke-linejoin', spec.strokeLinejoin);
       if (cur['stroke-linecap'] === undefined || cur['stroke-linejoin'] === undefined) {
         changed.push('补齐 linecap/linejoin');
+      }
+    } else if (profile === 'duotone') {
+      // 双色档**不强制根元素的 fill/stroke**：这类图标常是填充式的，
+      // 给根挂上 stroke 会让每个没写 stroke 的图元都多出一圈描边。
+      // 只把已存在的 stroke-width 折算到目标值（有描边的图元才受影响）。
+      if (cur['stroke-width'] !== undefined && String(cur['stroke-width']) !== String(swTarget)) {
+        t = setAttr(t, 'stroke-width', String(swTarget));
+        changed.push(`根元素 stroke-width → ${swTarget}`);
       }
     }
     return t;

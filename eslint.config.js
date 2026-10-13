@@ -192,6 +192,7 @@ export default defineConfig([
   {
     files: [
       'src/web/frontend/components/asset/manage.jsx', // 分组管理页（树 + 面包屑 + 批量）~420 行
+      'src/core/svg/spec.js', // 图标规范：解析 + 审计 + 归一化三件事同源，拆开会失去「判据只此一处」~366 行
     ],
     rules: { 'max-lines': ['error', { max: 450, skipBlankLines: true, skipComments: true }] },
   },

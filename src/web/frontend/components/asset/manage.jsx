@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
-import { TagCloud, BatchBar } from './parts.jsx';
+import { TagCloud, BatchBar, Crumbs } from './parts.jsx';
 import { buildTree, findNode } from './tree.jsx';
 import { ManageBrowse } from './manage-browse.jsx';
 import { ManageResult } from './manage-result.jsx';
@@ -25,7 +25,18 @@ function loadState(kind) {
 
 // 导航走 onNavigate（调用方写 hash，hash 回流 initialDir）——URL 与视图保持同一写者。
 // toolbar 可以是节点，也可以是 (reload) => 节点 的函数（svg 看板动作需要 reload）。
-export function ManagePage({ kind, initialDir, onOpen, onNavigate, toolbar, noun = '资源' }) {
+// views 是领域扩展的额外视图（如 svg 画廊）：[{ id, label, render(ctx) }]，
+// 「编辑模式」是默认视图（defaultViewLabel 可改），切换状态与筛选一起持久化。
+export function ManagePage({
+  kind,
+  initialDir,
+  onOpen,
+  onNavigate,
+  toolbar,
+  noun = '资源',
+  views = [],
+  defaultViewLabel = '列表',
+}) {
   const toast = useToast();
   const guard = useGuard();
   const { dialog, node } = useDialog();
@@ -35,6 +46,7 @@ export function ManagePage({ kind, initialDir, onOpen, onNavigate, toolbar, noun
   const [searchInput, setSearchInput] = useState(() => loadState(kind).search || '');
   const [search, setSearch] = useState(searchInput);
   const [activeTags, setActiveTags] = useState(() => loadState(kind).tags || []);
+  const [viewId, setViewId] = useState(() => loadState(kind).view || 'default');
   const [err, setErr] = useState('');
   // 批量选择：资源 key = `${group}/${name}`；目录 value = path
   const [selected, setSelected] = useState(() => new Set());
@@ -55,12 +67,12 @@ export function ManagePage({ kind, initialDir, onOpen, onNavigate, toolbar, noun
     try {
       localStorage.setItem(
         STATE_KEY(kind),
-        JSON.stringify({ dir, search: searchInput, tags: activeTags })
+        JSON.stringify({ dir, search: searchInput, tags: activeTags, view: viewId })
       );
     } catch {
       /* 隐私模式静默 */
     }
-  }, [dir, searchInput, activeTags, kind]);
+  }, [dir, searchInput, activeTags, viewId, kind]);
 
   const reload = useCallback(async () => {
     const q = new URLSearchParams();
@@ -284,6 +296,44 @@ export function ManagePage({ kind, initialDir, onOpen, onNavigate, toolbar, noun
           onChange={(e) => setSearchInput(e.target.value)}
           data-testid="manage-search"
         />
+        {views.length ? (
+          <div className="am-views" role="group" aria-label="视图切换">
+            <button
+              className={'btn small' + (viewId === 'default' ? ' primary' : '')}
+              onClick={() => setViewId('default')}
+              data-testid="view-default"
+            >
+              {defaultViewLabel}
+            </button>
+            {views.map((v) => (
+              <button
+                key={v.id}
+                className={'btn small' + (viewId === v.id ? ' primary' : '')}
+                onClick={() => setViewId(v.id)}
+                data-testid={`view-${v.id}`}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {/* 地址栏：页面级，所有视图（列表 / 画廊 / 搜索结果）共用——
+          放在视图内部的话，换视图就会把「我在哪」弄丢（真踩过：画廊模式没面包屑）。 */}
+      <div className="am-crumbbar">
+        <Crumbs items={crumbItems} />
+        <div className="am-spacer" />
+        {dir && dirGroup ? (
+          <>
+            <button className="btn small ghost" onClick={() => renameGroup(dir)} data-testid="rename-current-group">
+              改名 / 移动
+            </button>
+            <button className="btn small ghost danger" onClick={() => removeGroup(dir)} data-testid="remove-current-group">
+              删除当前文件夹
+            </button>
+          </>
+        ) : null}
       </div>
 
       <TagCloud
@@ -326,7 +376,23 @@ export function ManagePage({ kind, initialDir, onOpen, onNavigate, toolbar, noun
       {err ? <div className="empty bad">{err}</div> : null}
 
       {tree ? (
-        filtered ? (
+        views.find((v) => v.id === viewId) ? (
+          // 领域扩展视图（如 svg 画廊）：拿同一份 ctx，自己决定怎么展示当前文件夹
+          views
+            .find((v) => v.id === viewId)
+            .render({
+              kind,
+              dir,
+              dirGroup,
+              dirNode,
+              search,
+              activeTags,
+              onOpen,
+              pickDir,
+              batchMode,
+              reload,
+            })
+        ) : filtered ? (
           <ManageResult
             tree={tree}
             count={count}
@@ -340,18 +406,15 @@ export function ManagePage({ kind, initialDir, onOpen, onNavigate, toolbar, noun
           />
         ) : (
           <ManageBrowse
-            tree={tree}
             count={count}
             dir={dir}
             dirNode={dirNode}
             dirGroup={dirGroup}
-            crumbItems={crumbItems}
             activeTags={activeTags}
             toggleTag={toggleTag}
             onOpen={onOpen}
             pickDir={pickDir}
             removeGroup={removeGroup}
-            renameGroup={renameGroup}
             createGroup={createGroup}
             createAsset={createAsset}
             guard={guard}

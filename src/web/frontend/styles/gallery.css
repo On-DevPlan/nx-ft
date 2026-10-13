@@ -1,0 +1,65 @@
+/* SVG 画廊模式：图标平铺成墙 + 主题色范围（见 components/svg/gallery.jsx）
+   颜色由 .gal-grid 上的 color 驱动，图标规范保证图标用 currentColor 取色。 */
+
+.gal-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 10px; border: var(--border); border-radius: 8px; background: var(--paper);
+}
+.gal-label { font-size: 11px; color: var(--mid); }
+.gal-spacer { flex: 1; }
+.gal-count { font-size: 11px; }
+
+.gal-swatches { display: flex; align-items: center; gap: 4px; }
+.gal-swatch {
+  width: 22px; height: 22px; padding: 0; cursor: pointer;
+  border: 1px solid var(--soft-2); border-radius: 6px;
+}
+.gal-swatch.active {
+  outline: 2px solid var(--ink); outline-offset: 1px;
+}
+.gal-custom {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border: 1px dashed var(--soft-2); border-radius: 6px;
+  cursor: pointer; overflow: hidden;
+}
+.gal-custom input[type='color'] {
+  width: 34px; height: 34px; padding: 0; border: 0; background: none; cursor: pointer;
+}
+
+.gal-sizes { display: flex; align-items: center; gap: 4px; }
+.gal-deep { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--mid); }
+.gal-deep input { margin: 0; }
+.gal-search { width: 180px; }
+
+/* 图标墙：固定格子尺寸，字号 / 间距不随图标大小跳变 */
+.gal-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px;
+  padding: 12px; border: var(--border); border-radius: 10px; background: var(--paper);
+  min-height: 160px;
+}
+.gal-grid-dark { background: #14161a; }
+
+.gal-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 6px 8px; cursor: pointer; font: inherit; text-align: center;
+  border: 1px solid transparent; border-radius: 8px; background: none;
+  color: inherit;
+}
+.gal-cell:hover { background: rgba(127, 127, 127, 0.12); border-color: var(--soft-2); }
+.gal-grid-dark .gal-cell:hover { border-color: #30363d; }
+
+.gal-art { position: relative; display: grid; place-items: center; min-height: 48px; }
+/* 图标继承画廊的主题色：.icon 默认写死 var(--ink)，会把墙上的颜色截断在这里 */
+.gal-grid .icon { color: inherit; }
+.gal-mark { position: absolute; top: -4px; right: -8px; }
+.gal-name { font-size: 11px; font-weight: 600; color: var(--ink); max-width: 100%; }
+.gal-path { font-size: 11px; max-width: 100%; color: var(--mid); }
+/* 深底（白图标那把）时文字翻成浅色，否则黑字压在黑底上看不见 */
+.gal-grid-dark .gal-name { color: #e6edf3; }
+.gal-grid-dark .gal-path { color: #8b949e; }
+/* 双色标记：点缀色不跟主题走，别让用户误判成「切色没生效」 */
+.gal-duo {
+  font-size: 11px; padding: 0 5px; border-radius: 999px;
+  border: 1px solid var(--soft-2); color: var(--mid);
+}
+.gal-grid-dark .gal-duo { border-color: #30363d; color: #8b949e; }

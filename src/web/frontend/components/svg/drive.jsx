@@ -6,6 +6,7 @@
 import { useDialog, useGuard, useToast } from '../ui.jsx';
 import { useStore } from '../../store.jsx';
 import { useBatch } from './batch.jsx';
+import { SvgGallery } from './gallery.jsx';
 import { ManagePage } from '../asset/manage.jsx';
 
 const enc = encodeURIComponent;
@@ -39,6 +40,22 @@ export function SvgDrive({ path = '' }) {
       kind="svg"
       noun="图标"
       initialDir={path}
+      defaultViewLabel="编辑"
+      // 画廊模式：图标平铺成墙 + 主题色范围，验证「跟着主题色变」的效果
+      views={[
+        {
+          id: 'gallery',
+          label: '画廊',
+          render: (ctx) => (
+            <SvgGallery
+              dir={ctx.dir}
+              search={ctx.search}
+              activeTags={ctx.activeTags}
+              onOpen={ctx.onOpen}
+            />
+          ),
+        },
+      ]}
       toolbar={(reload) => <SvgBoardActions reload={reload} />}
       onNavigate={(dir) => {
         location.hash = dir ? `#/svg/dir/${encPath(dir)}` : '#/svg';

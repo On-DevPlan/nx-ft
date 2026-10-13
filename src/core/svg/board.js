@@ -6,7 +6,7 @@
 import { loadAsset } from '../assets/assets.js';
 import * as groups from '../assets/groups.js';
 import * as st from '../assets/storage.js';
-import { auditSvg, ICON_SPEC } from './spec.js';
+import { auditSvg, detectProfile, ICON_SPEC } from './spec.js';
 
 const SLOTS = ['svg', 'css', 'js'];
 
@@ -25,7 +25,9 @@ function auditOf(svg) {
       meta: null,
     };
   }
-  return auditSvg(svg);
+  // 按图标自身的形态选档位：双色图标（主题色 + 点缀色）不该被当成「写死了颜色」报错，
+  // 那是它的设计意图。档位判定见 spec.js 的 detectProfile。
+  return auditSvg(svg, { profile: detectProfile(svg) });
 }
 
 export function buildBoard(kind, { search = '', tags = [] } = {}) {
@@ -43,6 +45,7 @@ export function buildBoard(kind, { search = '', tags = [] } = {}) {
       stats.issues += audit.issues.length;
       if (audit.issues.length) stats.flagged++;
       else stats.compliant++;
+      const profile = svg ? detectProfile(svg) : 'line';
       return {
         name: a.name,
         label: a.label,
@@ -52,6 +55,7 @@ export function buildBoard(kind, { search = '', tags = [] } = {}) {
         updatedAt: a.updatedAt || null,
         bytes: audit.meta ? audit.meta.bytes : 0,
         svg,
+        profile,
         audit: { ok: audit.ok, issues: audit.issues },
       };
     }),

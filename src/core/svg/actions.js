@@ -188,8 +188,11 @@ export function svgActions() {
       http: ['GET', '/api/svg/spec-check'],
       summary: '规范审计：逐条列出不合规的图标与原因（--group 限定范围）',
       args: [{ name: 'group', required: false }],
-      flags: { profile: { type: 'string', enum: PROFILES, default: 'line' } },
-      run: (ctx) => audit.checkLibrary('svg', { group: ctx.group, profile: ctx.profile }),
+      flags: {
+        profile: { type: 'string', enum: PROFILES, default: 'line' },
+        accent: { type: 'string', hint: '双色档用：哪个色值是主题色（例 "#5B7CFA"）' },
+      },
+      run: (ctx) => audit.checkLibrary('svg', { group: ctx.group, profile: ctx.profile, accent: ctx.accent }),
       render: audit.renderCheck,
     },
     {
@@ -205,6 +208,7 @@ export function svgActions() {
       flags: {
         style: { type: 'string', hint: '不传则修当前风格' },
         profile: { type: 'string', enum: PROFILES, default: 'line' },
+        accent: { type: 'string', hint: '双色档用：哪个色值是主题色（例 "#5B7CFA"）' },
         'dry-run': { type: 'boolean' },
       },
       run: (ctx) =>
@@ -212,6 +216,7 @@ export function svgActions() {
           group: ctx.group,
           style: ctx.style,
           profile: ctx.profile,
+          accent: ctx.accent,
           dryRun: ctx['dry-run'],
         }),
       render: audit.renderFix,

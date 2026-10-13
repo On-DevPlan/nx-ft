@@ -90,7 +90,7 @@ node bin/ft.mjs svg export ui/icons --to ./out/icons
    flag 必须写在 `<<'EOF'` **之前**，定界符要带引号，`EOF` 要顶格。
 2. 写死 `width` / `height` 会让图标无法按容器缩放；写死颜色会让它无法换肤。
    两者 `svg spec check` 都会报出来。规范细节见
-   [`ft-svg/references/10-icon-spec.md`](../../ft-svg/references/10-icon-spec.md)。
+   [`ft-svg/references/B01-图标.md`](../../ft-svg/references/B01-图标.md)。
 3. 线宽检查是**全文档**的：把 `stroke-width` 写在某个子图元上，
    根元素看起来完全合规，渲染出来却比同组粗一圈——这是「一组图标看着不齐」的常见成因。
 4. `svg cat` 的输出是**裸源码**（不经 JSON 引号包裹），就是为了能直接管道：
@@ -99,16 +99,24 @@ node bin/ft.mjs svg export ui/icons --to ./out/icons
 
 ## 面板协作
 
-`node bin/ft.mjs serve` 后打开「SVG 资源」tab（默认端口 7869）。svg 面板是**四层页面**，
-不是 html 面板的孪生（但**共用同一套 URL 词汇**，见下）：
+`node bin/ft.mjs serve` 后打开「SVG 资源」tab（默认端口 7869）。
+svg 面板与「HTML 资源」tab **是同一套网盘布局与同一套 URL 词汇**——
+面包屑当地址栏、内联新建、没有左侧目录树：
 
 | 路由 | 页面 |
 | --- | --- |
-| `#/svg` | 看板：整库图标 + 规范状态 + 批量导入导出 / 自检 / 一键归一化 |
-| `#/svg/dir/<组路径>` | 分组页：这一支的图标与子分组（对应资产域的 dir） |
-| `#/svg/edit/<组路径>/<名>` | 资源页：多风格对比 + 三槽位编辑器 + 规范问题 + 历史回退（对应 edit） |
+| `#/svg` | 根目录（网盘页）：当前层的文件夹与资源 + 内联新建 |
+| `#/svg/dir/<组路径>` | 进入某个文件夹 |
+| `#/svg/edit/<组路径>/<名>` | 资源页：多风格对比 + 三槽位编辑器 + 规范问题 + 历史回退 |
 | `#/svg/edit/<组路径>/<名>/full` | 整页预览：尺寸阶梯 + 24pt 网格 + 明暗底色 |
 
-`dir` / `edit` 与「HTML 资源」tab 是同一套词汇，两个 tab 之间切换不用重记路由。
-看板与批量操作的完整说明见
-[`ft-svg/references/30-board-and-batch.md`](../../ft-svg/references/30-board-and-batch.md)。
+svg 独有的两点：
+
+- **编辑 / 画廊两视图**（标题行右侧切换，选择会记住）。画廊把当前文件夹的
+  资源平铺成墙，配一条**主题色范围**——切一次色整墙同时变，
+  用来验证「跟着主题色一起变」的效果；另有尺寸（20/24/32/48）与单色 / 双色筛选。
+- **看板动作**：批量导入 / 导出 / 规范自检 / 一键归一化。
+
+路由词汇（`dir` / `edit`）与「HTML 资源」tab 一致，两边切换不用重记。
+工作流与批量操作的完整说明见
+[`ft-svg/references/A01-工作流.md`](../../ft-svg/references/A01-工作流.md)。

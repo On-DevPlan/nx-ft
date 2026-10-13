@@ -2,11 +2,11 @@
 // 地址栏（面包屑）+ 工具行（内联新建）+ 子目录卡片 + 资源卡片。
 // 与 manage-result.jsx 是同一页面的两个互斥分支（有筛选条件走结果视图）。
 import { useState } from 'react';
-import { AssetCard, Crumbs, InlineCreateRow, SubdirCard } from './parts.jsx';
+import { AssetCard, InlineCreateRow, SubdirCard } from './parts.jsx';
 
 export function ManageBrowse({
-  count, dir, dirNode, dirGroup, crumbItems,
-  activeTags, toggleTag, onOpen, pickDir, removeGroup, renameGroup,
+  count, dir, dirNode, dirGroup,
+  activeTags, toggleTag, onOpen, pickDir, removeGroup,
   createGroup, createAsset, guard,
   batchMode, selected, onToggle, selectedDirs, onToggleDir,
 }) {
@@ -44,23 +44,9 @@ export function ManageBrowse({
 
   return (
     <>
-      <div className="am-crumbbar">
-        <Crumbs items={crumbItems} />
-        <div className="am-spacer" />
-        {dir && dirGroup ? (
-          <>
-            <button className="btn small ghost" onClick={() => renameGroup(dir)} data-testid="rename-current-group">
-              改名 / 移动
-            </button>
-            <button className="btn small ghost danger" onClick={() => removeGroup(dir)} data-testid="remove-current-group">
-              删除当前文件夹
-            </button>
-          </>
-        ) : null}
-      </div>
-
       {/* 网盘式工具行：内联新建，只起名，不弹对话框。
-          资源必须住在文件夹里（存储模型决定），根目录下禁用并提示。 */}
+          资源必须住在文件夹里（存储模型决定），根目录下落进「未分类」。
+          （地址栏 / 改名 / 删文件夹在 ManagePage 的页面级——所有视图共用） */}
       {!batchMode ? (
         <div className="am-actions">
           {creating === 'dir' ? (
