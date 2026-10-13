@@ -42,14 +42,38 @@
 .style-card-act:hover { background: var(--soft-2); }
 
 /* 编辑区左右**可拖拽**（SplitPane），不再是写死的 380px 侧栏。
-   分隔条承担间隔，两侧各自滚动。 */
-.detail [data-testid='detail-split'] { align-items: stretch; }
+   工作区给一个确定高度——两层 SplitPane（左右 + 右栏上下）都靠它才能分配空间；
+   clamp 兜住极端视口：太矮时仍能用，太高时不至于把预览拉成一条。 */
+.detail [data-testid='detail-split'] {
+  height: clamp(460px, calc(100vh - 300px), 1000px);
+  align-items: stretch;
+}
 .detail [data-testid='detail-split'] > .sp-pane:first-child { padding-right: 14px; }
 .detail [data-testid='detail-split'] > .sp-pane:last-child { padding-left: 14px; }
+
+/* 预览填满它那一格（原来高度写死，拖分隔条也不动） */
+.detail-side-preview { height: 100%; display: flex; }
+.detail-side-preview .asset-preview { flex: 1; min-height: 0; }
+.detail-side-preview .asset-frame-wrap { min-height: 0; }
+
 .detail-editors { display: grid; gap: 10px; }
-.detail-side { display: flex; flex-direction: column; gap: 14px; }
 
 .issue-list { display: flex; flex-direction: column; }
+
+/* 描述面板：显示模式（只读核对）/ 编辑模式（逐条 inline 编辑） */
+.desc-view { display: flex; flex-direction: column; gap: 8px; }
+.desc-main { margin: 0; font-size: 12px; line-height: 1.6; }
+.desc-styles { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.desc-styles li {
+  display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px;
+  padding: 4px 0; border-top: 1px solid var(--soft-2); font-size: 12px;
+}
+.desc-style-name { color: var(--mid); }
+.desc-edit { display: flex; flex-direction: column; gap: 8px; }
+.desc-field { display: flex; flex-direction: column; gap: 4px; }
+.desc-label { font-size: 11px; color: var(--mid); }
+.desc-input { width: 100%; }
+.desc-actions { display: flex; align-items: center; gap: 8px; }
 .issue-row {
   display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 4px 10px;
   padding: 8px 0; border-bottom: 1px solid var(--soft-2);

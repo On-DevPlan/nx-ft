@@ -82,7 +82,22 @@ export function makeDetailOps({
       toast('已重命名');
     });
 
+  // 主描述（资源级）：与风格描述分工——主描述说「这是什么场景」。
+  // 面板上不再弹对话框，直接收文本（DescPanel 的编辑模式里批量保存）。
+  const saveAssetDesc = (text) =>
+    guard(async () => {
+      await api('/api/svg/asset-desc', { method: 'POST', body: { ...ref, text } });
+      await reload();
+    });
+
   // 风格描述：多风格并存时用来记「这套实现的特征」。传空串即清除。
+  // 直接收文本（面板 inline 编辑）；仍是同一个端点，与 CLI 的 `svg style desc` 同源。
+  const saveStyleDesc = (style, text) =>
+    guard(async () => {
+      await api('/api/svg/style-desc', { method: 'POST', body: { ...ref, style, text } });
+      await reload();
+    });
+
   const setDesc = () =>
     guard(async () => {
       const style = cur();
@@ -100,8 +115,7 @@ export function makeDetailOps({
         okText: '保存描述',
       });
       if (text === null) return;
-      await api('/api/svg/style-desc', { method: 'POST', body: { ...ref, style, text } });
-      await reload();
+      await saveStyleDesc(style, text);
       toast(text ? '已更新描述' : '已清除描述');
     });
 
@@ -202,5 +216,5 @@ export function makeDetailOps({
       toast('已回退到快照 ' + entry);
     });
 
-  return { save, newStyle, removeStyle, setActive, rename, setDesc, addTags, removeTag, removeAsset, fixStyle, history, cur };
+  return { save, newStyle, removeStyle, setActive, rename, setDesc, addTags, removeTag, removeAsset, fixStyle, history, cur, saveAssetDesc, saveStyleDesc };
 }

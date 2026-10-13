@@ -51,7 +51,7 @@ export function listTree(kind, { search = '', tags = [] } = {}) {
             const at = a.tags || [];
             if (wantTags.length && !wantTags.every((t) => at.includes(t))) return false;
             if (!q) return true;
-            const hay = [a.name, a.label || '', groupPath, ...at, ...Object.keys(a.styles || {})]
+            const hay = [a.name, a.label || '', a.desc || '', groupPath, ...at, ...Object.keys(a.styles || {})]
               .join(' ')
               .toLowerCase();
             return hay.includes(q);
@@ -59,6 +59,7 @@ export function listTree(kind, { search = '', tags = [] } = {}) {
           .map((a) => ({
             name: a.name,
             label: a.label || a.name,
+            desc: a.desc || '',
             styles: a.styleCount ?? Object.keys(a.styles || {}).length,
             activeStyle: a.activeStyle || null,
             tags: a.tags || [],

@@ -65,6 +65,7 @@ export function loadAsset({ kind, group, name, code = false }) {
     group: groupPath,
     name: entryName,
     label: entry.label || entryName,
+    desc: entry.desc || '',
     tags: entry.tags || [],
     activeStyle: entry.activeStyle,
     styles,
@@ -78,6 +79,21 @@ export function loadAsset({ kind, group, name, code = false }) {
     out.code = map;
   }
   return { ...out, usedSlots: [...usedSlots(kind)] };
+}
+
+// 资源级「主描述」：一句话说清这个资源是干什么的（与风格描述分工——
+// 主描述回答「这是什么场景」，风格描述回答「这一套实现的特征」）。
+// 两者都是给人和 agent 检索用的元信息：资源多了以后，靠名字找不回来，
+// 靠描述才召回得准（CLI 侧配合 tree --search 一起用）。传空串即清除。
+export function setAssetDesc({ kind, group, name, desc }) {
+  assertKind(kind);
+  const { groupPath, entryName, entry, manifest } = resolveAsset(kind, group, name);
+  const text = String(desc ?? '').trim();
+  if (text.length > 200) throw badInput('描述最长 200 字符');
+  entry.desc = text;
+  entry.updatedAt = nowIso();
+  st.saveGroup(kind, groupPath, manifest);
+  return { status: 'ok', group: groupPath, name: entryName, desc: text };
 }
 
 // 资源改名：label 改展示名、to 改目录名（两者可单独或同时给）。

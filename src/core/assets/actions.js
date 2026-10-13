@@ -159,6 +159,20 @@ export function makeActions(kind) {
             : `已改展示名: ${r.group}/${r.name} → ${r.label}`,
     },
     {
+      id: kind + '.desc',
+      cli: [kind, 'desc'],
+      http: ['POST', A('asset-desc')],
+      summary: '给资源写「主描述」（一句话说清这是什么场景；区别于每个风格的 --desc）',
+      args: ['group', 'name'],
+      flags: { text: { type: 'string', required: true, hint: '留空串即清除' } },
+      run: (ctx) =>
+        assets.setAssetDesc({ kind, group: ctx.group, name: ctx.name, desc: ctx.text }),
+      render: (r) =>
+        r.desc
+          ? `已更新主描述: ${r.group}/${r.name} → ${r.desc}`
+          : `已清除主描述: ${r.group}/${r.name}`,
+    },
+    {
       id: kind + '.tag.add',
       cli: [kind, 'tag', 'add'],
       http: ['POST', A('tags-add')],

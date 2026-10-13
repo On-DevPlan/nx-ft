@@ -146,6 +146,35 @@ export default defineConfig([
   },
 
   {
+    // 前端专属：**打开 no-undef**。
+    // 全局关掉是给 Node 侧留的（CLI 里 process/console 等混用，装 globals 包不值）；
+    // 但前端只跑在浏览器，全局表小且稳定，而「忘了 import 就直接用」的代价是把整个视图打崩
+    // （真踩过：detail-parts.jsx 用了 useState 没 import → 页面白屏 + 控制台一团栈，
+    //   而 lint 一路绿灯）。浏览器全局按实际用到的手工列，新增 API 时补一行即可。
+    files: ['src/web/frontend/**/*.{js,jsx}'],
+    languageOptions: {
+      globals: {
+        document: 'readonly',
+        window: 'readonly',
+        location: 'readonly',
+        history: 'readonly',
+        localStorage: 'readonly',
+        navigator: 'readonly',
+        fetch: 'readonly',
+        AbortController: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        console: 'readonly',
+        alert: 'readonly',
+        confirm: 'readonly',
+      },
+    },
+    rules: { 'no-undef': 'error' },
+  },
+
+  {
     // 前端：这条规则的价值最高——把 Node 侧代码 import 进视图，
     // Vite 会把 node: 内置模块一起打进浏览器包，构建期报错或运行期炸掉。
     files: ['src/web/frontend/**/*.{js,jsx}'],
@@ -193,6 +222,9 @@ export default defineConfig([
     files: [
       'src/web/frontend/components/asset/manage.jsx', // 分组管理页（树 + 面包屑 + 批量）~420 行
       'src/core/svg/spec.js', // 图标规范：解析 + 审计 + 归一化三件事同源，拆开会失去「判据只此一处」~366 行
+      'src/core/assets/actions.js', // 声明式 action 表：一条 = 一个端点（CLI + HTTP 双声明），拆开就把「一源两派生」拆散了 ~304 行
+      'src/web/frontend/components/svg/detail.jsx', // 资源页：标识 + 描述 + 风格 + 双 SplitPane 工作区 ~343 行
+      'src/web/frontend/components/svg/detail-parts.jsx', // 资源页的呈现件集合（描述/风格/问题/CLI 块）~309 行
     ],
     rules: { 'max-lines': ['error', { max: 450, skipBlankLines: true, skipComments: true }] },
   },

@@ -10,7 +10,7 @@ import { PreviewPane } from '../asset/preview.jsx';
 import { SplitPane } from '../asset/SplitPane.jsx';
 import { Modal, useDialog, useGuard, useToast } from '../ui.jsx';
 import { makeDetailOps } from './detail-ops.jsx';
-import { CliBlock, IssueList, StyleStrip, TagBar } from './detail-parts.jsx';
+import { CliBlock, DescPanel, IssueList, StyleStrip, TagBar } from './detail-parts.jsx';
 import { Crumb, Empty } from './parts.jsx';
 import { Icon, IconGhost } from './svg-inline.jsx';
 import { useDetail, useNav } from './useSvg.js';
@@ -57,6 +57,8 @@ export default function Detail({ group, name }) {
   const [full, setFull] = useState(false);
   const [doc, setDoc] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [descEditing, setDescEditing] = useState(false);
+  const [descBusy, setDescBusy] = useState(false);
   const editRef = useRef(null);
 
   // 数据到位后落到「当前风格」；保存/新建风格导致清单变化时也做一次收敛。
@@ -123,6 +125,21 @@ export default function Detail({ group, name }) {
 
   const issues = cur?.audit?.issues || [];
 
+  // 描述面板的「保存全部」：主描述 + 只提交真正改过的风格描述（避免无谓写盘)
+  const saveDescs = async (mainText, styleText) => {
+    setDescBusy(true);
+    try {
+      await ops.saveAssetDesc(mainText);
+      for (const s of data?.styles || []) {
+        const next = styleText[s.name] ?? '';
+        if ((s.desc || '') !== next) await ops.saveStyleDesc(s.name, next);
+      }
+      setDescEditing(false);
+    } finally {
+      setDescBusy(false);
+    }
+  };
+
   if (err) return <div className="empty bad">接口调用失败：{err}</div>;
 
   return (
@@ -185,8 +202,8 @@ export default function Detail({ group, name }) {
               <button className="btn ghost" onClick={() => ops.setActive()} disabled={!cur || cur.name === data.activeStyle}>
                 设为当前
               </button>
-              <button className="btn ghost" onClick={ops.setDesc} disabled={!cur}>
-                描述
+              <button className="btn ghost" onClick={() => setDescEditing(true)} disabled={descEditing}>
+                编辑描述
               </button>
               <button className="btn ghost" onClick={ops.rename}>
                 改名
@@ -199,6 +216,35 @@ export default function Detail({ group, name }) {
               </button>
             </div>
           </div>
+
+          <section className="panel-card" data-testid="desc-panel">
+            <div className="panel-card-head">
+              <span>描述</span>
+              <span className="panel-card-extra">
+                {descEditing ? (
+                  <span className="muted">主描述 + 每个风格一条；保存后 `svg tree --search` 能召回</span>
+                ) : (
+                  <button
+                    className="btn small ghost"
+                    onClick={() => setDescEditing(true)}
+                    data-testid="desc-edit-toggle"
+                  >
+                    编辑
+                  </button>
+                )}
+              </span>
+            </div>
+            <div className="panel-card-body">
+              <DescPanel
+                desc={data.desc}
+                styles={data.styles}
+                editing={descEditing}
+                busy={descBusy}
+                onToggleEdit={() => setDescEditing(false)}
+                onSaveDesc={saveDescs}
+              />
+            </div>
+          </section>
 
           <section className="panel-card">
             <div className="panel-card-head">
@@ -258,18 +304,31 @@ export default function Detail({ group, name }) {
               </section>
             }
             right={
-              <div className="detail-side">
-                <PreviewPane doc={doc} full={full} tick={tick} onToggleFull={() => setFull((f) => !f)} />
-                <section className="panel-card">
-                  <div className="panel-card-head">
-                    <span>规范问题</span>
-                    <span className="panel-card-extra muted mono">{style}</span>
+              // 右栏再切一刀：预览 ↔ 规范问题，高度可拖（原来预览高度写死）
+              <SplitPane
+                direction="vertical"
+                initialPct={68}
+                minPct={25}
+                maxPct={88}
+                persistKey="nx-ft-svg-detail-side-split"
+                testId="detail-side-split"
+                left={
+                  <div className="detail-side-preview">
+                    <PreviewPane doc={doc} full={full} tick={tick} onToggleFull={() => setFull((f) => !f)} />
                   </div>
-                  <div className="panel-card-body">
-                    <IssueList issues={issues} style={style} onFix={ops.fixStyle} />
-                  </div>
-                </section>
-              </div>
+                }
+                right={
+                  <section className="panel-card">
+                    <div className="panel-card-head">
+                      <span>规范问题</span>
+                      <span className="panel-card-extra muted mono">{style}</span>
+                    </div>
+                    <div className="panel-card-body">
+                      <IssueList issues={issues} style={style} onFix={ops.fixStyle} profile={cur?.profile} />
+                    </div>
+                  </section>
+                }
+              />
             }
           />
 

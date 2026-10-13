@@ -1,4 +1,5 @@
-// 资源页的呈现件：风格条 / 规范问题 / 标签条 / CLI 命令块。
+// 资源页的呈现件：风格条 / 描述面板 / 规范问题 / 标签条 / CLI 命令块。
+import { useEffect, useState } from 'react';
 import { Copyable } from '../ui.jsx';
 import { assetCommands, heredocSnippet } from './cli.js';
 import { Icon, IconGhost } from './svg-inline.jsx';
@@ -55,10 +56,101 @@ export function StyleStrip({ styles = [], activeStyle, current, onPick, onSetAct
   );
 }
 
+// 描述面板：**主描述（资源级）+ 风格列表**，两个模式——
+//   显示模式：只读，一段主描述 + 每个风格一行「名字 · 描述」，便于快速核对 / 复制
+//   编辑模式：主描述一个输入框，每个风格一个输入框，各自保存
+// 为什么要有「主描述」：资源多了以后靠名字找不回来，靠描述才召回得准
+// （配合 tree --search —— 搜索会命中主描述与风格描述）。
+export function DescPanel({ desc, styles = [], editing, onToggleEdit, onSaveDesc, busy }) {
+  const [mainText, setMainText] = useState(desc || '');
+  const [styleText, setStyleText] = useState({});
+  useEffect(() => {
+    setMainText(desc || '');
+  }, [desc]);
+  useEffect(() => {
+    const init = {};
+    for (const s of styles) init[s.name] = s.desc || '';
+    setStyleText(init);
+  }, [styles]);
+
+  if (!editing) {
+    return (
+      <div className="desc-view" data-testid="desc-view">
+        <p className="desc-main">{desc || <span className="muted">（还没有主描述）</span>}</p>
+        <ul className="desc-styles">
+          {styles.map((s) => (
+            <li key={s.name}>
+              <span className="mono desc-style-name">{s.name}</span>
+              <span className="desc-style-text">{s.desc || <span className="muted">—</span>}</span>
+            </li>
+          ))}
+          {!styles.length ? <li className="muted">还没有风格</li> : null}
+        </ul>
+      </div>
+    );
+  }
+
+  return (
+    <div className="desc-edit" data-testid="desc-edit">
+      <label className="desc-field">
+        <span className="desc-label">主描述（这个资源是什么场景）</span>
+        <input
+          className="desc-input"
+          spellCheck="false"
+          placeholder="如：一只骑车送外卖的鹈鹕，用于首页加载动画"
+          value={mainText}
+          disabled={busy}
+          onChange={(e) => setMainText(e.target.value)}
+          data-testid="desc-main-input"
+        />
+      </label>
+      {styles.map((s) => (
+        <label key={s.name} className="desc-field">
+          <span className="desc-label">
+            风格 <span className="mono">{s.name}</span>（这一套的特征）
+          </span>
+          <input
+            className="desc-input"
+            spellCheck="false"
+            placeholder="如：整体更圆润，适合深色底"
+            value={styleText[s.name] || ''}
+            disabled={busy}
+            onChange={(e) => setStyleText((prev) => ({ ...prev, [s.name]: e.target.value }))}
+            data-testid={`desc-style-input-${s.name}`}
+          />
+        </label>
+      ))}
+      <div className="desc-actions">
+        <button
+          className="btn small primary"
+          disabled={busy}
+          onClick={() => onSaveDesc(mainText, styleText)}
+          data-testid="desc-save"
+        >
+          保存全部
+        </button>
+        <button className="btn small ghost" disabled={busy} onClick={onToggleEdit}>
+          取消
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // 规范问题清单：每条带 code 短标签 + 人读说明 + 怎么改。
-export function IssueList({ issues = [], style, onFix }) {
+// profile 决定「没问题」时那句话怎么说——插画/动画不套图标那套，
+// 说它「符合图标规范（24pt·1.8·currentColor）」是错的（用户实测指出）。
+export function IssueList({ issues = [], style, onFix, profile = 'line' }) {
   if (!issues.length) {
-    return <div className="issue-clean">这一版符合图标规范（24pt 网格 · stroke 1.8 · currentColor）。</div>;
+    return (
+      <div className="issue-clean">
+        {profile === 'color'
+          ? '原色图形：不套图标规范——配色与线宽按设计保留，只校验几何容器。'
+          : profile === 'duotone'
+            ? '这一版符合规范（双色：主题色走 currentColor，点缀色保留）。'
+            : '这一版符合图标规范（24pt 网格 · stroke 1.8 · currentColor）。'}
+      </div>
+    );
   }
   return (
     <div className="issue-list">
