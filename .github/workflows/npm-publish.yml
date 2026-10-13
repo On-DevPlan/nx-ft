@@ -79,4 +79,8 @@ jobs:
 
       - name: 发布（OIDC，无 token）
         if: steps.check.outputs.published == 'false'
-        run: npm publish --provenance --access public
+        # --loglevel verbose 是刻意打开的：npm 的 OIDC 换票失败是「静默」的——
+        # lib/utils/oidc.js 把换票异常全部 catch 掉、只在 verbose 级别记一行，
+        # 于是失败在面上只剩 ENEEDAUTH（看起来像「没登录」）。
+        # 打开 verbose 才能看到 registry 的真实答复：trusted publisher 未配置 / claims 不匹配 / 只允许 stage publish。
+        run: npm publish --provenance --access public --loglevel verbose
