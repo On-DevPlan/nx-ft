@@ -60,7 +60,7 @@
   width: 22px; height: 22px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   border: var(--border); border-radius: 6px; background: var(--paper);
-  color: var(--mid); font-size: 13px; line-height: 1; cursor: pointer;
+  color: var(--mid); font-size: 12px; line-height: 1; cursor: pointer;
 }
 .am-subdir-x:hover { color: var(--bad); border-color: var(--bad); background: var(--paper); }
 
@@ -104,6 +104,26 @@
 .am-tools {
   display: flex; align-items: center; gap: 6px;
   padding: 2px 0;
+}
+
+/* 网盘式工具行：内联新建（点 + 号后原位出现的输入行） */
+.am-actions {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.inline-create-wrap {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.inline-create {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px; border: var(--border); border-radius: 8px;
+  background: var(--paper);
+}
+.inline-create-input {
+  width: 320px; max-width: 60vw;
+}
+.inline-create-hint { font-size: 11px; }
+.inline-create-err {
+  font-size: 11px; padding: 2px 6px;
 }
 
 /* ---- 批量操作条 ---- */

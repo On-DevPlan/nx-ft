@@ -62,5 +62,5 @@ export function AssetView({ kind }) {
       />
     );
   }
-  return <ManagePage kind={kind} initialDir={route.dir} onOpen={openAsset} />;
+  return <ManagePage kind={kind} initialDir={route.dir} onOpen={openAsset} onNavigate={goManage} />;
 }

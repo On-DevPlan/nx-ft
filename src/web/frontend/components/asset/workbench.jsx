@@ -184,7 +184,7 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
             描述
           </button>
           <button
-            className={'btn' + (isDirty() ? '' : ' ghost')}
+            className={'btn primary' + (isDirty() ? '' : ' ghost')}
             onClick={ops.save}
             disabled={!asset?.styles.length}
             data-testid="wb-save"

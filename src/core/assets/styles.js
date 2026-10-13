@@ -113,9 +113,17 @@ export function removeStyle({ kind, group, name, style }) {
 
 export function saveCode({ kind, group, name, style, files }) {
   const kindDef = ASSET_KINDS[assertKind(kind)];
-  const { groupPath, entryName, entry, manifest } = resolveAsset(kind, group, name);
+  const { groupPath, entryName } = resolveAsset(kind, group, name);
+  let { entry, manifest } = resolveAsset(kind, group, name);
   const styleName = assertSafeName(String(style ?? '').trim(), '风格名');
-  assertStyle(entry, styleName);
+  // CLI/面板可以对任意风格名直接 put：不存在就当场建——「加风格」不该是前置手续。
+  // 已存在则照常保存；这里是唯一允许绕过 assertStyle 的入口。
+  if (!entry.styles[styleName]) {
+    addStyle({ kind, group: groupPath, name: entryName, style: styleName, files: {} });
+    // addStyle 内部重新落盘过清单；手里的 manifest/entry 是盘上旧快照，
+    // 直接沿用会在下面 saveGroup 时把新风格抹掉——必须重读。
+    ({ entry, manifest } = resolveAsset(kind, group, name));
+  }
   const meta = entry.styles[styleName];
 
   const incoming = {};

@@ -1,5 +1,5 @@
 // 资产域共享的呈现件：面包屑、标签云、相对时间、资源卡片、子目录卡片。
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 
 export function relTime(iso) {
   if (!iso) return '';
@@ -158,6 +158,56 @@ export function BatchBar({ count, dirCount = 0, total, onSelectAll, onInvert, on
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+// 内联创建行（网盘式）：点「+ 新建」后原位出现的输入框。
+// Enter = 确认，Esc = 取消，失焦 = 取消。只问名字——网盘不问你「展示名」和「标签」。
+// error 有值时显示在输入行下方（Priority 8：错误出现在字段旁，不只靠 toast）。
+export function InlineCreateRow({ placeholder, confirmText = '创建', hint, onConfirm, onCancel, testId }) {
+  const [value, setValue] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    const v = value.trim();
+    if (!v) return onCancel();
+    if (busy) return;
+    setBusy(true);
+    setErr('');
+    try {
+      await onConfirm(v);
+    } catch (e) {
+      setErr(String((e && e.message) || e));
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="inline-create-wrap" data-testid={testId}>
+      <div className="inline-create">
+        <input
+          className="inline-create-input"
+          autoFocus
+          spellCheck="false"
+          placeholder={placeholder}
+          value={value}
+          disabled={busy}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') submit();
+            if (e.key === 'Escape') onCancel();
+          }}
+          data-testid={testId ? `${testId}-input` : undefined}
+        />
+        {hint ? <span className="muted inline-create-hint">{hint}</span> : null}
+        <button className="btn small" disabled={busy} onMouseDown={(e) => { e.preventDefault(); submit(); }}>
+          {busy ? '创建中…' : confirmText}
+        </button>
+        <button className="btn small ghost" disabled={busy} onMouseDown={(e) => { e.preventDefault(); onCancel(); }}>
+          取消
+        </button>
+      </div>
+      {err ? <div className="inline-create-err bad" data-testid={testId ? `${testId}-err` : undefined}>{err}</div> : null}
     </div>
   );
 }

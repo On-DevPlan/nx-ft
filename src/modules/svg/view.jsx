@@ -1,19 +1,15 @@
 // SVG 面板路由：三层页面，**沿用资产域同一套 URL 词汇**（见 components/asset/index.jsx）：
-//   #/svg                               → 工作台（根目录：目录树 + 顶层分组）
-//   #/svg/dir/<分组路径>                 → 工作台（左边目录树常驻，右边是这一层的内容）
+//   #/svg                               → 网盘页（根目录，面包屑 + 内联创建，与 html 同一套）
+//   #/svg/dir/<分组路径>                 → 网盘页（当前目录内容）
 //   #/svg/edit/<分组路径>/<图标名>        → 资源页（对应 edit：改这一枚）
 //   #/svg/edit/<分组路径>/<图标名>/full   → 整页预览（本域扩展：放大核对线帽与网格）
 //
-// 为什么 #/svg 与 #/svg/dir/<组> 是**同一个组件**：它们本来就是同一件事——
-// 「左边树 + 右边当前层」。分成两个页面会让「进了分组就看不见目录树」，
-// 而空分组点进去连个新建入口都没有，等于死路。
-//
-// 路由解析放在视图里（与 AssetView 一致），面板壳只取 hash 首段判视图、不下发 route——
-// 这样同一个 tab 内的跳转不会被壳重写掉。
+// 看板/分组页合并为同一组件的历史理由不变：本来就是「当前目录」一件事。
+// 现在换成与 html 一致的网盘布局（ManagePage），svg 特有的批量动作走 toolbar 插槽。
 import { useEffect, useState } from 'react';
 import Detail from '../../web/frontend/components/svg/detail.jsx';
 import FullScreen from '../../web/frontend/components/svg/fullscreen.jsx';
-import Workspace from '../../web/frontend/components/svg/workspace.jsx';
+import { SvgDrive } from '../../web/frontend/components/svg/drive.jsx';
 
 const dec = (s) => {
   try {
@@ -71,5 +67,5 @@ export default function SvgView() {
   if (route.view === 'asset') {
     return <Detail key={`${route.group}/${route.name}`} group={route.group} name={route.name} />;
   }
-  return <Workspace path={route.group || ''} />;
+  return <SvgDrive path={route.group || ''} />;
 }

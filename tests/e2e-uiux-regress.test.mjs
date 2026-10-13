@@ -73,12 +73,20 @@ test('UIUX-REGRESS: 关键按钮都有 data-testid', async () => {
     }
   }
 
-  // 关键按钮的 data-testid value
+  // 关键按钮的 data-testid value（网盘重构后创建入口在内容区：new-dir / new-asset）
   const requiredTestIds = [
-    'manage-new-group',
-    'manage-new-asset',
+    'new-dir',
+    'new-asset',
+    'inline-create-dir',
+    'inline-create-asset',
     'manage-search',
     'enter-batch',
+    'batch-select-all',
+    'batch-invert',
+    'batch-cancel',
+    'batch-delete',
+    'batch-delete-dirs',
+    'subdir-remove-',
     'wb-save',
     'wb-new-style',
     'wb-style-desc',

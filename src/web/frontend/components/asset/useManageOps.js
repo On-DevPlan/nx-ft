@@ -17,6 +17,26 @@ export function makeManageOps({
   onOpen,
   noun = '资源',
 }) {
+  // ---- 网盘式创建（免对话框）：只在当前目录里起名，回车即建 ----
+  // addGroup / addAsset（对话框式）仍保留给 svg 工作台；html 管理页走这两个。
+
+  const createGroup = async (parent, name) => {
+    const path = parent ? `${parent}/${name}` : name;
+    const r = await api(`/api/${kind}/groups`, { method: 'POST', body: { group: path } });
+    await reload();
+    setDir(r.path || path);
+    toast(r.status === 'skipped' ? '分组已存在' : '已创建文件夹: ' + (r.path || path));
+    return r;
+  };
+
+  const createAsset = async (parent, name) => {
+    const r = await api(`/api/${kind}/assets`, { method: 'POST', body: { group: parent, name } });
+    await reload();
+    toast(`已创建${noun}: ` + r.group + '/' + r.name);
+    onOpen(r.group, r.name);
+    return r;
+  };
+
   const addGroup = (parent = dir) =>
     guard(async () => {
       const hint = parent ? parent + '/' : '';
@@ -35,28 +55,24 @@ export function makeManageOps({
       toast(r.status === 'skipped' ? '分组已存在' : '已创建分组: ' + r.path);
     });
 
-  // 改名 / 移动是同一件事（目录挪到新路径）。只改展示名时可只填 label。
+  // 改名 / 移动是同一件事（目录挪到新路径）。一个对话框问目标路径——
+  // 只改路径 = 移动；展示名默认跟随目录名（不再追问第二个对话框）。
   const renameGroup = (path = dir) =>
     guard(async () => {
       if (!path) return;
       const to = await dialog({
-        title: `改名或移动 ${path}`,
-        message: '改路径 = 整个目录挪过去（含资源与子分组）；只改展示名就把路径留原样。',
+        title: `移动或重命名 ${path}`,
+        message: '改路径 = 整个目录挪过去（含资源与子分组）。',
         input: true,
         value: path,
         placeholder: 'ui/icons/nav',
-        okText: '下一步',
+        okText: '确定',
       });
-      if (!to) return;
-      const label = await dialog({
-        title: '展示名（回车保持不变）',
-        input: true,
-        value: '',
-        placeholder: '导航图标',
-      });
+      if (!to || to === path) return;
+      const label = to.split('/').pop();
       const r = await api(`/api/${kind}/groups-rename`, {
         method: 'POST',
-        body: { group: path, to, label: label || undefined },
+        body: { group: path, to, label },
       });
       if (r.status === 'blocked') {
         toast(`没改成：${r.reason}`);
@@ -117,5 +133,5 @@ export function makeManageOps({
       onOpen(r.group, r.name);
     });
 
-  return { addGroup, renameGroup, removeGroup, addAsset };
+  return { addGroup, renameGroup, removeGroup, addAsset, createGroup, createAsset };
 }
