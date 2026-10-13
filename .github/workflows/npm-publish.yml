@@ -20,7 +20,8 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Node 24：npm@latest（12.x）不支持 Node 20（EBADENGINE）；本地开发同为 24
+          node-version: '24'
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
 
