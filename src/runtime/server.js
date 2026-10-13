@@ -5,6 +5,7 @@ import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fsp from 'node:fs/promises';
 import { handleApi, sendJson } from './api.js';
+import { handleZipDownload, ZIP_PATH } from './zip-download.js';
 import { DEFAULT_PORT } from '../core/paths.js';
 
 // vite 的 outDir：src/web/public（构建产物，gitignore）
@@ -54,6 +55,11 @@ export function startServer({ port = DEFAULT_PORT, host = '127.0.0.1' } = {}) {
   const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      // 二进制下载（zip）：JSON 路由的出口都是 {ok,data} 信封，二进制得先分流
+      if (url.pathname === ZIP_PATH) {
+        await handleZipDownload(req, res, url);
+        return;
+      }
       if (url.pathname.startsWith('/api/')) {
         await handleApi(req, res, url);
         return;

@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.js';
 import { Icon, IconGhost } from './svg-inline.jsx';
 import { SpecBadge, Empty } from './parts.jsx';
+import { SubdirCard } from '../asset/parts.jsx';
 
 // 规范颜色范围：图标必须在这些色下都立得住。
 // 前七色对齐面板 tokens（正文 / 次要 / 主色 / 链接 / 警示 / 危险 / 紫），
@@ -25,7 +26,10 @@ export const THEME_COLORS = [
   { name: '白（深底）', value: '#ffffff' },
 ];
 
-const SIZES = [20, 24, 32, 48];
+const SIZES = [20, 24, 32, 48, 64, 96];
+// 每行列数：auto = 按容器自适应；固定值适合「一张一张看清楚」——
+// 动画类的资源在密集网格里根本看不清（用户实测），3 列配大尺寸才是它的读法。
+const COLS = [0, 2, 3, 4, 6, 8];
 const LS_KEY = 'nx-ft-svg-gallery';
 
 function loadPrefs() {
@@ -36,23 +40,24 @@ function loadPrefs() {
   }
 }
 
-export function SvgGallery({ dir, search, activeTags, onOpen }) {
+export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }) {
   const prefs = loadPrefs();
   const [color, setColor] = useState(prefs.color || THEME_COLORS[0].value);
   const [size, setSize] = useState(prefs.size || 32);
   const [deep, setDeep] = useState(!!prefs.deep); // 含子目录
   const [kind, setKind] = useState(prefs.kind || 'all'); // all | duotone | line
+  const [cols, setCols] = useState(prefs.cols ?? 0); // 0 = 自适应
   const [data, setData] = useState(null);
   const [err, setErr] = useState('');
   const [q, setQ] = useState('');
 
   useEffect(() => {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify({ color, size, deep, kind }));
+      localStorage.setItem(LS_KEY, JSON.stringify({ color, size, deep, kind, cols }));
     } catch {
       /* 隐私模式静默 */
     }
-  }, [color, size, deep, kind]);
+  }, [color, size, deep, kind, cols]);
 
   const params = useMemo(() => {
     const p = new URLSearchParams();
@@ -76,7 +81,8 @@ export function SvgGallery({ dir, search, activeTags, onOpen }) {
     };
   }, [params]);
 
-  // 当前文件夹（含可选子目录）的图标 + 名字过滤 + 单色/双色筛选
+  // 当前文件夹（含可选子目录）的资源 + 名字过滤 + 单色/双色筛选
+  const subdirs = dirNode?.children || [];
   const all = useMemo(() => {
     const out = [];
     for (const g of data?.groups || []) {
@@ -98,34 +104,41 @@ export function SvgGallery({ dir, search, activeTags, onOpen }) {
   }, [all, kind, q]);
 
   const duotoneCount = all.filter((c) => c.profile === 'duotone').length;
+  // 主题色只对「跟随主题」的资源有意义。整屏都是原色图形（动画 / 插画）时
+  // 那一行控件与图例都是死按钮——直接不渲染（不同 SVG 类型的兼容）。
+  const hasFollowers = all.some((c) => c.profile !== 'color');
 
   const darkBg = color.toLowerCase() === '#ffffff';
 
   return (
     <>
       <div className="gal-bar">
-        <span className="gal-label">主题色</span>
-        <div className="gal-swatches">
-          {THEME_COLORS.map((c) => (
-            <button
-              key={c.value}
-              className={'gal-swatch' + (color === c.value ? ' active' : '')}
-              style={{ background: c.value }}
-              title={c.name}
-              aria-label={c.name}
-              onClick={() => setColor(c.value)}
-              data-testid={`gal-color-${c.name}`}
-            />
-          ))}
-          <label className="gal-custom" title="业务自定义色（用定后建议回填到规范）">
-            <input
-              type="color"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              data-testid="gal-color-custom"
-            />
-          </label>
-        </div>
+        {hasFollowers ? (
+          <>
+            <span className="gal-label">主题色</span>
+            <div className="gal-swatches">
+              {THEME_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  className={'gal-swatch' + (color === c.value ? ' active' : '')}
+                  style={{ background: c.value }}
+                  title={c.name}
+                  aria-label={c.name}
+                  onClick={() => setColor(c.value)}
+                  data-testid={`gal-color-${c.name}`}
+                />
+              ))}
+              <label className="gal-custom" title="业务自定义色（用定后建议回填到规范）">
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  data-testid="gal-color-custom"
+                />
+              </label>
+            </div>
+          </>
+        ) : null}
 
         <span className="gal-label">尺寸</span>
         <div className="gal-sizes">
@@ -169,6 +182,21 @@ export function SvgGallery({ dir, search, activeTags, onOpen }) {
           含子文件夹
         </label>
 
+        <span className="gal-label">每行</span>
+        <div className="gal-sizes">
+          {COLS.map((n) => (
+            <button
+              key={n}
+              className={'btn small' + (cols === n ? ' primary' : '')}
+              onClick={() => setCols(n)}
+              title={n === 0 ? '按容器宽度自适应' : `一行 ${n} 个`}
+              data-testid={`gal-cols-${n === 0 ? 'auto' : n}`}
+            >
+              {n === 0 ? '自动' : n}
+            </button>
+          ))}
+        </div>
+
         <div className="gal-spacer" />
         <input
           className="gal-search"
@@ -181,34 +209,53 @@ export function SvgGallery({ dir, search, activeTags, onOpen }) {
         <span className="muted gal-count" data-testid="gal-count">{cells.length} 枚</span>
       </div>
 
-      {/* 颜色系统一句话解释：切主题色只影响「跟随主题」的那一部分 */}
-      <div className="gal-legend muted">
-        主题色只作用于跟随主题的部分：
-        <span>单色全跟</span>
-        <span>双色只跟主题色那一半</span>
-        <span>原色不跟（配色即内容）</span>
-      </div>
+      {/* 颜色系统一句话解释：只在真有两类资源（跟随 / 不跟随）时才值得出现 */}
+      {hasFollowers && cells.some((c) => c.profile === 'color') ? (
+        <div className="gal-legend muted">
+          主题色只作用于跟随主题的部分：
+          <span>单色全跟</span>
+          <span>双色只跟主题色那一半</span>
+          <span>原色不跟（配色即内容）</span>
+        </div>
+      ) : null}
 
       {err ? <div className="empty bad">{err}</div> : null}
 
       {data && !cells.length ? (
         <Empty>
-          {dir ? '这个文件夹还没有图标' : '还没有任何图标'}
-          {!deep && dir ? '。也可能图标在子文件夹里——勾上「含子文件夹」看看' : ''}
+          {dir ? '这个文件夹还没有资源' : '还没有任何资源'}
+          {!deep && dir ? '。也可能在子文件夹里——勾上「含子文件夹」看看' : ''}
         </Empty>
       ) : null}
 
+      {/* 文件夹在画廊**之上**：一个文件夹的内容才铺成画廊。
+          少了这一段，画廊模式就成了「只能看、进不去」的死页面（用户实测反馈）。 */}
+      {subdirs.length ? (
+        <>
+          <div className="am-sec-title">文件夹 · {subdirs.length}</div>
+          <div className="am-subdirs">
+            {subdirs.map((c) => (
+              <SubdirCard key={c.path} node={c} onSelect={pickDir} />
+            ))}
+          </div>
+        </>
+      ) : null}
+
       <div
-        className={'gal-grid' + (darkBg ? ' gal-grid-dark' : '')}
-        style={{ color }}
+        className={'gal-grid' + (darkBg ? ' gal-grid-dark' : '') + (cols ? ' gal-grid-fixed' : '')}
+        style={{
+          color,
+          // 固定列数时直接写死列模板；自适应时交给 CSS 的 auto-fill
+          ...(cols ? { gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` } : {}),
+        }}
         data-testid="gal-grid"
       >
         {cells.map((c) => (
           <button
             key={`${c.groupPath}/${c.name}`}
-            className={'gal-cell' + (dir ? '' : '')}
+            className={'gal-cell' + (c.profile === 'color' ? ' gal-cell-art' : '')}
             onClick={() => onOpen(c.groupPath, c.name)}
-            title={`${c.label}（${c.name}）\n${c.groupPath}`}
+            title={`${c.label}（${c.name}）\n${c.groupPath}${c.profile === 'color' ? '\n原色图形：按自身长宽比撑满格子' : ''}`}
             data-testid={`gal-cell-${c.name}`}
           >
             <span className="gal-art">

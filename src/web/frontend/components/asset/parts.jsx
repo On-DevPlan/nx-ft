@@ -242,7 +242,7 @@ export function SubdirCard({ node, onSelect, onRemove, selectable, selected, onT
       ) : null}
       <span className="am-subdir-name">{node.label || node.name}</span>
       <span className="am-subdir-count">{node.total} 资源</span>
-      {!selectable ? (
+      {!selectable && onRemove ? (
         <button
           className="am-subdir-x"
           title={`删除目录 ${node.path}`}

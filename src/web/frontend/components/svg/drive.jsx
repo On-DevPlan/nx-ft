@@ -25,7 +25,9 @@ function SvgBoardActions({ reload }) {
     <>
       <div className="am-actions">
         <button className="btn small ghost" onClick={() => batch.importDir()}>批量导入</button>
-        <button className="btn small ghost" onClick={() => batch.exportDir()}>批量导出</button>
+        <button className="btn small ghost" onClick={() => batch.downloadZip()} data-testid="export-zip">
+          批量导出
+        </button>
         <button className="btn small ghost" onClick={() => batch.check()}>规范自检</button>
         <button className="btn small ghost" onClick={() => batch.fix()}>一键归一化</button>
       </div>
@@ -49,9 +51,11 @@ export function SvgDrive({ path = '' }) {
           render: (ctx) => (
             <SvgGallery
               dir={ctx.dir}
+              dirNode={ctx.dirNode}
               search={ctx.search}
               activeTags={ctx.activeTags}
               onOpen={ctx.onOpen}
+              pickDir={ctx.pickDir}
             />
           ),
         },

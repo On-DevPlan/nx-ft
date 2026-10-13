@@ -49,6 +49,19 @@
 .gal-grid-dark .gal-cell:hover { border-color: #30363d; }
 
 .gal-art { position: relative; display: grid; place-items: center; min-height: 48px; }
+/* 原色图形（动画 / 插画）：按自身长宽比撑满格宽，不塞进方框——
+   800×600 的动画压进 32px 方框只剩一条，根本看不清它画的是什么。
+   Icon 组件用行内 px 定尺寸，这里必须 !important 才能盖过行内样式。 */
+.gal-cell-art .gal-art { width: 100%; }
+.gal-cell-art .icon,
+.gal-cell-art .icon svg {
+  width: 100% !important;
+  height: auto !important;
+}
+.gal-cell-art .icon { max-height: 320px; }
+/* 固定列数（少列）时给大图形留出空间——动画/插画在大格子里才看得清 */
+.gal-grid-fixed .gal-cell { padding: 16px 10px 12px; }
+.gal-grid-fixed .gal-art { min-height: auto; }
 /* 图标继承画廊的主题色：.icon 默认写死 var(--ink)，会把墙上的颜色截断在这里 */
 .gal-grid .icon { color: inherit; }
 .gal-mark { position: absolute; top: -4px; right: -8px; }

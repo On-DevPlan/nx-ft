@@ -38,14 +38,21 @@ export function buildHtmlDoc(code) {
   return doc;
 }
 
-// svg：把用户写的 <svg> 放进居中壳里，css/js 照常注入。
+// svg：把用户写的 <svg> 放进一个「撑满预览帧」的壳里，css/js 照常注入。
+//
+// 关键：图形要**随预览区一起变大变小**。早先写的是 max-width/max-height:70vw/70vh +
+// height:auto —— 那让图形只占帧的 70%，而且完全不吃预览区的高度（把预览拉大它也不动，
+// 用户原话「预览的高度不变」）。现在让 svg 填满带内边距的容器，靠默认的
+// preserveAspectRatio="xMidYMid meet" 保持长宽比：图标与 800×600 的动画都能放大到
+// 看得清，且永不变形。
 export function buildSvgDoc(code) {
   const { extra, scriptText } = skin(code.css, code.js);
   const svg = String(code.svg || '');
   const style = [
-    'html,body{margin:0;min-height:100vh}',
+    'html,body{margin:0;height:100%}',
     'body{display:grid;place-items:center;background:#fff}',
-    'svg{max-width:70vw;max-height:70vh;height:auto}',
+    '#app{width:100%;height:100%;display:grid;place-items:center;padding:16px;box-sizing:border-box}',
+    '#app>svg{width:100%;height:100%;max-width:100%;max-height:100%}',
     extra,
   ]
     .filter(Boolean)

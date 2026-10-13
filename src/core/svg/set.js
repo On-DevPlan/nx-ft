@@ -18,6 +18,7 @@ import { assertKind, normalizeTags, parseGroupPath } from '../assets/constants.j
 import * as st from '../assets/storage.js';
 import { renderBoardHtml } from './board-page.js';
 import { auditSvg } from './spec.js';
+import { zipStore } from '../zip.js';
 
 const SLOTS = ['svg', 'css', 'js'];
 
@@ -121,6 +122,51 @@ export function importDir({ kind, group, from, style = 'default', tags, recursiv
     tags: tagList,
     total: plan.length,
     imported,
+    skipped,
+  };
+}
+
+// ---- 打包成 zip（浏览器直接下载用） ----
+//
+// 与 exportDir 的分工：exportDir 写到指定的本机目录（CLI 用），
+// exportZip 把同一批文件**装进内存里的一个 zip** 交给 HTTP 层——
+// 面板上点「批量导出」就该直接下载，而不是先让人填一个目录路径。
+// 取文件的规则与 exportDir 完全一致（同一套「当前风格」判定），只是不落盘。
+export function exportZip({ kind, group, style } = {}) {
+  assertKind(kind);
+  const groupPaths = group
+    ? [parseGroupPath(group)]
+    : st.scanGroups(kind).map((g) => g.groupPath);
+  if (!groupPaths.length) throw notFound('库里还没有任何分组');
+
+  const entries = [];
+  const skipped = [];
+  for (const gp of groupPaths) {
+    const manifest = st.loadGroup(kind, gp);
+    if (!manifest) throw notFound(`分组不存在: ${gp}`);
+    for (const a of Object.values(manifest.assets).filter((x) => x.kind === kind)) {
+      const useStyle = style || a.activeStyle || Object.keys(a.styles)[0];
+      if (!useStyle || !a.styles[useStyle]) {
+        skipped.push({ group: gp, name: a.name, reason: '没有可导出的风格' });
+        continue;
+      }
+      const svg = st.readCodeFiles(kind, gp, a.name, useStyle, SLOTS).svg || '';
+      if (!svg.trim()) {
+        skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的 svg 槽位为空` });
+        continue;
+      }
+      entries.push({ name: `${gp}/${a.name}.svg`, data: svg });
+    }
+  }
+  if (!entries.length) throw notFound('没有可导出的资源（都缺风格或内容为空）');
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  const scope = group ? group.replace(/\//g, '-') : `${kind}-all`;
+  return {
+    status: 'ok',
+    filename: `${scope}-${stamp}.zip`,
+    buffer: zipStore(entries),
+    count: entries.length,
     skipped,
   };
 }

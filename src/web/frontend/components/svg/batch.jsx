@@ -150,8 +150,25 @@ export function useBatch({ bin, dialog, guard, toast, reload, group }) {
       });
     });
 
-  // 批量导出：写「目录 + 一张自包含 index.html 看板页」。
-  // 同名文件默认跳过（导出器不改写别人的文件），跳过项会如实列出来。
+  // 批量导出（面板）：**直接下载一个 zip**，不再让用户填本机目录。
+  // 服务端 /api/svg/export.zip 用 store 模式打包（零依赖，见 core/zip.js），
+  // 带 Content-Disposition，所以浏览器收到就是一次下载。
+  // 想导到指定目录的场景仍由 CLI 承担：`svg export --to <目录>`（含 index.html 看板页）。
+  const downloadZip = () => {
+    const p = new URLSearchParams();
+    if (group) p.set('group', group);
+    const url = '/api/svg/export.zip' + (p.toString() ? '?' + p.toString() : '');
+    // 用 <a download> 而不是 location.href：不打扰当前页面的路由与状态
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast('已开始下载 zip');
+  };
+
+  // 批量导出到本机目录（CLI 侧同一动作，面板不再暴露入口）
   const exportDir = () =>
     guard(async () => {
       const to = await dialog({
@@ -197,5 +214,5 @@ export function useBatch({ bin, dialog, guard, toast, reload, group }) {
     </Modal>
   ) : null;
 
-  return { check, fix, importDir, exportDir, node };
+  return { check, fix, importDir, exportDir, downloadZip, node };
 }
