@@ -99,6 +99,23 @@ export function SplitPane({
   // 双击分隔条 = 重置为 initialPct
   const onDoubleClick = () => setPct(initialPct);
 
+  // 键盘替代（WCAG 2.2 AA「Dragging Movements」：拖拽不能是唯一的调整方式）：
+  // 分隔条可聚焦，方向键微调、Shift+方向键大步、Home/End 到两端、双击/回车复位。
+  const onKeyDown = (e) => {
+    const back = direction === 'horizontal' ? 'ArrowLeft' : 'ArrowUp';
+    const fwd = direction === 'horizontal' ? 'ArrowRight' : 'ArrowDown';
+    const step = e.shiftKey ? 10 : 2;
+    let next = null;
+    if (e.key === back) next = pct - step;
+    else if (e.key === fwd) next = pct + step;
+    else if (e.key === 'Home') next = minPct;
+    else if (e.key === 'End') next = maxPct;
+    else if (e.key === 'Enter') next = initialPct;
+    if (next === null) return;
+    e.preventDefault();
+    setPct(Math.min(maxPct, Math.max(minPct, next)));
+  };
+
   const isHoriz = direction === 'horizontal';
   const dividerClass = isHoriz ? 'sp-divider sp-divider-h' : 'sp-divider sp-divider-v';
 
@@ -121,13 +138,16 @@ export function SplitPane({
       <div
         className={dividerClass}
         role="separator"
+        tabIndex={0}
         aria-orientation={isHoriz ? 'vertical' : 'horizontal'}
+        aria-label="调整面板比例（拖动，或用方向键）"
         aria-valuenow={Math.round(pct)}
         aria-valuemin={minPct}
         aria-valuemax={maxPct}
         onMouseDown={onDown}
         onDoubleClick={onDoubleClick}
-        title="拖拽改变占比 · 双击重置"
+        onKeyDown={onKeyDown}
+        title="拖拽改变占比 · 方向键微调 · 双击重置"
         data-testid={testId ? `${testId}-divider` : undefined}
       />
       <div className={isHoriz ? 'sp-pane sp-pane-h' : 'sp-pane sp-pane-v'} style={styleSecond}>

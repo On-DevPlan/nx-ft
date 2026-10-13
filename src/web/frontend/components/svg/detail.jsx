@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../../store.jsx';
 import { CodeEditor } from '../asset/CodeEditor.jsx';
 import { PreviewPane } from '../asset/preview.jsx';
+import { SplitPane } from '../asset/SplitPane.jsx';
 import { Modal, useDialog, useGuard, useToast } from '../ui.jsx';
 import { makeDetailOps } from './detail-ops.jsx';
 import { CliBlock, IssueList, StyleStrip, TagBar } from './detail-parts.jsx';
@@ -215,43 +216,62 @@ export default function Detail({ group, name }) {
             </div>
           </section>
 
-          <div className="detail-work">
-            <section className="panel-card">
-              <div className="panel-card-head">
-                <span>编辑 · <span className="mono">{style || '—'}</span></span>
-                <span className="panel-card-extra">
-                  <span className="muted">Ctrl/Cmd+S 保存</span>
-                </span>
-              </div>
-              <div className="panel-card-body">
-                <div className="detail-editors" ref={editRef}>
-                  {SLOTS.map((slot) => (
-                    <CodeEditor
-                      key={`${style}:${slot}`}
-                      label={LABEL[slot]}
-                      initial={cur ? cur[slot] : ''}
-                      collapsed={slot === 'js'}
-                      onSave={ops.save}
-                      onChange={() => setTick((n) => n + 1)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <div className="detail-side">
-              <PreviewPane doc={doc} full={full} tick={tick} onToggleFull={() => setFull((f) => !f)} />
+          {/* 左右可拖拽（比例由用户定，不是写死的 380px）；双击分隔条复位，
+              键盘方向键也能调（WCAG 2.2 AA：拖拽不能是唯一方式） */}
+          <SplitPane
+            direction="horizontal"
+            initialPct={62}
+            minPct={30}
+            maxPct={85}
+            persistKey="nx-ft-svg-detail-split"
+            testId="detail-split"
+            left={
               <section className="panel-card">
                 <div className="panel-card-head">
-                  <span>规范问题</span>
-                  <span className="panel-card-extra muted mono">{style}</span>
+                  <span>编辑 · <span className="mono">{style || '—'}</span></span>
+                  <span className="panel-card-extra">
+                    <span className="muted">Ctrl/Cmd+S</span>
+                    <button
+                      className={'btn small' + (dirty ? ' primary' : ' ghost')}
+                      onClick={ops.save}
+                      disabled={!cur || !dirty}
+                      data-testid="detail-save"
+                    >
+                      {dirty ? '保存 *' : '已保存'}
+                    </button>
+                  </span>
                 </div>
                 <div className="panel-card-body">
-                  <IssueList issues={issues} style={style} onFix={ops.fixStyle} />
+                  <div className="detail-editors" ref={editRef}>
+                    {SLOTS.map((slot) => (
+                      <CodeEditor
+                        key={`${style}:${slot}`}
+                        label={LABEL[slot]}
+                        initial={cur ? cur[slot] : ''}
+                        collapsed={slot === 'js'}
+                        onSave={ops.save}
+                        onChange={() => setTick((n) => n + 1)}
+                      />
+                    ))}
+                  </div>
                 </div>
               </section>
-            </div>
-          </div>
+            }
+            right={
+              <div className="detail-side">
+                <PreviewPane doc={doc} full={full} tick={tick} onToggleFull={() => setFull((f) => !f)} />
+                <section className="panel-card">
+                  <div className="panel-card-head">
+                    <span>规范问题</span>
+                    <span className="panel-card-extra muted mono">{style}</span>
+                  </div>
+                  <div className="panel-card-body">
+                    <IssueList issues={issues} style={style} onFix={ops.fixStyle} />
+                  </div>
+                </section>
+              </div>
+            }
+          />
 
           <section className="panel-card">
             <div className="panel-card-head">

@@ -93,6 +93,10 @@ test('UIUX-REGRESS: 关键按钮都有 data-testid', async () => {
     'wb-rename',
     'wb-remove',
     'wb-remove-style',
+    'detail-save',
+    'detail-split',
+    'gal-grid',
+    'gal-legend',
     'crumbs',
   ];
   for (const id of requiredTestIds) {

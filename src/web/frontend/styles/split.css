@@ -25,6 +25,12 @@
 }
 .sp-divider:hover { background: var(--soft-2); }
 .sp-divider:active { background: var(--mid); }
+/* 键盘可达（WCAG 2.2 AA：拖拽不能是唯一方式）——焦点必须看得见 */
+.sp-divider:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -1px;
+  background: var(--soft-2);
+}
 
 .sp-divider-h {
   width: 6px;

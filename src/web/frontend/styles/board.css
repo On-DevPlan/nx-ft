@@ -135,7 +135,7 @@ body.ws-dragging { cursor: col-resize; user-select: none; }
   background: var(--soft); font-size: 12px; font-weight: 600;
 }
 .panel-card-head > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
-.panel-card-extra { font-weight: 400; font-size: 11px; }
+.panel-card-extra { display: flex; align-items: center; gap: 8px; font-weight: 400; font-size: 11px; }
 .panel-card-body { padding: 12px; }
 
 /* 统计条：一屏之内说清「有多少、多少合规」。用分隔线切分，不用卡片堆叠。 */

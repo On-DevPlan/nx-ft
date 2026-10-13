@@ -55,9 +55,17 @@
 .gal-name { font-size: 11px; font-weight: 600; color: var(--ink); max-width: 100%; }
 /* 深底（白图标那把）时文字翻成浅色，否则黑字压在黑底上看不见 */
 .gal-grid-dark .gal-name { color: #e6edf3; }
-/* 双色标记：点缀色不跟主题走，别让用户误判成「切色没生效」 */
-.gal-duo {
-  font-size: 11px; padding: 0 5px; border-radius: 999px;
-  border: 1px solid var(--soft-2); color: var(--mid);
+
+/* 类型标记（双色 / 原色 / 风格数）：让「会不会跟主题走」在墙上就能看出来 */
+.gal-marks { display: flex; align-items: center; gap: 4px; min-height: 16px; }
+.gal-mark-chip {
+  font-size: 11px; line-height: 1; padding: 2px 5px; border-radius: 999px;
+  border: 1px solid var(--soft-2); color: var(--mid); white-space: nowrap;
 }
-.gal-grid-dark .gal-duo { border-color: #30363d; color: #8b949e; }
+.gal-grid-dark .gal-mark-chip { border-color: #30363d; color: #8b949e; }
+
+/* 颜色系统说明 */
+.gal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 11px; }
+.gal-legend span {
+  padding: 2px 6px; border-radius: 999px; border: 1px dashed var(--soft-2);
+}

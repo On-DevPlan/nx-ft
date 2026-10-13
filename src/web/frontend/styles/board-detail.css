@@ -41,7 +41,11 @@
 }
 .style-card-act:hover { background: var(--soft-2); }
 
-.detail-work { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
+/* 编辑区左右**可拖拽**（SplitPane），不再是写死的 380px 侧栏。
+   分隔条承担间隔，两侧各自滚动。 */
+.detail [data-testid='detail-split'] { align-items: stretch; }
+.detail [data-testid='detail-split'] > .sp-pane:first-child { padding-right: 14px; }
+.detail [data-testid='detail-split'] > .sp-pane:last-child { padding-left: 14px; }
 .detail-editors { display: grid; gap: 10px; }
 .detail-side { display: flex; flex-direction: column; gap: 14px; }
 
@@ -138,7 +142,8 @@
 /* ---------- 响应式 ---------- */
 
 @media (max-width: 1080px) {
-  .detail-work { grid-template-columns: 1fr; }
+  .detail [data-testid='detail-split'] > .sp-pane:first-child { padding-right: 0; }
+  .detail [data-testid='detail-split'] > .sp-pane:last-child { padding-left: 0; }
   .statbar-spec { margin-left: 0; border-left: 0; border-top: var(--border); width: 100%; padding: 6px 14px; }
 }
 @media (max-width: 640px) {

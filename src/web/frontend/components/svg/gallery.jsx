@@ -173,12 +173,20 @@ export function SvgGallery({ dir, search, activeTags, onOpen }) {
         <input
           className="gal-search"
           spellCheck="false"
-          placeholder="在墙上找图标"
+          placeholder="在墙上找资源"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           data-testid="gal-search"
         />
-        <span className="muted gal-count">{cells.length} 枚</span>
+        <span className="muted gal-count" data-testid="gal-count">{cells.length} 枚</span>
+      </div>
+
+      {/* 颜色系统一句话解释：切主题色只影响「跟随主题」的那一部分 */}
+      <div className="gal-legend muted">
+        主题色只作用于跟随主题的部分：
+        <span>单色全跟</span>
+        <span>双色只跟主题色那一半</span>
+        <span>原色不跟（配色即内容）</span>
       </div>
 
       {err ? <div className="empty bad">{err}</div> : null}
@@ -212,8 +220,14 @@ export function SvgGallery({ dir, search, activeTags, onOpen }) {
               ) : null}
             </span>
             <span className="gal-name nowrap">{c.label}</span>
-            {/* 双色：点缀色不跟主题走，只有主题色那一半跟着变——标出来省得误判成「没生效」 */}
-            {c.profile === 'duotone' ? <span className="gal-duo">双色</span> : null}
+            {/* 类型与风格数：让「这枚会不会跟主题走」「它有几种做法」在墙上就能看出来 */}
+            <span className="gal-marks">
+              {c.profile === 'duotone' ? <span className="gal-mark-chip">双色</span> : null}
+              {c.profile === 'color' ? <span className="gal-mark-chip">原色</span> : null}
+              {c.styleCount > 1 ? (
+                <span className="gal-mark-chip" title={`${c.styleCount} 个风格`}>×{c.styleCount}</span>
+              ) : null}
+            </span>
           </button>
         ))}
       </div>
