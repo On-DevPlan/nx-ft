@@ -214,7 +214,6 @@ export function SvgGallery({ dir, search, activeTags, onOpen }) {
             <span className="gal-name nowrap">{c.label}</span>
             {/* 双色：点缀色不跟主题走，只有主题色那一半跟着变——标出来省得误判成「没生效」 */}
             {c.profile === 'duotone' ? <span className="gal-duo">双色</span> : null}
-            {!dir && deep === false ? <span className="gal-path nowrap muted">{c.groupPath}</span> : null}
           </button>
         ))}
       </div>

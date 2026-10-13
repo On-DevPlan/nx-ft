@@ -53,10 +53,8 @@
 .gal-grid .icon { color: inherit; }
 .gal-mark { position: absolute; top: -4px; right: -8px; }
 .gal-name { font-size: 11px; font-weight: 600; color: var(--ink); max-width: 100%; }
-.gal-path { font-size: 11px; max-width: 100%; color: var(--mid); }
 /* 深底（白图标那把）时文字翻成浅色，否则黑字压在黑底上看不见 */
 .gal-grid-dark .gal-name { color: #e6edf3; }
-.gal-grid-dark .gal-path { color: #8b949e; }
 /* 双色标记：点缀色不跟主题走，别让用户误判成「切色没生效」 */
 .gal-duo {
   font-size: 11px; padding: 0 5px; border-radius: 999px;
