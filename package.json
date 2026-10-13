@@ -1,7 +1,7 @@
 {
   "name": "nx-ft",
-  "version": "0.2.0",
-  "description": "本机前端工程化资源管理：HTML/SVG 渲染沙盒、分组+标签+多风格资源库与编辑历史，CLI 与 Web 面板同源",
+  "version": "0.3.0",
+  "description": "本机前端工程化资源管理：HTML/SVG 渲染沙盒、分组+标签+多风格资源库与编辑历史、SVG 图标集规范与四层看板，CLI 与 Web 面板同源",
   "type": "module",
   "bin": {
     "nx-ft": "bin/ft.mjs"
