@@ -59,7 +59,8 @@ export default function Board() {
     guard(async () => {
       const path = await dialog({
         title: '新建分组',
-        message: '1~3 段路径，如 ui/icons、ui/icons/nav。',
+        // 段数上限的真相在 core/assets/constants.js 的 GROUP_DEPTH_MAX（当前 8）
+        message: '最多 8 段路径，如 ui/icons、ui/icons/nav。',
         input: true,
         placeholder: 'ui/icons',
         okText: '创建',
@@ -70,13 +71,14 @@ export default function Board() {
       toast(r.status === 'skipped' ? '分组已存在' : '已创建分组: ' + r.path);
     });
 
-  const addAsset = () =>
+  const addAsset = (preset) =>
     guard(async () => {
       const group = await dialog({
         title: '新建图标',
         message: '图标 = 一枚 SVG。建好后会进入资源页，可直接写路径或让 AI 用 CLI 写。',
         input: true,
-        value: data?.groups?.[0]?.path || '',
+        // 从某个分组的空态点进来时带上那个分组，省掉手打路径
+        value: preset || data?.groups?.[0]?.path || '',
         placeholder: 'ui/icons',
         okText: '下一步',
       });
@@ -181,17 +183,28 @@ export default function Board() {
                 归一化
               </button>
             </GroupHead>
-            <div className="icon-grid">
-              {g.assets.map((a) => (
-                <IconTile
-                  key={g.path + '/' + a.name}
-                  asset={a}
-                  groupPath={g.path}
-                  onOpen={() => nav.asset(g.path, a.name)}
-                  onFull={() => nav.full(g.path, a.name)}
-                />
-              ))}
-            </div>
+            {g.assets.length ? (
+              <div className="icon-grid">
+                {g.assets.map((a) => (
+                  <IconTile
+                    key={g.path + '/' + a.name}
+                    asset={a}
+                    groupPath={g.path}
+                    onOpen={() => nav.asset(g.path, a.name)}
+                    onFull={() => nav.full(g.path, a.name)}
+                  />
+                ))}
+              </div>
+            ) : (
+              /* 空分组要给一句说明和一个入口：刚建好的分组本来就没有资源，
+                 只留一个空网格会让人以为「建了但没生效」。 */
+              <div className="board-group-empty">
+                <span className="muted">这一组还没有图标</span>
+                <button className="btn small ghost" onClick={() => addAsset(g.path)}>
+                  在此新建图标
+                </button>
+              </div>
+            )}
           </section>
         ))}
       </div>

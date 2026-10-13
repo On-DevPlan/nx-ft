@@ -113,7 +113,8 @@ export function useBatch({ bin, dialog, guard, toast, reload, group }) {
         input: true,
         value: group || '',
         placeholder: 'ui/icons',
-        message: '1~3 段路径；不存在会自动创建。',
+        // 段数上限的真相在 core/assets/constants.js 的 GROUP_DEPTH_MAX（当前 8）
+        message: '最多 8 段路径；不存在会自动创建。',
         okText: '预览计划',
       });
       if (!target) return;

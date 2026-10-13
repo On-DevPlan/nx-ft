@@ -97,6 +97,13 @@
 
 .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(122px, 1fr)); gap: 8px; }
 
+/* 空分组：一句说明 + 一个入口。刚建好的分组本来就没有资源，
+   只留一个空网格会让人以为「建了但没生效」。 */
+.board-group-empty {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  border: 1px dashed var(--soft-2); border-radius: 10px; font-size: 12px;
+}
+
 .icon-tile {
   display: flex; flex-direction: column; overflow: hidden;
   border: var(--border); border-radius: 10px; background: var(--paper);

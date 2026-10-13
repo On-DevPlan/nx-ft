@@ -26,6 +26,8 @@ export function listTree(kindFilter, { search = '', tags = [] } = {}) {
   const scanned = st.scanGroups();
   const wantTags = normalizeTags(tags);
   const q = String(search || '').trim().toLowerCase();
+  // 「有没有在筛选」决定空分组是留还是丢，见下面的 .filter 注释
+  const filtering = !!q || wantTags.length > 0;
   const tagCounts = new Map();
   let kindTotal = 0;
 
@@ -60,7 +62,11 @@ export function listTree(kindFilter, { search = '', tags = [] } = {}) {
           .sort((a, b) => a.name.localeCompare(b.name)),
       };
     })
-    .filter((g) => g.assets.length);
+    // 无筛选时**不丢空分组**。刚建好的分组本来就没有资源，丢掉它等于「建完就消失」——
+    // 面板上什么都看不到，用户只会认为创建失败了，而「先建目录、再往里放资源」
+    // 正是这个工具最基本的用法（真实踩过：建了分组却怎么都不显示）。
+    // 只有带搜索/标签条件时才隐藏：一个没有任何命中资源的分组出现在结果里是噪音。
+    .filter((g) => !filtering || g.assets.length > 0);
 
   const availableTags = [...tagCounts.entries()]
     .map(([name, count]) => ({ name, count }))
