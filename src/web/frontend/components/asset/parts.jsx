@@ -72,6 +72,7 @@ export function TagCloud({ tags, active = [], onToggle, onClear }) {
 // 资源卡片：点卡片进工作台；标签片可点即筛（不发散冒泡）。
 // 可选勾选框：批量模式下显示。选中态与父级 selected 集合联动。
 export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagToggle, selectable, selected, onToggle }) {
+  // 修：勾选框需要 onClick + onChange 双拦截，否则冒泡到外层 div 会触发 onOpen 跳转。
   const handleCheck = (e) => {
     e.stopPropagation();
     onToggle && onToggle(groupPath, asset.name);
@@ -79,7 +80,7 @@ export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagTogg
   return (
     <div
       className={'am-card' + (selected ? ' selected' : '')}
-      onClick={() => !selected && onOpen(groupPath, asset.name)}
+      onClick={() => !selectable && onOpen(groupPath, asset.name)}
       title={`打开工作台: ${groupPath}/${asset.name}`}
       data-testid={`asset-card-${asset.name}`}
     >
@@ -89,6 +90,7 @@ export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagTogg
           className="am-card-check"
           aria-label={`选择 ${asset.name}`}
           checked={!!selected}
+          onClick={handleCheck}
           onChange={handleCheck}
           data-testid={`asset-card-check-${asset.name}`}
         />

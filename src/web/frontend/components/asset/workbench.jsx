@@ -7,6 +7,7 @@ import { CodeEditor } from './CodeEditor.jsx';
 import { buildPreviewDoc, PreviewPane } from './preview.jsx';
 import { Crumbs } from './parts.jsx';
 import { makeAssetOps } from './useAssetOps.js';
+import { SplitPane } from './SplitPane.jsx';
 
 const KIND_SLOTS = { html: ['html', 'css', 'js'], svg: ['svg', 'css', 'js'] };
 const KIND_LABEL = { html: { html: 'HTML', css: 'CSS', js: 'JS' }, svg: { svg: 'SVG', css: 'CSS', js: 'JS' } };
@@ -47,7 +48,13 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
       const style = a.styles.some((s) => s.name === target.style)
         ? target.style
         : a.activeStyle || a.styles[0]?.name || '';
-      savedRef.current = { ...(a.code[style] || {}) };
+      // 修：savedRef 必须包含 KIND_SLOTS 的全部 key，否则无风格资源首次打开会被误判 dirty。
+      const codeForStyle = a.code[style] || {};
+      const normalized = {};
+      KIND_SLOTS[kind].forEach((slot) => {
+        normalized[slot] = codeForStyle[slot] || '';
+      });
+      savedRef.current = normalized;
       setAsset(a);
       setSel({ group: a.group, name: a.name, style });
       setReady(true);
@@ -102,7 +109,12 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
   const pickStyle = async (style) => {
     if (!style || style === sel.style || !asset) return;
     if (!(await guardDirty())) return;
-    savedRef.current = { ...(asset.code[style] || {}) };
+    const codeForStyle = asset.code[style] || {};
+    const normalized = {};
+    KIND_SLOTS[kind].forEach((slot) => {
+      normalized[slot] = codeForStyle[slot] || '';
+    });
+    savedRef.current = normalized;
     setSel((s) => ({ ...s, style }));
     setTick((n) => n + 1);
   };
@@ -167,21 +179,26 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
           </select>
           {style?.desc ? <span className="wb-desc" title={style.desc}>{style.desc}</span> : null}
           {style ? <span className="tag">历史 {style.historyCount}/5</span> : null}
-          <button className="btn ghost" onClick={ops.newStyle}>新风格</button>
-          <button className="btn ghost" onClick={ops.setStyleDesc} disabled={!asset?.styles.length}>
+          <button className="btn ghost" onClick={ops.newStyle} data-testid="wb-new-style">新风格</button>
+          <button className="btn ghost" onClick={ops.setStyleDesc} disabled={!asset?.styles.length} data-testid="wb-style-desc">
             描述
           </button>
-          <button className={'btn' + (isDirty() ? '' : ' ghost')} onClick={ops.save} disabled={!asset?.styles.length}>
+          <button
+            className={'btn' + (isDirty() ? '' : ' ghost')}
+            onClick={ops.save}
+            disabled={!asset?.styles.length}
+            data-testid="wb-save"
+          >
             {isDirty() ? '保存 *' : '保存'}
           </button>
           <details className="wb-more">
-            <summary className="btn ghost">更多</summary>
+            <summary className="btn ghost" data-testid="wb-more">更多</summary>
             <div className="wb-more-menu">
-              <button className="btn ghost" onClick={ops.removeStyle} disabled={!asset?.styles.length}>
+              <button className="btn ghost" onClick={ops.removeStyle} disabled={!asset?.styles.length} data-testid="wb-remove-style">
                 删除当前风格
               </button>
-              <button className="btn ghost" onClick={ops.renameAsset}>改展示名</button>
-              <button className="btn ghost danger" onClick={ops.removeAsset}>删除资源</button>
+              <button className="btn ghost" onClick={ops.renameAsset} data-testid="wb-rename">改展示名</button>
+              <button className="btn ghost danger" onClick={ops.removeAsset} data-testid="wb-remove">删除资源</button>
             </div>
           </details>
         </div>
@@ -200,27 +217,39 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
       </div>
 
       <div className="wb-body" ref={mainRef}>
-        <div className="wb-editors-row">
-          {KIND_SLOTS[kind].map((slot) => (
-            <CodeEditor
-              key={`${sel.name}:${sel.style}:${slot}`}
-              label={KIND_LABEL[kind][slot]}
-              initial={ready ? (asset?.code?.[sel.style] || {})[slot] : ''}
-              readOnly={!ready}
-              collapsed={slot === 'js'} /* JS 默认折叠，3 列横向给 HTML/CSS 留宽 */
-              onSave={ops.save}
-              onChange={() => setTick((n) => n + 1)}
-            />
-          ))}
-        </div>
-        <div className="wb-preview-row">
-          <PreviewPane
-            doc={ready ? buildPreviewDoc(kind, readCode()) : ''}
-            full={full}
-            tick={tick}
-            onToggleFull={() => setFull((f) => !f)}
-          />
-        </div>
+        <SplitPane
+          direction="vertical"
+          initialPct={55}
+          minPct={20}
+          maxPct={80}
+          persistKey={`nx-ft-wb-split-${kind}-${group}-${name}`}
+          testId="wb-split"
+          left={
+            <div className="wb-editors-row">
+              {KIND_SLOTS[kind].map((slot) => (
+                <CodeEditor
+                  key={`${sel.name}:${sel.style}:${slot}`}
+                  label={KIND_LABEL[kind][slot]}
+                  initial={ready ? (asset?.code?.[sel.style] || {})[slot] : ''}
+                  readOnly={!ready}
+                  collapsed={slot === 'js'}
+                  onSave={ops.save}
+                  onChange={() => setTick((n) => n + 1)}
+                />
+              ))}
+            </div>
+          }
+          right={
+            <div className="wb-preview-row">
+              <PreviewPane
+                doc={ready ? buildPreviewDoc(kind, readCode()) : ''}
+                full={full}
+                tick={tick}
+                onToggleFull={() => setFull((f) => !f)}
+              />
+            </div>
+          }
+        />
       </div>
       {node}
     </div>

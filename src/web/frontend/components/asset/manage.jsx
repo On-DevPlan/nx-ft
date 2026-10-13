@@ -223,9 +223,10 @@ export function ManagePage({ kind, initialDir, onOpen }) {
           placeholder="搜索名称 / 分组 / 标签 / 风格"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
+          data-testid="manage-search"
         />
-        <button className="btn" onClick={() => addGroup()}>新建分组</button>
-        <button className="btn" onClick={() => addAsset()}>新建资源</button>
+        <button className="btn" onClick={() => addGroup()} data-testid="manage-new-group">新建分组</button>
+        <button className="btn" onClick={() => addAsset()} data-testid="manage-new-asset">新建资源</button>
       </div>
 
       <TagCloud

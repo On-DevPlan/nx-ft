@@ -29,7 +29,10 @@ export function SplitPane({
   const stored = (() => {
     if (!persistKey) return initialPct;
     try {
-      const v = Number(localStorage.getItem(persistKey));
+      // 修：Number(null) === 0 会把初始宽度锁死在 0%。必须先判断 null。
+      const raw = localStorage.getItem(persistKey);
+      if (raw == null) return initialPct;
+      const v = Number(raw);
       return Number.isFinite(v) ? v : initialPct;
     } catch {
       return initialPct;
