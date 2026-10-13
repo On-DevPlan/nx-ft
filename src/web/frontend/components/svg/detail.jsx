@@ -18,15 +18,16 @@ import { useDetail, useNav } from './useSvg.js';
 const SLOTS = ['svg', 'css', 'js'];
 const LABEL = { svg: 'SVG', css: 'CSS', js: 'JS' };
 
-// 预览文档：图标规范不写死宽高，所以这里用 100%/100% 让它按容器缩放，
-// preserveAspectRatio 默认 xMidYMid 会把正方形图标居中放满。
-// 只占 62% 是为了留出呼吸空间：铺满整个面板时图标会显得笨重，
-// 而 62%（约 230px）已经足够看清线帽和拐点——要看更大就进整页预览。
+// 预览文档：图形要**随预览区一起缩放**。
+// 早先写的是 `#app{width:62%;height:62%}`——图形恒定只占帧的 62%，
+// 把预览区拉大它也不动（用户三次反馈「预览高度被固定」，根因就在这一行）。
+// 现在让 #app 撑满、留 6% 内边距当呼吸位（比例缩放，不是写死像素），
+// svg 100% 填满 + 默认 preserveAspectRatio，图标与 800×600 的动画都能放大且不变形。
 function svgDoc(code) {
   const css = [
     'html,body{margin:0;height:100%}',
     'body{display:grid;place-items:center;background:#fff}',
-    '#app{width:62%;height:62%}',
+    '#app{width:100%;height:100%;padding:6%;box-sizing:border-box;display:grid;place-items:center}',
     'svg{width:100%;height:100%;display:block}',
     String(code.css || ''),
   ].join('\n');
