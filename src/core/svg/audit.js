@@ -15,7 +15,7 @@ import { ICON_SPEC, PROFILES, auditSvg, normalizeSvg } from './spec.js';
 const SLOTS = ['svg', 'css', 'js'];
 
 function targetGroups(kind, group) {
-  const all = st.scanGroups();
+  const all = st.scanGroups(kind);
   const scoped = group ? all.filter((g) => g.groupPath === group) : all;
   if (group && !scoped.length) {
     const similar = all.map((g) => g.groupPath).filter((p) => p.includes(group));
@@ -41,7 +41,7 @@ export function checkLibrary(kind, { group, profile = 'line' } = {}) {
   for (const g of groups) {
     for (const a of g.assets) {
       const style = a.activeStyle || Object.keys(a.styles)[0];
-      const svg = style ? st.readCodeFiles(g.path, a.name, style, SLOTS).svg || '' : '';
+      const svg = style ? st.readCodeFiles(kind, g.path, a.name, style, SLOTS).svg || '' : '';
       const audit = auditSvg(svg, { profile });
       stats.assets++;
       stats.issues += audit.issues.length;
@@ -82,7 +82,7 @@ export function fixLibrary(kind, { group, style, profile = 'line', dryRun = fals
         failed.push({ group: g.path, name: a.name, reason: '没有可修复的风格' });
         continue;
       }
-      const before = st.readCodeFiles(g.path, a.name, targetStyle, SLOTS).svg || '';
+      const before = st.readCodeFiles(kind, g.path, a.name, targetStyle, SLOTS).svg || '';
       const norm = normalizeSvg(before, { profile });
       if (!norm.ok) {
         failed.push({ group: g.path, name: a.name, reason: norm.error });

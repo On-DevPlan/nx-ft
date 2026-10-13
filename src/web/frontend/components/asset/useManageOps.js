@@ -1,14 +1,28 @@
-// 管理页操作集合：新建分组 / 删除分组 / 新建资源（三组弹窗流程）。
-// 抽成独立文件：让 manage.jsx 保持「布局与浏览逻辑」一件事。
+// 管理/工作台的操作集合：新建分组、改名/移动、删除分组、新建资源。
+// 抽成独立文件：让 manage.jsx 与 svg 工作台都只负责「布局与浏览」一件事。
+//
+// 两个面板共用这一份（靠 kind 与 noun 参数区分）：html 说「资源」，svg 说「图标」。
+// 共用而不是各写一份，是为了让「同一件事在两个面板里行为一致」成为结构事实——
+// 分开写迟早会出现「html 能改名、svg 不能」这种没人注意到的缺口。
 import { api } from '../../api/client.js';
 
-export function makeManageOps({ kind, dir, reload, setDir, dialog, guard, toast, onOpen }) {
+export function makeManageOps({
+  kind,
+  dir,
+  reload,
+  setDir,
+  dialog,
+  guard,
+  toast,
+  onOpen,
+  noun = '资源',
+}) {
   const addGroup = (parent = dir) =>
     guard(async () => {
       const hint = parent ? parent + '/' : '';
       const path = await dialog({
         title: '新建分组',
-        message: `1~8 段路径（支持多层目录树）${parent ? `，当前目录: ${parent}` : ''}`,
+        message: `最多 8 段路径（支持多层目录树）${parent ? `，当前目录: ${parent}` : ''}`,
         input: true,
         value: hint,
         placeholder: 'ui/buttons/primary',
@@ -21,11 +35,43 @@ export function makeManageOps({ kind, dir, reload, setDir, dialog, guard, toast,
       toast(r.status === 'skipped' ? '分组已存在' : '已创建分组: ' + r.path);
     });
 
+  // 改名 / 移动是同一件事（目录挪到新路径）。只改展示名时可只填 label。
+  const renameGroup = (path = dir) =>
+    guard(async () => {
+      if (!path) return;
+      const to = await dialog({
+        title: `改名或移动 ${path}`,
+        message: '改路径 = 整个目录挪过去（含资源与子分组）；只改展示名就把路径留原样。',
+        input: true,
+        value: path,
+        placeholder: 'ui/icons/nav',
+        okText: '下一步',
+      });
+      if (!to) return;
+      const label = await dialog({
+        title: '展示名（回车保持不变）',
+        input: true,
+        value: '',
+        placeholder: '导航图标',
+      });
+      const r = await api(`/api/${kind}/groups-rename`, {
+        method: 'POST',
+        body: { group: path, to, label: label || undefined },
+      });
+      if (r.status === 'blocked') {
+        toast(`没改成：${r.reason}`);
+        return;
+      }
+      await reload();
+      if (r.renamed) setDir(r.path);
+      toast(r.renamed ? `已移动: ${path} → ${r.path}` : `已更新展示名: ${path}`);
+    });
+
   const removeGroup = (path) =>
     guard(async () => {
       const ok = await dialog({
         title: `删除分组 ${path}？`,
-        message: '分组内的资源、子分组、风格与历史会全部删除（非空需确认），不可恢复。',
+        message: `分组内的${noun}、子分组、风格与历史会全部删除（非空需确认），不可恢复。`,
         okText: '连同内容一起删除',
         danger: true,
       });
@@ -41,28 +87,35 @@ export function makeManageOps({ kind, dir, reload, setDir, dialog, guard, toast,
   const addAsset = (parent = dir) =>
     guard(async () => {
       const group = await dialog({
-        title: '新建资源',
+        title: `新建${noun}`,
         input: true,
         value: parent || '',
         placeholder: '分组路径，如 ui/buttons',
-        message: '资源 = 一个场景（如「登录按钮」），创建后进入工作台加风格。',
+        message:
+          kind === 'svg'
+            ? '图标 = 一枚 SVG。建好后进入资源页，可直接写路径或让 AI 用 CLI 写。'
+            : `${noun} = 一个场景（如「登录按钮」），创建后进入工作台加风格。`,
       });
       if (!group) return;
       const name = await dialog({
-        title: '资源名',
+        title: '目录名',
         input: true,
-        placeholder: 'login-btn（目录名，用 kebab-case）',
+        placeholder: kind === 'svg' ? 'add-icon（kebab-case）' : 'login-btn（kebab-case）',
       });
       if (!name) return;
-      const label = await dialog({ title: '展示名（回车跳过）', input: true, placeholder: '登录按钮' });
+      const label = await dialog({
+        title: '展示名（回车跳过）',
+        input: true,
+        placeholder: kind === 'svg' ? '加号' : '登录按钮',
+      });
       const r = await api(`/api/${kind}/assets`, {
         method: 'POST',
         body: { group, name, label: label || undefined },
       });
       await reload();
-      toast('已创建资源: ' + r.group + '/' + r.name);
+      toast(`已创建${noun}: ` + r.group + '/' + r.name);
       onOpen(r.group, r.name);
     });
 
-  return { addGroup, removeGroup, addAsset };
+  return { addGroup, renameGroup, removeGroup, addAsset };
 }

@@ -1,9 +1,111 @@
-/* 第 6 层甲 / SVG 看板：看板页与分组页 + 全站公共件（面包屑 / 面板卡 / 统计条 / 规范标签）。
+/* 第 6 层甲 / SVG 工作台：左树 + 右内容（中间可拖动）+ 面板公共件。
  *
  * 另两半在同目录：资源页与整页预览见 board-detail.css。
  * 这一层沿用 tokens 里的变量，不引入新颜色——「需要注意」一律用对比度表达
  * （墨色胶囊 / 粗体数字 / 下缘 2px 墨线），颜色只留给真正的错误（--bad）。
  */
+
+/* ---------- 工作台骨架：左树 ▏右内容 ---------- */
+/* 树 sticky 且独立滚动：内容很长时（几十枚图标）也始终看得到自己在哪个目录 */
+.ws { display: flex; align-items: flex-start; gap: 0; }
+
+.ws-tree {
+  flex: 0 0 auto;
+  position: sticky;
+  top: 72px;
+  max-height: calc(100vh - 92px);
+  overflow: auto;
+  border: var(--border);
+  border-radius: 10px;
+  background: var(--paper);
+}
+.ws-tree-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 1;
+}
+.ws-tree-title { font-size: 12px; font-weight: 700; }
+.ws-tree-body { padding: 4px 2px 8px; }
+.ws-tree .tm-tree { min-width: 0; }
+.ws-tree .tm-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 拖动条：视觉上是一条细线，命中区给足 6px，不然很难拖 */
+.ws-split {
+  flex: 0 0 6px;
+  align-self: stretch;
+  cursor: col-resize;
+  border-radius: 3px;
+  background: transparent;
+  transition: background 0.12s;
+}
+.ws-split:hover { background: var(--soft-2); }
+/* 拖动中：整页都是左右箭头，且禁止选中文字（否则会选到一片高亮） */
+body.ws-dragging { cursor: col-resize; user-select: none; }
+
+.ws-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 10px;
+}
+.ws-body { display: flex; flex-direction: column; gap: 10px; }
+
+/* 子目录卡：进去 / 改名 / 删 三个动作都在卡上，不用先点进去再找 */
+.ws-dirs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.ws-dir {
+  display: flex;
+  align-items: center;
+  border: var(--border);
+  border-radius: 8px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.ws-dir-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+.ws-dir-main:hover { background: var(--soft); }
+.ws-dir-name {
+  font-weight: 600;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ws-dir-count { font-size: 11px; color: var(--mid); flex: 0 0 auto; }
+.ws-dir-act {
+  flex: 0 0 auto;
+  border: 0;
+  border-left: var(--border);
+  background: none;
+  color: var(--mid);
+  font-size: 11px;
+  padding: 8px 7px;
+  cursor: pointer;
+}
+.ws-dir-act:hover { background: var(--soft); color: var(--ink); }
+.ws-dir-act.danger:hover { background: var(--bad); color: #fff; }
+
 
 /* ---------- 公共件 ---------- */
 

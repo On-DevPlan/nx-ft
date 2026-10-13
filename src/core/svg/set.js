@@ -99,7 +99,7 @@ export function importDir({ kind, group, from, style = 'default', tags, recursiv
   }
 
   let groupCreated = false;
-  if (!st.loadGroup(groupPath)) {
+  if (!st.loadGroup(kind, groupPath)) {
     addGroup({ group: groupPath });
     groupCreated = true;
   }
@@ -134,7 +134,7 @@ export function exportDir({ kind, group, to, style, board = true, force = false 
 
   const groupPaths = group
     ? [parseGroupPath(group)]
-    : st.scanGroups().map((g) => g.groupPath);
+    : st.scanGroups(kind).map((g) => g.groupPath);
   if (!groupPaths.length) throw notFound('库里还没有任何分组');
 
   const exported = [];
@@ -142,7 +142,7 @@ export function exportDir({ kind, group, to, style, board = true, force = false 
   const boardGroups = [];
 
   for (const gp of groupPaths) {
-    const manifest = st.loadGroup(gp);
+    const manifest = st.loadGroup(kind, gp);
     if (!manifest) throw notFound(`分组不存在: ${gp}`);
     const assets = Object.values(manifest.assets).filter((a) => a.kind === kind);
     const boardAssets = [];
@@ -153,7 +153,7 @@ export function exportDir({ kind, group, to, style, board = true, force = false 
         skipped.push({ group: gp, name: a.name, reason: '没有可导出的风格' });
         continue;
       }
-      const code = st.readCodeFiles(gp, a.name, useStyle, SLOTS);
+      const code = st.readCodeFiles(kind, gp, a.name, useStyle, SLOTS);
       const svg = code.svg || '';
       if (!svg.trim()) {
         skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的 svg 槽位为空` });

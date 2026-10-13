@@ -28,7 +28,7 @@ export function setStyleDesc({ kind, group, name, style, text }) {
   const desc = normalizeDesc(text);
   entry.styles[styleName].desc = desc;
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
+  st.saveGroup(kind, groupPath, manifest);
   return { status: 'ok', group: groupPath, name: entryName, style: styleName, desc };
 }
 
@@ -59,7 +59,7 @@ export function addStyle({ kind, group, name, style, copyFrom, code, desc }) {
     const fromName = assertSafeName(String(copyFrom).trim(), '来源风格名');
     assertStyle(entry, fromName);
     from = fromName;
-    files = st.readCodeFiles(groupPath, entryName, fromName, kindDef.slots);
+    files = st.readCodeFiles(kind, groupPath, entryName, fromName, kindDef.slots);
   } else if (code) {
     files = {};
     for (const slot of kindDef.slots) {
@@ -76,11 +76,11 @@ export function addStyle({ kind, group, name, style, copyFrom, code, desc }) {
     updatedAt: nowIso(),
     history: [],
   };
-  if (files) st.writeCodeFiles(groupPath, entryName, styleName, files);
+  if (files) st.writeCodeFiles(kind, groupPath, entryName, styleName, files);
   entry.activeStyle = styleName;
   entry.styleCount = Object.keys(entry.styles).length;
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
+  st.saveGroup(kind, groupPath, manifest);
   return { status: 'ok', group: groupPath, name: entryName, style: styleName, from, active: true };
 }
 
@@ -90,7 +90,7 @@ export function setActiveStyle({ kind, group, name, style }) {
   assertStyle(entry, styleName);
   entry.activeStyle = styleName;
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
+  st.saveGroup(kind, groupPath, manifest);
   return { status: 'ok', group: groupPath, name: entryName, activeStyle: styleName };
 }
 
@@ -104,8 +104,8 @@ export function removeStyle({ kind, group, name, style }) {
   }
   entry.styleCount = Object.keys(entry.styles).length;
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
-  st.removeStyleDir(groupPath, entryName, styleName);
+  st.saveGroup(kind, groupPath, manifest);
+  st.removeStyleDir(kind, groupPath, entryName, styleName);
   return { status: 'ok', group: groupPath, name: entryName, style: styleName, activeStyle: entry.activeStyle };
 }
 
@@ -125,29 +125,29 @@ export function saveCode({ kind, group, name, style, files }) {
   }
   if (!Object.keys(incoming).length) throw badInput('没有要保存的内容（用 --code-html/--code-css/--code-js 或 --code 提供）');
 
-  const before = st.readCodeFiles(groupPath, entryName, styleName, kindDef.slots);
+  const before = st.readCodeFiles(kind, groupPath, entryName, styleName, kindDef.slots);
   const changed = Object.keys(incoming).some((s) => incoming[s] !== before[s]);
   if (!changed) {
     return { status: 'skipped', group: groupPath, name: entryName, style: styleName, reason: '内容无变化' };
   }
 
   const tag = newTag();
-  st.snapshotStyle(groupPath, entryName, styleName, tag, kindDef.slots);
+  st.snapshotStyle(kind, groupPath, entryName, styleName, tag, kindDef.slots);
   const history = Array.isArray(meta.history) ? meta.history : [];
   history.unshift({ id: tag, at: nowIso() });
   while (history.length > HISTORY_KEEP) {
-    st.removeHistoryTag(groupPath, entryName, styleName, history.pop().id);
+    st.removeHistoryTag(kind, groupPath, entryName, styleName, history.pop().id);
   }
   meta.history = history;
 
-  st.writeCodeFiles(groupPath, entryName, styleName, incoming);
+  st.writeCodeFiles(kind, groupPath, entryName, styleName, incoming);
   meta.updatedAt = nowIso();
   const touched = Object.keys(incoming);
   if (!meta.slot || !(before[meta.slot] || '').trim()) {
     meta.slot = touched.find((s) => (incoming[s] || '').trim()) || meta.slot;
   }
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
+  st.saveGroup(kind, groupPath, manifest);
   return {
     status: 'ok',
     group: groupPath,
@@ -187,7 +187,7 @@ export function readHistory({ kind, group, name, style, entry: entryId }) {
     style: styleName,
     entry: hit.id,
     at: hit.at,
-    code: st.readCodeFiles(groupPath, entryName, styleName, kindDef.slots, hit.id),
+    code: st.readCodeFiles(kind, groupPath, entryName, styleName, kindDef.slots, hit.id),
   };
 }
 
@@ -203,20 +203,20 @@ export function restoreHistory({ kind, group, name, style, entry: entryId }) {
 
   // 恢复 = 把「当前」先推入历史（可再回滚到恢复前），再把快照写回当前。
   const tag = newTag();
-  st.snapshotStyle(groupPath, entryName, styleName, tag, kindDef.slots);
+  st.snapshotStyle(kind, groupPath, entryName, styleName, tag, kindDef.slots);
 
   const restored = {};
   for (const slot of kindDef.slots) {
-    restored[slot] = st.readCodeFiles(groupPath, entryName, styleName, kindDef.slots, id)[slot];
+    restored[slot] = st.readCodeFiles(kind, groupPath, entryName, styleName, kindDef.slots, id)[slot];
   }
-  st.writeCodeFiles(groupPath, entryName, styleName, restored);
+  st.writeCodeFiles(kind, groupPath, entryName, styleName, restored);
 
   meta.history = [{ id: tag, at: nowIso() }, ...(meta.history || [])];
   while (meta.history.length > HISTORY_KEEP) {
-    st.removeHistoryTag(groupPath, entryName, styleName, meta.history.pop().id);
+    st.removeHistoryTag(kind, groupPath, entryName, styleName, meta.history.pop().id);
   }
   meta.updatedAt = nowIso();
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
+  st.saveGroup(kind, groupPath, manifest);
   return { status: 'ok', group: groupPath, name: entryName, style: styleName, restored: id, historyCount: meta.history.length };
 }

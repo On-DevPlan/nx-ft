@@ -24,7 +24,7 @@ function catSlot({ group, name, style, slot }) {
   if (!use || !a.styles.some((s) => s.name === use)) {
     throw notFound(`风格不存在: ${use || '(无)'}（该资源现有: ${a.styles.map((s) => s.name).join(', ') || '无'}）`);
   }
-  const code = st.readCodeFiles(a.group, a.name, use, SLOTS);
+  const code = st.readCodeFiles('svg', a.group, a.name, use, SLOTS);
   return { status: 'ok', group: a.group, name: a.name, label: a.label, style: use, slot, code: code[slot] ?? '' };
 }
 

@@ -17,13 +17,13 @@ export function createAsset({ kind, group, name, label, style, code, tags }) {
   assertKind(kind);
   const groupPath = parseGroupPath(group);
   const entryName = assertSafeName(String(name ?? '').trim(), '资源名');
-  const manifest = st.loadGroup(groupPath);
+  const manifest = st.loadGroup(kind, groupPath);
   if (!manifest) throw notFound(`分组不存在: ${groupPath}（先用 group add 建组）`);
   if (manifest.assets[entryName]) return { status: 'skipped', group: groupPath, name: entryName, reason: '已存在' };
 
   const entry = {
     name: entryName,
-    kind, // 资源属于哪个渲染类型（html|svg）——同一分组下两种资源互不串树
+    kind, // 冗余但留证：目录树已经按 kind 分开，这里再记一份便于清单自解释与排查
     label: labelOf(label, entryName),
     tags: normalizeTags(tags),
     activeStyle: null,
@@ -33,7 +33,7 @@ export function createAsset({ kind, group, name, label, style, code, tags }) {
     updatedAt: nowIso(),
   };
   manifest.assets[entryName] = entry;
-  st.saveGroup(groupPath, manifest);
+  st.saveGroup(kind, groupPath, manifest);
 
   let styleStatus = 'none';
   if (style) {
@@ -55,7 +55,7 @@ export function loadAsset({ kind, group, name, code = false }) {
   assertKind(kind);
   const groupPath = parseGroupPath(group);
   const entryName = assertSafeName(String(name ?? '').trim(), '资源名');
-  const { entry } = locate(groupPath, entryName);
+  const { entry } = locate(kind, groupPath, entryName);
   const slots = ASSET_KINDS[kind].slots;
   const styles = Object.values(entry.styles)
     .map(styleMeta)
@@ -73,20 +73,44 @@ export function loadAsset({ kind, group, name, code = false }) {
   if (code) {
     const map = {};
     for (const s of Object.values(entry.styles)) {
-      map[s.name] = st.readCodeFiles(groupPath, entryName, s.name, slots);
+      map[s.name] = st.readCodeFiles(kind, groupPath, entryName, s.name, slots);
     }
     out.code = map;
   }
-  return { ...out, usedSlots: [...usedSlots()] };
+  return { ...out, usedSlots: [...usedSlots(kind)] };
 }
 
-export function renameAsset({ kind, group, name, label }) {
+// 资源改名：label 改展示名、to 改目录名（两者可单独或同时给）。
+// 改名**不动内容**——目录整体挪过去，风格与编辑历史原样跟着走。
+//
+// 展示名的归属：只有「当初没起名」（label 恰好等于目录名，即自动派生的那种）
+// 才跟着目录名走；用户自己起过的展示名一律保留——改个目录名顺手把人家起的名字
+// 抹掉，是没人要求过的副作用。
+export function renameAsset({ kind, group, name, label, to }) {
   assertKind(kind);
   const { groupPath, entryName, entry, manifest } = resolveAsset(kind, group, name);
-  entry.label = labelOf(label, entryName);
+  const target = to === undefined ? entryName : assertSafeName(String(to).trim(), '资源名');
+  const autoLabel = (entry.label || entryName) === entryName;
+  let renamed = false;
+
+  if (target !== entryName) {
+    if (manifest.assets[target]) {
+      return { status: 'blocked', group: groupPath, name: entryName, to: target, reason: '目标名已存在' };
+    }
+    st.renameAssetDir(kind, groupPath, entryName, target);
+    delete manifest.assets[entryName];
+    entry.name = target;
+    manifest.assets[target] = entry;
+    renamed = true;
+  }
+
+  if (label !== undefined) entry.label = labelOf(label, target);
+  else if (renamed && autoLabel) entry.label = target;
+  else if (!entry.label) entry.label = target;
+
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
-  return { status: 'ok', group: groupPath, name: entryName, label: entry.label };
+  st.saveGroup(kind, groupPath, manifest);
+  return { status: 'ok', group: groupPath, name: target, label: entry.label, renamed };
 }
 
 export function removeAsset({ kind, group, name, force }) {
@@ -103,8 +127,8 @@ export function removeAsset({ kind, group, name, force }) {
     };
   }
   delete manifest.assets[entryName];
-  st.saveGroup(groupPath, manifest);
-  st.removeAssetDir(groupPath, entryName);
+  st.saveGroup(kind, groupPath, manifest);
+  st.removeAssetDir(kind, groupPath, entryName);
   return { status: 'ok', group: groupPath, name: entryName, removed: { styles: styleNames.length } };
 }
 
@@ -121,7 +145,7 @@ export function addTags({ kind, group, name, tags }) {
   }
   entry.tags = [...current, ...added];
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
+  st.saveGroup(kind, groupPath, manifest);
   return { status: 'ok', group: groupPath, name: entryName, added, tags: entry.tags };
 }
 
@@ -137,6 +161,6 @@ export function removeTags({ kind, group, name, tags }) {
   for (const t of removed) current.delete(t);
   entry.tags = [...current];
   entry.updatedAt = nowIso();
-  st.saveGroup(groupPath, manifest);
+  st.saveGroup(kind, groupPath, manifest);
   return { status: 'ok', group: groupPath, name: entryName, removed, tags: entry.tags };
 }

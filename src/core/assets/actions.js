@@ -3,52 +3,13 @@
 // 每个功能域一条声明，同时给出 cli 路径与 http 路由——「Web 上能做的 CLI 都能做」
 // 由此成为结构事实。两个模块的差异只有：命令前缀（html|svg）与 URL 前缀。
 import { APP_NAME } from '../paths.js';
+import { badInput } from '../errors/index.js';
 import { ASSET_KINDS } from './constants.js';
+import { codeFlags, collectFiles } from './code-input.js';
 import * as groups from './groups.js';
 import * as assets from './assets.js';
 import * as styles from './styles.js';
 import * as renders from './renders.js';
-
-// 每个 kind 的代码槽位与「两种入口的键名」：
-//   flag —— CLI 的 --code / --code-html / --code-css / --code-js
-//   body —— HTTP JSON body（面板走这条）：html / svg / css / js
-// 两条入口在这里汇合成同一个 files 对象，语义不分叉。
-const CODE_KEYS = {
-  html: [
-    ['html', 'code-html'],
-    ['css', 'code-css'],
-    ['js', 'code-js'],
-  ],
-  svg: [
-    ['svg', 'code'],
-    ['css', 'code-css'],
-    ['js', 'code-js'],
-  ],
-};
-
-function collectFiles(ctx, kind) {
-  const files = {};
-  for (const [bodyKey, flagKey] of CODE_KEYS[kind]) {
-    const v = ctx[flagKey] !== undefined ? ctx[flagKey] : ctx[bodyKey];
-    if (v !== undefined) files[bodyKey] = v;
-  }
-  return files;
-}
-
-function codeFlags(kind) {
-  if (kind === 'html') {
-    return {
-      'code-html': { type: 'string', hint: 'html|-' },
-      'code-css': { type: 'string', hint: 'css|-' },
-      'code-js': { type: 'string', hint: 'js|-' },
-    };
-  }
-  return {
-    code: { type: 'string', hint: 'svg|-' },
-    'code-css': { type: 'string', hint: 'css|-' },
-    'code-js': { type: 'string', hint: 'js|-' },
-  };
-}
 
 export function makeActions(kind) {
   const K = kind.toUpperCase();
@@ -73,9 +34,28 @@ export function makeActions(kind) {
       summary: '创建分组（1~8 段路径，支持多层，如 ui/buttons/primary）',
       args: ['group'],
       flags: { label: { type: 'string' } },
-      run: (ctx) => groups.addGroup({ group: ctx.group, label: ctx.label }),
+      run: (ctx) => groups.addGroup({ kind, group: ctx.group, label: ctx.label }),
       render: (r) =>
         r.status === 'skipped' ? `分组已存在: ${r.path}` : `已创建分组: ${r.path}（${r.label}）`,
+    },
+    {
+      id: kind + '.group.rename',
+      cli: [kind, 'group', 'rename'],
+      http: ['POST', A('groups-rename')],
+      summary: '分组改名 / 移动（--to 新路径；只改展示名可省略 --to）',
+      args: ['group'],
+      flags: {
+        to: { type: 'string', hint: '新路径，如 ui/icons/nav' },
+        label: { type: 'string', hint: '展示名' },
+      },
+      run: (ctx) =>
+        groups.renameGroup({ kind, group: ctx.group, to: ctx.to || ctx.group, label: ctx.label }),
+      render: (r) =>
+        r.status === 'blocked'
+          ? `拒绝改名: ${r.path} —— ${r.reason}`
+          : r.renamed
+            ? `已改名/移动: → ${r.path}（${r.label}）`
+            : `已更新展示名: ${r.path}（${r.label}）`,
     },
     {
       id: kind + '.group.rm',
@@ -84,7 +64,7 @@ export function makeActions(kind) {
       summary: '删除分组（非空需 --force）',
       args: ['group'],
       flags: { force: { type: 'boolean' } },
-      run: (ctx) => groups.removeGroup({ group: ctx.group, force: ctx.force }),
+      run: (ctx) => groups.removeGroup({ kind, group: ctx.group, force: ctx.force }),
       render: (r) =>
         r.status === 'blocked'
           ? `拒绝删除: ${r.path} —— ${r.reason}`
@@ -153,11 +133,30 @@ export function makeActions(kind) {
       id: kind + '.rename',
       cli: [kind, 'rename'],
       http: ['POST', A('asset-rename')],
-      summary: '修改资源展示标签（目录名不变）',
+      summary: '资源改名：--label 改展示名，--to 改目录名（至少给一个；改目录名不动内容与历史）',
       args: ['group', 'name'],
-      flags: { label: { type: 'string', required: true } },
-      run: (ctx) => assets.renameAsset({ kind, group: ctx.group, name: ctx.name, label: ctx.label }),
-      render: (r) => `已重命名: ${r.group}/${r.name} → ${r.label}`,
+      flags: {
+        label: { type: 'string', hint: '展示名' },
+        to: { type: 'string', hint: '新目录名，如 arrow-up' },
+      },
+      run: (ctx) => {
+        if (ctx.label === undefined && ctx.to === undefined) {
+          throw badInput('至少给一个：--label（展示名）或 --to（目录名）');
+        }
+        return assets.renameAsset({
+          kind,
+          group: ctx.group,
+          name: ctx.name,
+          label: ctx.label,
+          to: ctx.to,
+        });
+      },
+      render: (r) =>
+        r.status === 'blocked'
+          ? `拒绝改名: ${r.group}/${r.name} —— ${r.reason}`
+          : r.renamed
+            ? `已改名: ${r.group}/${r.name}（目录名已改，展示名 ${r.label}）`
+            : `已改展示名: ${r.group}/${r.name} → ${r.label}`,
     },
     {
       id: kind + '.tag.add',

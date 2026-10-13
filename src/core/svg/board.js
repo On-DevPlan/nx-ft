@@ -37,7 +37,7 @@ export function buildBoard(kind, { search = '', tags = [] } = {}) {
     label: g.label,
     assets: g.assets.map((a) => {
       const style = a.activeStyle || null;
-      const svg = style ? st.readCodeFiles(g.path, a.name, style, SLOTS).svg || '' : '';
+      const svg = style ? st.readCodeFiles(kind, g.path, a.name, style, SLOTS).svg || '' : '';
       const audit = auditOf(svg);
       stats.icons++;
       stats.issues += audit.issues.length;
@@ -76,7 +76,7 @@ export function buildBoard(kind, { search = '', tags = [] } = {}) {
 export function buildAssetDetail(kind, { group, name }) {
   const asset = loadAsset({ kind, group, name, code: false });
   const styles = asset.styles.map((s) => {
-    const code = st.readCodeFiles(asset.group, asset.name, s.name, SLOTS);
+    const code = st.readCodeFiles(kind, asset.group, asset.name, s.name, SLOTS);
     const svg = code.svg || '';
     const audit = auditOf(svg);
     return {

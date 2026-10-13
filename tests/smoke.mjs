@@ -142,14 +142,55 @@ test('资产冒烟：建分组/资源 → heredoc 写代码 → 风格复制 →
   assert.equal(bySearch.count.assets, 1);
 });
 
-test('资产冒烟：html 与 svg 树按类型隔离', async () => {
+test('资产冒烟：html 与 svg 是两棵独立的目录树', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'nx-ft-smoke-'));
+  // 两棵树各自建同名分组——分开之后，同一个名字在两边是互不相干的两件事
   await run('html group add ui/mix --json', tmpdir(), { assetsDir: dir });
+  await run('svg group add ui/mix --json', tmpdir(), { assetsDir: dir });
   await run('html add ui/mix page-hero --json', tmpdir(), { assetsDir: dir });
   await run('svg add ui/mix arrow --json', tmpdir(), { assetsDir: dir });
+  // 只在 svg 树里建的分组，html 树里不该出现
+  await run('svg group add icons/nav --json', tmpdir(), { assetsDir: dir });
 
   const htmlTree = JSON.parse((await run('html tree --json', tmpdir(), { assetsDir: dir })).stdout);
   const svgTree = JSON.parse((await run('svg tree --json', tmpdir(), { assetsDir: dir })).stdout);
+  assert.deepEqual(htmlTree.groups.map((g) => g.path), ['ui/mix']);
   assert.deepEqual(htmlTree.groups[0].assets.map((a) => a.name), ['page-hero']);
-  assert.deepEqual(svgTree.groups[0].assets.map((a) => a.name), ['arrow']);
+  assert.deepEqual(svgTree.groups.map((g) => g.path), ['icons/nav', 'ui/mix']);
+  assert.deepEqual(svgTree.groups.find((g) => g.path === 'ui/mix').assets.map((a) => a.name), ['arrow']);
+
+  // 在另一棵树里给不存在的分组建资源 → 报错，不会串过去
+  const bad = await run('svg add no/such x --json', tmpdir(), { assetsDir: dir }).catch((e) => e);
+  assert.ok(bad, 'svc 树里不存在的分组应当报错');
+});
+
+test('资产冒烟：分组改名 / 移动 + 资源改名', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'nx-ft-smoke-'));
+  await run('svg group add ui/icons --json', tmpdir(), { assetsDir: dir });
+  await run('svg group add ui/icons/nav --json', tmpdir(), { assetsDir: dir });
+  await run('svg add ui/icons/nav home --json', tmpdir(), { assetsDir: dir });
+
+  // 改名（含子分组）→ 资源跟着目录走
+  const ren = JSON.parse(
+    (await run('svg group rename ui/icons --to ui/glyphs --json', tmpdir(), { assetsDir: dir })).stdout
+  );
+  assert.equal(ren.path, 'ui/glyphs');
+  const moved = JSON.parse(
+    (await run('svg load ui/glyphs/nav home --json', tmpdir(), { assetsDir: dir })).stdout
+  );
+  assert.equal(moved.group, 'ui/glyphs/nav');
+
+  // 资源改名：改目录名，展示名跟着走（本来没起过名）
+  const asset = JSON.parse(
+    (await run('svg rename ui/glyphs/nav home --to house --json', tmpdir(), { assetsDir: dir })).stdout
+  );
+  assert.equal(asset.renamed, true);
+  assert.equal(asset.name, 'house');
+  assert.equal(asset.label, 'house');
+
+  // 不能移进自己的子树
+  const bad = await run('svg group rename ui/glyphs --to ui/glyphs/inner --json', tmpdir(), {
+    assetsDir: dir,
+  }).catch((e) => e);
+  assert.ok(bad, '移进自己的子树必须被拒绝');
 });
