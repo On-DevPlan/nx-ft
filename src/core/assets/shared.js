@@ -1,0 +1,57 @@
+// 资源定位与共享工具：assets.js（资源 CRUD）与 styles.js（风格/历史）都从这里取。
+// 单独一层的原因：两边都需要「找资源 + 断言存在」，写在任一侧都会形成循环依赖。
+import { randomBytes } from 'node:crypto';
+import { notFound } from '../errors/index.js';
+import { assertSafeName } from '../paths.js';
+import { assertKind, nowIso, parseGroupPath, toTag } from './constants.js';
+import * as st from './storage.js';
+
+export function locate(groupPath, name) {
+  const manifest = st.loadGroup(groupPath);
+  if (!manifest) throw notFound(`分组不存在: ${groupPath}（先用 group add 建组）`);
+  const entry = manifest.assets[name];
+  if (!entry) throw notFound(`资源不存在: ${groupPath}/${name}`);
+  return { manifest, entry };
+}
+
+export function assertStyle(entry, styleName) {
+  if (!entry.styles[styleName]) {
+    throw notFound(`风格不存在: ${styleName}（现有: ${Object.keys(entry.styles).join(', ') || '无'}）`);
+  }
+}
+
+// 全库「实际用到的槽位」并集：空槽位的编辑框在面板上隐藏。
+export function usedSlots() {
+  const used = new Set();
+  for (const { manifest } of st.scanGroups()) {
+    for (const a of Object.values(manifest.assets)) {
+      for (const s of Object.values(a.styles)) used.add(s.slot);
+    }
+  }
+  return used;
+}
+
+export function newTag() {
+  // 同一秒内多次保存也要拿到不同目录（快速连续保存是常态）
+  return toTag(nowIso()) + '-' + randomBytes(2).toString('hex');
+}
+
+export function styleMeta(s) {
+  return {
+    name: s.name,
+    slot: s.slot,
+    desc: s.desc || '',
+    createdAt: s.createdAt,
+    updatedAt: s.updatedAt,
+    historyCount: Array.isArray(s.history) ? s.history.length : 0,
+  };
+}
+
+// 供 actions 层复用的资源定位（返回写入用上下文）
+export function resolveAsset(kind, group, name) {
+  assertKind(kind);
+  const groupPath = parseGroupPath(group);
+  const entryName = assertSafeName(String(name ?? '').trim(), '资源名');
+  const { manifest, entry } = locate(groupPath, entryName);
+  return { groupPath, entryName, manifest, entry };
+}
