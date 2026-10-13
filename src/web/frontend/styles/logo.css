@@ -20,9 +20,9 @@
 .scheme-swatch {
   width: 34px; height: 34px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; font-family: ui-monospace, Consolas, monospace;
+  font-weight: 700; font-size: 12px; font-family: ui-monospace, Consolas, monospace;
 }
-.scheme-name { font-size: 10px; color: var(--mid); }
+.scheme-name { font-size: 11px; color: var(--mid); }
 .scheme-chip.active .scheme-name { color: var(--ink); }
 .logo-custom { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 11px; }
 .logo-custom input[type='color'] { width: 36px; height: 26px; padding: 0 2px; cursor: pointer; }

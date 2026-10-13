@@ -6,11 +6,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
-import { TagCloud } from './parts.jsx';
+import { TagCloud, BatchBar } from './parts.jsx';
 import { ancestorsOf, buildTree, findNode, TreePanel } from './tree.jsx';
 import { ManageBrowse } from './manage-browse.jsx';
 import { ManageResult } from './manage-result.jsx';
 import { makeManageOps } from './useManageOps.js';
+import { SplitPane } from './SplitPane.jsx';
 
 const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源' };
 const STATE_KEY = (kind) => `nx-ft-manage-${kind}`;
@@ -35,6 +36,9 @@ export function ManagePage({ kind, initialDir, onOpen }) {
   const [search, setSearch] = useState(searchInput);
   const [activeTags, setActiveTags] = useState(() => loadState(kind).tags || []);
   const [err, setErr] = useState('');
+  // 批量选择状态：key = `${groupPath}/${name}`
+  const [selected, setSelected] = useState(() => new Set());
+  const [batchMode, setBatchMode] = useState(false);
 
   // 深链（#/html/dir/…）带来的目录变化
   useEffect(() => {
@@ -56,6 +60,72 @@ export function ManagePage({ kind, initialDir, onOpen }) {
       /* 隐私模式静默 */
     }
   }, [dir, expanded, searchInput, activeTags, kind]);
+
+  // 批量操作切换
+  const toggleSelect = (groupPath, name) => {
+    const key = `${groupPath}/${name}`;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    setBatchMode(true);
+  };
+
+  const enterBatch = () => setBatchMode(true);
+  const cancelBatch = () => {
+    setBatchMode(false);
+    setSelected(new Set());
+  };
+
+  const selectAllVisible = (visibleList) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      visibleList.forEach(([g, a]) => next.add(`${g}/${a}`));
+      return next;
+    });
+  };
+
+  const invertVisible = (visibleList) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      visibleList.forEach(([g, a]) => {
+        const key = `${g}/${a}`;
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+      });
+      return next;
+    });
+  };
+
+  const batchDelete = async () => {
+    if (selected.size === 0) return;
+    const ok = await dialog({
+      title: '批量删除',
+      message: `将删除 ${selected.size} 个资源。此操作不可撤销。`,
+      okText: '确认删除',
+      danger: true,
+    });
+    if (!ok) return;
+    let ok_count = 0;
+    for (const key of selected) {
+      const [groupPath, name] = key.split('/');
+      try {
+        await api(`/api/${kind}/rm`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ group: groupPath, name, force: true }),
+        });
+        ok_count++;
+      } catch {
+        /* 单条失败不阻断其它 */
+      }
+    }
+    toast({ kind: 'ok', msg: `批量删除完成（${ok_count}/${selected.size}）` });
+    cancelBatch();
+    reload();
+  };
 
   // 选中目录的祖先链自动展开（从深链/持久化进来的目录立刻可见）
   useEffect(() => {
@@ -165,49 +235,95 @@ export function ManagePage({ kind, initialDir, onOpen }) {
         onClear={() => setActiveTags([])}
       />
 
+      {batchMode ? (
+        <BatchBar
+          count={selected.size}
+          total={
+            filtered
+              ? (tree?.groups || []).reduce((s, g) => s + g.assets.length, 0)
+              : (tree?.groups.find((g) => g.path === dir)?.assets.length || 0)
+          }
+          onSelectAll={() => {
+            const list = filtered
+              ? (tree?.groups || []).flatMap((g) => g.assets.map((a) => [g.path, a.name]))
+              : (tree?.groups.find((g) => g.path === dir)?.assets || []).map((a) => [dir, a.name]);
+            selectAllVisible(list);
+          }}
+          onInvert={() => {
+            const list = filtered
+              ? (tree?.groups || []).flatMap((g) => g.assets.map((a) => [g.path, a.name]))
+              : (tree?.groups.find((g) => g.path === dir)?.assets || []).map((a) => [dir, a.name]);
+            invertVisible(list);
+          }}
+          onCancel={cancelBatch}
+          onBatchDelete={batchDelete}
+        />
+      ) : (
+        <div className="am-tools">
+          <button className="btn small ghost" onClick={enterBatch} data-testid="enter-batch">
+            批量操作
+          </button>
+        </div>
+      )}
+
       {err ? <div className="empty bad">{err}</div> : null}
 
       {tree ? (
-        <div className="am-body">
-          <aside className="am-tree">
-            <TreePanel
-              root={root}
-              sel={filtered ? null : dir}
-              expanded={expanded}
-              onSelect={pickDir}
-              onToggle={toggleExpand}
-            />
-          </aside>
-
-          <section className="am-content">
-            {filtered ? (
-              <ManageResult
-                tree={tree}
-                count={count}
-                activeTags={activeTags}
-                toggleTag={toggleTag}
-                onOpen={onOpen}
-                onClear={clearFilters}
+        <SplitPane
+          direction="horizontal"
+          initialPct={22}
+          minPct={15}
+          maxPct={45}
+          persistKey={`nx-ft-am-split-${kind}`}
+          testId="am-split"
+          left={
+            <aside className="am-split-tree">
+              <TreePanel
+                root={root}
+                sel={filtered ? null : dir}
+                expanded={expanded}
+                onSelect={pickDir}
+                onToggle={toggleExpand}
               />
-            ) : (
-              <ManageBrowse
-                tree={tree}
-                count={count}
-                dir={dir}
-                dirNode={dirNode}
-                dirGroup={dirGroup}
-                crumbItems={crumbItems}
-                activeTags={activeTags}
-                toggleTag={toggleTag}
-                onOpen={onOpen}
-                pickDir={pickDir}
-                removeGroup={removeGroup}
-                addGroup={addGroup}
-                addAsset={addAsset}
-              />
-            )}
-          </section>
-        </div>
+            </aside>
+          }
+          right={
+            <section className="am-split-content">
+              {filtered ? (
+                <ManageResult
+                  tree={tree}
+                  count={count}
+                  activeTags={activeTags}
+                  toggleTag={toggleTag}
+                  onOpen={onOpen}
+                  onClear={clearFilters}
+                  batchMode={batchMode}
+                  selected={selected}
+                  onToggle={toggleSelect}
+                />
+              ) : (
+                <ManageBrowse
+                  tree={tree}
+                  count={count}
+                  dir={dir}
+                  dirNode={dirNode}
+                  dirGroup={dirGroup}
+                  crumbItems={crumbItems}
+                  activeTags={activeTags}
+                  toggleTag={toggleTag}
+                  onOpen={onOpen}
+                  pickDir={pickDir}
+                  removeGroup={removeGroup}
+                  addGroup={addGroup}
+                  addAsset={addAsset}
+                  batchMode={batchMode}
+                  selected={selected}
+                  onToggle={toggleSelect}
+                />
+              )}
+            </section>
+          }
+        />
       ) : null}
       {node}
     </div>

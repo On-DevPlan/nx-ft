@@ -41,7 +41,7 @@ header .meta {
   border-radius: 6px;
   cursor: pointer;
   color: var(--mid);
-  font-size: 13px;
+  font-size: 12px;
 }
 .tab:hover { background: var(--soft); }
 .tab.active {

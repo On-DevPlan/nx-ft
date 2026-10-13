@@ -13,7 +13,7 @@
 }
 .detail-ident-main { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
 .detail-ident-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.detail-ident-label { font-size: 15px; font-weight: 700; }
+.detail-ident-label { font-size: 14px; font-weight: 700; }
 .detail-ident-title .mono { font-size: 11px; }
 .detail-ident-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; }
 .detail-ident-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
@@ -33,7 +33,7 @@
 .style-card-name { max-width: 100%; font-size: 12px; font-weight: 600; }
 /* 风格描述：多风格并排时唯一说清「这套实现的特征」的地方（svg style desc 写）。
    没写时显示一个淡淡的破折号占位，卡片高度不会因为有没有描述而参差。 */
-.style-card-desc { max-width: 100%; font-size: 10px; color: var(--mid); line-height: 1.3; }
+.style-card-desc { max-width: 100%; font-size: 11px; color: var(--mid); line-height: 1.3; }
 .style-card-badges { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
 .style-card-act {
   border: 0; border-top: var(--border); background: var(--soft); padding: 5px 8px;
@@ -51,7 +51,7 @@
   padding: 8px 0; border-bottom: 1px solid var(--soft-2);
 }
 .issue-row:last-of-type { border-bottom: 0; }
-.issue-code { font-size: 10px; color: var(--mid); padding-top: 1px; }
+.issue-code { font-size: 11px; color: var(--mid); padding-top: 1px; }
 .issue-row.err .issue-code { color: var(--bad); font-weight: 700; }
 .issue-msg { font-size: 12px; }
 .issue-hint { grid-column: 2; font-size: 11px; }
@@ -87,7 +87,7 @@
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   padding: 10px 16px; border-bottom: var(--border); background: var(--soft); flex-shrink: 0;
 }
-.fullpage-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.fullpage-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
 .fullpage-title .mono { font-weight: 700; }
 .fullpage-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 

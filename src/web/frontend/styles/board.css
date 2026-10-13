@@ -114,7 +114,7 @@ body.ws-dragging { cursor: col-resize; user-select: none; }
 .icon-blank { border: 1px dashed var(--soft-2); border-radius: 4px; }
 .icon-ghost { border: 1px dashed var(--soft-2); border-radius: 6px; }
 
-.crumb { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; min-width: 0; font-size: 13px; }
+.crumb { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; min-width: 0; font-size: 12px; }
 .crumb-seg, .crumb-cur {
   border: 0; background: none; padding: 3px 6px; border-radius: 6px;
   font: inherit; color: var(--mid); cursor: pointer;
@@ -148,8 +148,8 @@ body.ws-dragging { cursor: col-resize; user-select: none; }
   min-width: 78px; padding: 8px 16px;
 }
 .statbar-cell + .statbar-cell { border-left: var(--border); }
-.statbar-v { font-size: 18px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
-.statbar-k { font-size: 10px; color: var(--mid); letter-spacing: 0.06em; }
+.statbar-v { font-size: 14px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.statbar-k { font-size: 11px; color: var(--mid); letter-spacing: 0.06em; }
 /* 待规范 > 0 时给一条墨色下缘线：注意到它，但不把整屏染红。 */
 .statbar-cell.hot { box-shadow: inset 0 -2px 0 var(--ink); }
 .statbar-cell.hot .statbar-v { font-weight: 800; }
@@ -162,7 +162,7 @@ body.ws-dragging { cursor: col-resize; user-select: none; }
 /* 规范标签：合规 → 浅底灰字；待规范 → 墨色胶囊（靠对比度抓眼）；阻断 → --bad。 */
 .spec-badge {
   display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 999px;
-  font-size: 10px; white-space: nowrap; background: var(--soft-2); color: var(--mid);
+  font-size: 11px; white-space: nowrap; background: var(--soft-2); color: var(--mid);
 }
 .spec-badge.ok { background: var(--paper); color: var(--mid); border: 1px solid var(--soft-2); }
 .spec-badge.warn { background: var(--ink); color: var(--paper); }
@@ -224,12 +224,12 @@ body.ws-dragging { cursor: col-resize; user-select: none; }
 .icon-tile-name { max-width: 100%; font-size: 11px; font-weight: 600; }
 .icon-tile-foot {
   display: flex; align-items: center; gap: 4px; min-height: 26px; padding: 0 6px 0 8px;
-  border-top: var(--border); background: var(--soft); font-size: 10px;
+  border-top: var(--border); background: var(--soft); font-size: 11px;
 }
-.icon-tile-path { flex: 1; min-width: 0; color: var(--mid); font-size: 10px; }
-.icon-tile-count { flex-shrink: 0; color: var(--mid); font-size: 10px; }
+.icon-tile-path { flex: 1; min-width: 0; color: var(--mid); font-size: 11px; }
+.icon-tile-count { flex-shrink: 0; color: var(--mid); font-size: 11px; }
 .icon-tile-act {
-  border: 0; background: none; padding: 0 2px; font: inherit; font-size: 10px;
+  border: 0; background: none; padding: 0 2px; font: inherit; font-size: 11px;
   color: var(--mid); cursor: pointer; flex-shrink: 0;
   opacity: 0; transition: opacity 0.12s;
 }

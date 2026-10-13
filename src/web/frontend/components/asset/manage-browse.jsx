@@ -7,6 +7,7 @@ import { AssetCard, Crumbs, SubdirCard } from './parts.jsx';
 export function ManageBrowse({
   tree, count, dir, dirNode, dirGroup, crumbItems,
   activeTags, toggleTag, onOpen, pickDir, removeGroup, addGroup, addAsset,
+  batchMode, selected, onToggle,
 }) {
   if (dir && !dirNode) {
     return (
@@ -56,6 +57,9 @@ export function ManageBrowse({
                 activeTags={activeTags}
                 onOpen={onOpen}
                 onTagToggle={toggleTag}
+                selectable={batchMode}
+                selected={selected && selected.has(`${dirGroup.path}/${a.name}`)}
+                onToggle={onToggle}
               />
             ))}
           </div>

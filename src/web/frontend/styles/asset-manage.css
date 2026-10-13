@@ -10,7 +10,7 @@
 
 .asset-manage { display: flex; flex-direction: column; gap: 12px; }
 .am-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.am-title { font-size: 15px; font-weight: 700; }
+.am-title { font-size: 14px; font-weight: 700; }
 .am-count { font-size: 11px; }
 .am-spacer { flex: 1; }
 .am-search { width: 260px; height: var(--row-h); font-size: var(--fs-core); }
@@ -32,11 +32,11 @@
 .tm-root { padding-left: 6px; }
 .tm-arrow {
   width: 16px; height: 16px; flex-shrink: 0; padding: 0; border: 0; background: none;
-  color: var(--mid); font-size: 10px; cursor: pointer;
+  color: var(--mid); font-size: 11px; cursor: pointer;
 }
 .tm-arrow-empty { visibility: hidden; }
 .tm-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tm-count { color: var(--mid); font-size: 10px; flex-shrink: 0; }
+.tm-count { color: var(--mid); font-size: 11px; flex-shrink: 0; }
 .tm-empty { padding: 10px; font-size: 11px; }
 
 .am-content { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -50,7 +50,7 @@
   background: var(--paper); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
 }
 .am-subdir:hover { background: var(--soft); }
-.am-subdir-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.am-subdir-name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .am-subdir-count { margin-left: auto; color: var(--mid); font-size: 11px; flex-shrink: 0; }
 .am-subdir-x {
   position: absolute; top: 2px; right: 4px; width: 18px; height: 18px;
@@ -69,7 +69,7 @@
   display: flex; align-items: center; gap: 8px; padding: 6px 12px;
   border-bottom: var(--border); background: var(--soft);
 }
-.am-group-name { font-weight: 600; font-size: 13px; }
+.am-group-name { font-weight: 600; font-size: 14px; }
 .am-group-path { font-size: 11px; }
 .am-group-head .btn { margin-left: 2px; }
 
@@ -81,14 +81,38 @@
   display: flex; flex-direction: column; gap: 5px; text-align: left;
   border: var(--border); border-radius: 10px; padding: 10px 12px 8px;
   background: var(--paper); cursor: pointer; color: var(--ink); font: inherit;
+  position: relative;
 }
 .am-card:hover { background: var(--soft); }
-.am-card-label { font-weight: 600; font-size: 13px; }
+.am-card.selected { background: var(--soft); border-color: var(--ink); }
+.am-card-label { font-weight: 600; font-size: 14px; }
 .am-card-name { font-size: 11px; color: var(--mid); }
 .am-card-tags { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
 .am-card-foot {
   display: flex; gap: 10px; margin-top: 2px; font-size: 11px; color: var(--mid);
 }
+.am-card-check {
+  position: absolute; top: 8px; right: 8px;
+  width: 16px; height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.am-tools {
+  display: flex; align-items: center; gap: 6px;
+  padding: 2px 0;
+}
+
+/* ---- 批量操作条 ---- */
+
+.batch-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 12px; border: var(--border); border-radius: 10px;
+  background: var(--soft);
+}
+.batch-bar-left { display: flex; align-items: center; gap: 6px; }
+.batch-bar-middle { font-size: 12px; color: var(--ink); }
+.batch-bar-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 
 /* ---- 共享：标签云 / 标签片 ---- */
 

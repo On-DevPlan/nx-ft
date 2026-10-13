@@ -7,6 +7,7 @@ import { CodeEditor } from './CodeEditor.jsx';
 import { buildPreviewDoc, PreviewPane } from './preview.jsx';
 import { Crumbs } from './parts.jsx';
 import { makeAssetOps } from './useAssetOps.js';
+import { SplitPane } from './SplitPane.jsx';
 
 const KIND_SLOTS = { html: ['html', 'css', 'js'], svg: ['svg', 'css', 'js'] };
 const KIND_LABEL = { html: { html: 'HTML', css: 'CSS', js: 'JS' }, svg: { svg: 'SVG', css: 'CSS', js: 'JS' } };
@@ -200,24 +201,38 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
       </div>
 
       <div className="wb-body" ref={mainRef}>
-        <div className="asset-editors">
-          {KIND_SLOTS[kind].map((slot) => (
-            <CodeEditor
-              key={`${sel.name}:${sel.style}:${slot}`}
-              label={KIND_LABEL[kind][slot]}
-              initial={ready ? (asset?.code?.[sel.style] || {})[slot] : ''}
-              readOnly={!ready}
-              collapsed={slot === 'js'}
-              onSave={ops.save}
-              onChange={() => setTick((n) => n + 1)}
-            />
-          ))}
-        </div>
-        <PreviewPane
-          doc={ready ? buildPreviewDoc(kind, readCode()) : ''}
-          full={full}
-          tick={tick}
-          onToggleFull={() => setFull((f) => !f)}
+        <SplitPane
+          direction="vertical"
+          initialPct={55}
+          minPct={20}
+          maxPct={80}
+          persistKey={`nx-ft-wb-split-${kind}-${group}-${name}`}
+          testId="wb-split"
+          left={
+            <div className="wb-split-editors">
+              {KIND_SLOTS[kind].map((slot) => (
+                <CodeEditor
+                  key={`${sel.name}:${sel.style}:${slot}`}
+                  label={KIND_LABEL[kind][slot]}
+                  initial={ready ? (asset?.code?.[sel.style] || {})[slot] : ''}
+                  readOnly={!ready}
+                  collapsed={slot === 'js'}
+                  onSave={ops.save}
+                  onChange={() => setTick((n) => n + 1)}
+                />
+              ))}
+            </div>
+          }
+          right={
+            <div className="wb-split-preview">
+              <PreviewPane
+                doc={ready ? buildPreviewDoc(kind, readCode()) : ''}
+                full={full}
+                tick={tick}
+                onToggleFull={() => setFull((f) => !f)}
+              />
+            </div>
+          }
         />
       </div>
       {node}

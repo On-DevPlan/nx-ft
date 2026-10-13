@@ -26,7 +26,8 @@
     "link:local": "node scripts/link-local.mjs",
     "unlink:local": "node scripts/link-local.mjs --unlink",
     "lint": "eslint .",
-    "test": "pnpm run lint && pnpm run build && pnpm run test:smoke && pnpm run test:unit",
+    "uiux:score": "node scripts/score-uiux.mjs",
+    "test": "pnpm run lint && pnpm run build && pnpm run test:smoke && pnpm run test:unit && pnpm run uiux:score",
     "test:smoke": "node tests/smoke.mjs",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "logo": "node tools/logo-gen/cli.mjs"

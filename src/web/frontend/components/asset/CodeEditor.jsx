@@ -42,7 +42,7 @@ export function CodeEditor({ label, initial, readOnly, rows = 8, collapsed, onSa
   };
 
   return (
-    <div className={'code-pane' + (closed ? ' collapsed' : '')}>
+    <div className={'code-pane' + (closed ? ' collapsed' : '')} data-testid={`code-pane-${label.toLowerCase()}`}>
       <button className="code-pane-head" onClick={() => setClosed((c) => !c)} title="折叠/展开">
         <span className="code-pane-label">{label}</span>
         <span className="code-pane-tools">
@@ -70,6 +70,8 @@ export function CodeEditor({ label, initial, readOnly, rows = 8, collapsed, onSa
             onChange && onChange();
           }}
           placeholder={readOnly ? '' : '在这里写 ' + label + '（Tab 缩进，Ctrl+S 保存）'}
+          aria-label={`${label} 编辑器`}
+          data-testid={`code-area-${label.toLowerCase()}`}
         />
       </div>
     </div>

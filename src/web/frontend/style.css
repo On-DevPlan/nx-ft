@@ -30,6 +30,7 @@
 @import './styles/layout.css';
 @import './styles/asset-manage.css';
 @import './styles/asset-workbench.css';
+@import './styles/split.css';
 @import './styles/logo.css';
 @import './styles/board.css';
 @import './styles/board-detail.css';

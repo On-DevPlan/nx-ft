@@ -17,16 +17,25 @@ export function relTime(iso) {
 // 带 onClick 的段可点（返回上一层）；最后一段通常是当前页（不可点）。
 export function Crumbs({ items }) {
   return (
-    <nav className="crumbs">
+    <nav className="crumbs" aria-label="breadcrumb" data-testid="crumbs">
       {items.map((it, i) => (
         <Fragment key={i}>
           {i > 0 ? <span className="crumb-sep">/</span> : null}
           {it.onClick ? (
-            <button className="crumb-link" onClick={it.onClick} title={it.title}>
+            <button
+              className="crumb-link"
+              onClick={it.onClick}
+              title={it.title}
+              data-testid={`crumb-${i}`}
+            >
               {it.label}
             </button>
           ) : (
-            <span className={'crumb-cur' + (it.mono ? ' mono' : '')} title={it.title}>
+            <span
+              className={'crumb-cur' + (it.mono ? ' mono' : '')}
+              title={it.title}
+              data-testid={`crumb-${i}-current`}
+            >
               {it.label}
             </span>
           )}
@@ -61,13 +70,29 @@ export function TagCloud({ tags, active = [], onToggle, onClear }) {
 }
 
 // 资源卡片：点卡片进工作台；标签片可点即筛（不发散冒泡）。
-export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagToggle }) {
+// 可选勾选框：批量模式下显示。选中态与父级 selected 集合联动。
+export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagToggle, selectable, selected, onToggle }) {
+  const handleCheck = (e) => {
+    e.stopPropagation();
+    onToggle && onToggle(groupPath, asset.name);
+  };
   return (
-    <button
-      className="am-card"
-      onClick={() => onOpen(groupPath, asset.name)}
+    <div
+      className={'am-card' + (selected ? ' selected' : '')}
+      onClick={() => !selected && onOpen(groupPath, asset.name)}
       title={`打开工作台: ${groupPath}/${asset.name}`}
+      data-testid={`asset-card-${asset.name}`}
     >
+      {selectable ? (
+        <input
+          type="checkbox"
+          className="am-card-check"
+          aria-label={`选择 ${asset.name}`}
+          checked={!!selected}
+          onChange={handleCheck}
+          data-testid={`asset-card-check-${asset.name}`}
+        />
+      ) : null}
       <div className="am-card-label">{asset.label}</div>
       <div className="am-card-name mono">{asset.name}</div>
       <div className="am-card-tags">
@@ -90,7 +115,36 @@ export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagTogg
         <span className="mono">{asset.activeStyle || '-'}</span>
         <span>{relTime(asset.updatedAt)}</span>
       </div>
-    </button>
+    </div>
+  );
+}
+
+// 批量操作条：进入批量模式后顶部出现，列出「已选 N」「全选」「反选」「取消」「批量 X」。
+export function BatchBar({ count, total, onSelectAll, onInvert, onCancel, onBatchDelete, disabled }) {
+  if (count === 0 && !disabled) return null; // 空时不显示
+  return (
+    <div className="batch-bar" role="toolbar" aria-label="批量操作" data-testid="batch-bar">
+      <div className="batch-bar-left">
+        <button className="btn small" onClick={onSelectAll} data-testid="batch-select-all">
+          {count === total ? '取消全选' : '全选当前页'}
+        </button>
+        <button className="btn small ghost" onClick={onInvert} data-testid="batch-invert">反选</button>
+        <button className="btn small ghost" onClick={onCancel} data-testid="batch-cancel">取消批量</button>
+      </div>
+      <div className="batch-bar-middle">
+        已选 <strong data-testid="batch-count">{count}</strong> / {total} 项
+      </div>
+      <div className="batch-bar-right">
+        <button
+          className="btn small"
+          onClick={onBatchDelete}
+          disabled={count === 0}
+          data-testid="batch-delete"
+        >
+          批量删除
+        </button>
+      </div>
+    </div>
   );
 }
 

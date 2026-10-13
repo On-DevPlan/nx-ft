@@ -3,8 +3,8 @@
   "$comment": "group 名 → skill 名列表的别名表。路径恒由 assets/<skills[i]>/ 推导；本文件只做聚合。",
   "groups": {
     "nx-ft": {
-      "skills": ["nx-ft", "ft-svg"],
-      "summary": "nx-ft 主 skill（存储 / 命令 / 面板）+ ft-svg（SVG 图标集规范与批量运维）；skill install --group nx-ft 一次装齐"
+      "skills": ["nx-ft", "ft-svg", "ft-uiux"],
+      "summary": "nx-ft 主 skill（存储 / 命令 / 面板）+ ft-svg（SVG 图标集规范与批量运维）+ ft-uiux（Web 面板视觉与交互规范：A 序列 sub-agent 评分 + B 序列主 agent 实现参考）；skill install --group nx-ft 一次装齐"
     }
   }
 }

@@ -4,7 +4,7 @@
 // 因为「搜索」的语义是跨目录找东西，而不是「在某个目录里找」。
 import { AssetCard } from './parts.jsx';
 
-export function ManageResult({ tree, count, activeTags, toggleTag, onOpen, onClear }) {
+export function ManageResult({ tree, count, activeTags, toggleTag, onOpen, onClear, batchMode, selected, onToggle }) {
   return (
     <>
       <div className="am-crumbbar">
@@ -35,6 +35,9 @@ export function ManageResult({ tree, count, activeTags, toggleTag, onOpen, onCle
                   activeTags={activeTags}
                   onOpen={onOpen}
                   onTagToggle={toggleTag}
+                  selectable={batchMode}
+                  selected={selected && selected.has(`${g.path}/${a.name}`)}
+                  onToggle={onToggle}
                 />
               ))}
             </div>
