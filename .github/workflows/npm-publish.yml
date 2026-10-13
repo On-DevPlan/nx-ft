@@ -6,9 +6,16 @@ name: Publish to npm
 #     Package → Settings → Trusted Publisher → GitHub Actions
 #     Org: On-DevPlan / Repo: nx-ft / Workflow: npm-publish.yml
 #   配好后本流水线无需任何 NPM_TOKEN 秘密：npm CLI 用 OIDC 换取发布权，直接发版。
+#
+#   CLI 也能配（必须在本机终端里跑——npm 的 Web 换 OTP 要求 TTY，CI/管道里会直接 EOTP 退出）：
+#     npx -y npm@12.2.0 trust list   nx-ft
+#     npx -y npm@12.2.0 trust github nx-ft --file npm-publish.yml \
+#       --repo On-DevPlan/nx-ft --allow-publish
+#   配完不必等下次发版：手动触发本工作流（workflow_dispatch），看「OIDC 预检」那一步的结论即可。
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write   # 打 tag 需要
@@ -18,13 +25,13 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           # Node 24：npm@latest（12.x）不支持 Node 20（EBADENGINE）；本地开发同为 24
           node-version: '24'
@@ -63,19 +70,50 @@ jobs:
           git tag -a "${{ steps.pkg.outputs.tag }}" -m "Release ${{ steps.pkg.outputs.tag }}"
           git push origin "${{ steps.pkg.outputs.tag }}"
 
-      - name: 升级 npm（Trusted Publishing 需 npm ≥ 11.5.1）
+      - name: 升级 npm（Trusted Publishing 需 npm ≥ 11.6）
         run: npm install -g npm@latest
 
-      - name: OIDC 预检（Trusted Publishing 排查用；不打印令牌本体）
+      - name: OIDC 预检（Trusted Publishing；不打印令牌本体）
+        # 这里真去 registry 换一次票。只有这一步能证明「trusted publisher 已配好且 claims 匹配」——
+        # 只验 GitHub 侧能不能拿到 ID token 是没用的：那边永远通，而 npm 的换票失败是静默的
+        # （lib/utils/oidc.js 把异常全 catch 掉，只在 verbose 记一行），面上只剩 ENEEDAUTH。
+        # 本次不发布时降级为 warning，免得「版本已发布」的正常推送被预检拦红。
         run: |
+          set -u
+          PKG='${{ steps.pkg.outputs.name }}'
           echo "npm 版本: $(npm --version)"
-          if [ -z "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
             echo "::error::OIDC 环境缺失（检查 permissions: id-token: write）"
-          else
-            echo "OIDC 环境: 已注入"
-            LEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" | wc -c)
-            if [ "$LEN" -gt 50 ]; then echo "ID token 获取: 成功"; else echo "::error::ID token 获取失败"; fi
+            exit 1
           fi
+          echo "OIDC 环境: 已注入"
+
+          ID_TOKEN=$(curl -sS -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=npm:registry.npmjs.org" | jq -r '.value // empty')
+          if [ -z "$ID_TOKEN" ]; then
+            echo "::error::GitHub 侧 ID token 获取失败"
+            exit 1
+          fi
+          echo "GitHub 侧 ID token: 获取成功"
+
+          RESP=$(curl -sS -w '\n%{http_code}' -X POST \
+            -H "Authorization: bearer ${ID_TOKEN}" \
+            "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/${PKG}")
+          CODE=$(printf '%s' "$RESP" | tail -n1)
+          DETAIL=$(printf '%s' "$RESP" | sed '$d' | head -c 400)
+
+          if [ "$CODE" = "200" ]; then
+            echo "npm OIDC 换票: 成功 —— trusted publisher 已生效"
+            exit 0
+          fi
+
+          if [ "${{ steps.check.outputs.published }}" = "false" ]; then
+            echo "::error::npm OIDC 换票失败（HTTP ${CODE}）：${DETAIL}"
+            echo "::error::下面的发布必然失败。先去 npmjs.com 给 ${PKG} 配 Trusted Publisher（见本文件头部注释）。"
+            exit 1
+          fi
+          echo "::warning::npm OIDC 换票失败（HTTP ${CODE}）：${DETAIL} —— 本次版本已发布，不阻断；但下次发版会失败，需先配好 Trusted Publisher"
 
       - name: 发布（OIDC，无 token）
         if: steps.check.outputs.published == 'false'
