@@ -26,11 +26,25 @@ test('关键模块与视图都已登记（防漏登记静默失效）', () => {
   }
 });
 
-test('每个模块至少一条 action，且 html/svg 的 action 数量一致（同构保证）', () => {
+test('每个模块至少一条 action；svg 的命令集必须覆盖 html（同构 + 专属扩展）', () => {
   for (const m of MODULES) {
     assert.ok(m.actions && m.actions.length, `模块 ${m.id} 没有 action`);
   }
   const html = MODULES.find((m) => m.id === 'html');
   const svg = MODULES.find((m) => m.id === 'svg');
-  assert.equal(html.actions.length, svg.actions.length);
+
+  // 语义从「数量相等」放宽为「超集」：svg 在共用 CRUD 之上多了看板 / 批量 / 规范三类专属命令。
+  // 但**共用部分必须逐条对齐** —— html 有一条，svg 就必须有同名的一条，
+  // 否则「两个面板交互一致」这个前提就破了（同名的那条会各自漂移）。
+  const strip = (id, kind) => id.replace(new RegExp('^' + kind + '\\.'), '');
+  const svgIds = new Set(svg.actions.map((a) => strip(a.id, 'svg')));
+  for (const a of html.actions) {
+    assert.ok(svgIds.has(strip(a.id, 'html')), `svg 缺少与 html 对应的 action: ${a.id}`);
+  }
+
+  // 专属扩展确实存在（防止有人「为了过测试」把两边改成一样长）
+  const extra = svg.actions.filter(
+    (a) => !html.actions.some((h) => strip(h.id, 'html') === strip(a.id, 'svg'))
+  );
+  assert.ok(extra.length >= 5, `svg 应有专属 action（看板/批量/规范），实际只多出 ${extra.length} 条`);
 });

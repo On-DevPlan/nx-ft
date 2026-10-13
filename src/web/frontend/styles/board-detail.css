@@ -1,0 +1,147 @@
+/* 资源页 / 整页预览 / 批量结果（board.css 的续篇：看板那一半在同目录 board.css）。 */
+/* ---------- 资源页 ---------- */
+
+.detail { max-width: none; }
+
+.detail-ident {
+  display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
+  border: var(--border); border-radius: 10px; background: var(--paper); padding: 14px;
+}
+.detail-ident-art {
+  display: grid; place-items: center; width: 64px; height: 64px; flex-shrink: 0;
+  border: var(--border); border-radius: 10px; background: var(--soft);
+}
+.detail-ident-main { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
+.detail-ident-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.detail-ident-label { font-size: 15px; font-weight: 700; }
+.detail-ident-title .mono { font-size: 11px; }
+.detail-ident-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; }
+.detail-ident-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+
+.style-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 8px; }
+.style-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  border: var(--border); border-radius: 10px; background: var(--paper);
+}
+.style-card.cur { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.style-card-art { display: grid; place-items: center; height: 46px; width: 100%; }
+.style-card-main {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 8px 8px; border: 0; background: none; cursor: pointer; font: inherit; color: var(--ink);
+}
+.style-card-main:hover { background: var(--soft); }
+.style-card-name { max-width: 100%; font-size: 12px; font-weight: 600; }
+/* 风格描述：多风格并排时唯一说清「这套实现的特征」的地方（svg style desc 写）。
+   没写时显示一个淡淡的破折号占位，卡片高度不会因为有没有描述而参差。 */
+.style-card-desc { max-width: 100%; font-size: 10px; color: var(--mid); line-height: 1.3; }
+.style-card-badges { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
+.style-card-act {
+  border: 0; border-top: var(--border); background: var(--soft); padding: 5px 8px;
+  font: inherit; font-size: 11px; color: var(--ink); cursor: pointer;
+}
+.style-card-act:hover { background: var(--soft-2); }
+
+.detail-work { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
+.detail-editors { display: grid; gap: 10px; }
+.detail-side { display: flex; flex-direction: column; gap: 14px; }
+
+.issue-list { display: flex; flex-direction: column; }
+.issue-row {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 4px 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--soft-2);
+}
+.issue-row:last-of-type { border-bottom: 0; }
+.issue-code { font-size: 10px; color: var(--mid); padding-top: 1px; }
+.issue-row.err .issue-code { color: var(--bad); font-weight: 700; }
+.issue-msg { font-size: 12px; }
+.issue-hint { grid-column: 2; font-size: 11px; }
+.issue-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 10px; border-top: var(--border); font-size: 11px; }
+.issue-clean { color: var(--mid); font-size: 12px; }
+
+.cli-block { display: flex; flex-direction: column; gap: 10px; }
+.cli-block-row { display: flex; flex-direction: column; gap: 4px; }
+.cli-item { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cli-item-label { font-size: 11px; width: 76px; flex-shrink: 0; }
+.cli-item-cmd {
+  font-size: 11px; background: var(--soft); border-radius: 4px; padding: 2px 6px;
+  color: var(--ink); word-break: break-all;
+}
+.cli-block-heredoc { display: flex; flex-direction: column; gap: 6px; font-size: 11px; }
+.cli-block-heredoc .snippet-box { cursor: copy; }
+.cli-block-heredoc pre { white-space: pre-wrap; word-break: break-all; }
+
+.hist { display: flex; flex-direction: column; }
+.hist-head { font-size: 11px; padding-bottom: 8px; border-bottom: var(--border); }
+.hist-row {
+  display: flex; align-items: center; gap: 12px; min-height: var(--row-h);
+  padding: 4px 0; border-bottom: 1px solid var(--soft-2); font-size: 12px;
+}
+.hist-row > span:first-child { min-width: 140px; }
+.hist-row > span:nth-child(2) { flex: 1; }
+.hist-foot { padding-top: 10px; font-size: 11px; }
+
+/* ---------- 整页预览 ---------- */
+
+.fullpage { position: fixed; inset: 0; z-index: 70; background: var(--paper); display: flex; flex-direction: column; }
+.fullpage-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px; border-bottom: var(--border); background: var(--soft); flex-shrink: 0;
+}
+.fullpage-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.fullpage-title .mono { font-weight: 700; }
+.fullpage-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.seg { display: inline-flex; border: var(--border); border-radius: 8px; overflow: hidden; background: var(--paper); }
+.seg-btn {
+  border: 0; border-right: var(--border); background: none; padding: 0 9px; height: 26px;
+  font: inherit; font-size: 11px; color: var(--mid); cursor: pointer;
+}
+.seg-btn:last-child { border-right: 0; }
+.seg-btn:hover { background: var(--soft); color: var(--ink); }
+.seg-btn.active { background: var(--ink); color: var(--paper); font-weight: 600; }
+
+.fullpage-stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: auto; padding: 28px; }
+.fullpage-stage.on-soft { background: var(--soft); }
+.fullpage-stage.on-ink { background: var(--ink); }
+.fullpage-stage.on-ink .fullpage-canvas .icon { color: var(--paper); }
+.fullpage-canvas { display: grid; place-items: center; position: relative; }
+/* 24pt 网格叠加：线要淡。192px 下有 24×24 条线，再深一点整块就变成「影子」，
+   反倒看不清图标的弧线——它是量尺，不是图案。 */
+.fullpage-canvas.with-grid::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(to right, rgba(20, 22, 26, 0.09) 0 1px, transparent 1px var(--grid-step)),
+    repeating-linear-gradient(to bottom, rgba(20, 22, 26, 0.09) 0 1px, transparent 1px var(--grid-step));
+  outline: 1px dashed rgba(20, 22, 26, 0.24);
+}
+.on-ink .fullpage-canvas.with-grid::after {
+  background-image:
+    repeating-linear-gradient(to right, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px var(--grid-step)),
+    repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.13) 0 1px, transparent 1px var(--grid-step));
+  outline-color: rgba(255, 255, 255, 0.3);
+}
+.fullpage-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 8px 16px; border-top: var(--border); font-size: 11px; flex-shrink: 0;
+}
+
+/* ---------- 批量结果弹窗 ---------- */
+
+.batch-result { display: flex; flex-direction: column; gap: 8px; }
+.batch-result-head { font-size: 12px; font-weight: 600; }
+.batch-pre { max-height: 46vh; overflow: auto; white-space: pre; }
+.batch-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 12px; border-top: var(--border); font-size: 11px;
+}
+
+/* ---------- 响应式 ---------- */
+
+@media (max-width: 1080px) {
+  .detail-work { grid-template-columns: 1fr; }
+  .statbar-spec { margin-left: 0; border-left: 0; border-top: var(--border); width: 100%; padding: 6px 14px; }
+}
+@media (max-width: 640px) {
+  .icon-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .detail-ident-acts { margin-left: 0; }
+}

@@ -9,6 +9,12 @@ export * as assetGroups from './core/assets/groups.js';
 export * as assetStore from './core/assets/assets.js';
 export * as assetStyles from './core/assets/styles.js';
 
+// SVG 作为「图标集」的专属能力（规范 / 看板 / 审计 / 批量搬运）
+export * as svgSpec from './core/svg/spec.js';
+export * as svgBoard from './core/svg/board.js';
+export * as svgAudit from './core/svg/audit.js';
+export * as svgSet from './core/svg/set.js';
+
 // LOGO 生成（脚本产图）
 export * as logoGallery from './core/logo/gallery.js';
 

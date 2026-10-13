@@ -287,11 +287,13 @@ export function makeActions(kind) {
   ];
 }
 
-export function makeModule(kind, order) {
+// extraActions 给「在共用 CRUD 之上还有专属能力」的类型用（当前只有 svg：
+// 看板 / 批量导入导出 / 规范审计）。html 不传，因此两个模块的共用部分保持逐条同构。
+export function makeModule(kind, order, extraActions = []) {
   return {
     id: kind,
     title: ASSET_KINDS[kind].label,
     order,
-    actions: makeActions(kind),
+    actions: [...makeActions(kind), ...extraActions],
   };
 }

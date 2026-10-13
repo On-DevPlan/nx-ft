@@ -1,0 +1,60 @@
+/* 第 3 层 / 壳的版式（头部 / tab 栏 / 面板 / 栅格）。**这一层按你的项目自由改。**
+ * ============================================================
+   3. layout —— 版式（**这一层随项目自由改**）
+   ============================================================ */
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 5;
+}
+
+.brand { font-weight: 700; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 8px; }
+.brand img { width: 22px; height: 22px; border-radius: 6px; display: block; }
+.brand .sub { font-weight: 400; color: var(--mid); margin-left: 8px; font-size: 12px; }
+
+header nav { display: flex; flex-wrap: wrap; gap: 4px; }
+header .meta {
+  margin-left: auto;
+  min-width: 0;
+  max-width: 46vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--mid);
+  font-size: 12px;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.tab {
+  border: 1px solid transparent;
+  background: none;
+  padding: 5px 10px;
+  height: var(--btn-h);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--mid);
+  font-size: 13px;
+}
+.tab:hover { background: var(--soft); }
+.tab.active {
+  color: var(--ink);
+  border-color: var(--soft-2);
+  background: var(--soft);
+  font-weight: 600;
+  box-shadow: var(--shadow-relief);
+}
+
+main { padding: 16px; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* 并排卡片用 .cols，避免每个视图各写一套 flex */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }

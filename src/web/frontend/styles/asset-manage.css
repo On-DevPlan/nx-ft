@@ -1,0 +1,111 @@
+/* 第 4 层甲 / 资产域第一层：管理页（搜索 + 标签云 + 分组卡片网格）。
+ * 第二层（全屏工作台）在同目录 asset-workbench.css。
+ * ============================================================
+   4. 资产域（html / svg 共用）
+   第一层：管理页（搜索 + 标签云 + 分组卡片网格）
+   第二层：全屏工作台（面包屑 + 风格/描述 + 三编辑框 + 预览）
+   ============================================================ */
+
+/* ---- 管理页 ---- */
+
+.asset-manage { display: flex; flex-direction: column; gap: 12px; }
+.am-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.am-title { font-size: 15px; font-weight: 700; }
+.am-count { font-size: 11px; }
+.am-spacer { flex: 1; }
+.am-search { width: 260px; height: var(--row-h); font-size: var(--fs-core); }
+
+/* 管理页双层：左目录树 + 右内容 */
+.am-body { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 12px; align-items: start; }
+.am-tree {
+  border: var(--border); border-radius: 10px; background: var(--paper); padding: 6px;
+  max-height: calc(100vh - 220px); overflow: auto;
+  position: sticky; top: 12px;
+}
+.tm-row {
+  display: flex; align-items: center; gap: 4px;
+  height: var(--row-h); padding-right: 8px; border-radius: 6px;
+  font-size: var(--fs-core); cursor: pointer;
+}
+.tm-row:hover { background: var(--soft); }
+.tm-row.active { background: var(--soft); font-weight: 600; box-shadow: var(--shadow-relief-inset); }
+.tm-root { padding-left: 6px; }
+.tm-arrow {
+  width: 16px; height: 16px; flex-shrink: 0; padding: 0; border: 0; background: none;
+  color: var(--mid); font-size: 10px; cursor: pointer;
+}
+.tm-arrow-empty { visibility: hidden; }
+.tm-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tm-count { color: var(--mid); font-size: 10px; flex-shrink: 0; }
+.tm-empty { padding: 10px; font-size: 11px; }
+
+.am-content { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.am-crumbbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: var(--row-h); }
+.am-sec-title { font-size: 11px; color: var(--mid); letter-spacing: 0.04em; }
+
+.am-subdirs { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.am-subdir {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  border: var(--border); border-radius: 10px; padding: 10px 12px;
+  background: var(--paper); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
+}
+.am-subdir:hover { background: var(--soft); }
+.am-subdir-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.am-subdir-count { margin-left: auto; color: var(--mid); font-size: 11px; flex-shrink: 0; }
+.am-subdir-x {
+  position: absolute; top: 2px; right: 4px; width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; background: none; color: var(--mid);
+  font-size: 12px; line-height: 1; cursor: pointer; opacity: 0;
+}
+.am-subdir:hover .am-subdir-x { opacity: 1; }
+.am-subdir-x:hover { color: var(--bad); background: var(--soft-2); }
+
+.am-group {
+  border: var(--border); border-radius: 10px; background: var(--paper); overflow: hidden;
+}
+.am-group + .am-group { margin-top: 12px; }
+.am-group-head {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  border-bottom: var(--border); background: var(--soft);
+}
+.am-group-name { font-weight: 600; font-size: 13px; }
+.am-group-path { font-size: 11px; }
+.am-group-head .btn { margin-left: 2px; }
+
+.am-cards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px; padding: 12px;
+}
+.am-card {
+  display: flex; flex-direction: column; gap: 5px; text-align: left;
+  border: var(--border); border-radius: 10px; padding: 10px 12px 8px;
+  background: var(--paper); cursor: pointer; color: var(--ink); font: inherit;
+}
+.am-card:hover { background: var(--soft); }
+.am-card-label { font-weight: 600; font-size: 13px; }
+.am-card-name { font-size: 11px; color: var(--mid); }
+.am-card-tags { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
+.am-card-foot {
+  display: flex; gap: 10px; margin-top: 2px; font-size: 11px; color: var(--mid);
+}
+
+/* ---- 共享：标签云 / 标签片 ---- */
+
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 4px; max-height: 88px; overflow: auto; }
+.tag-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 8px; border-radius: 999px;
+  border: 1px solid var(--soft-2); background: var(--paper);
+  color: var(--mid); font-size: 11px; cursor: pointer;
+}
+.tag-chip:hover { background: var(--soft); color: var(--ink); }
+.tag-chip.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.tag-chip.ghost { border-style: dashed; }
+.tag-chip-count { opacity: 0.7; }
+.tag-chip-x {
+  border: 0; background: none; color: inherit; cursor: pointer;
+  padding: 0 0 0 2px; font-size: 12px; line-height: 1;
+}
+.tag-chip-x:hover { color: var(--bad); }
+

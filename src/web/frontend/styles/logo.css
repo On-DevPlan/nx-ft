@@ -1,0 +1,35 @@
+/* 第 5 层 / LOGO 生成页（与资产域无关，独立一层）。
+ * ============================================================
+   5. LOGO 生成页
+   ============================================================ */
+
+.logo-page { display: flex; flex-direction: column; gap: 12px; }
+.logo-cols { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 12px; align-items: start; }
+.logo-form { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.logo-field { display: flex; align-items: flex-start; gap: 10px; }
+.logo-label { width: 64px; flex-shrink: 0; color: var(--mid); font-size: 11px; padding-top: 7px; }
+.logo-input { flex: 1; min-width: 0; height: var(--row-h); }
+.scheme-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.scheme-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 6px 4px; border: 1px solid var(--soft-2); border-radius: 8px;
+  background: var(--paper); cursor: pointer;
+}
+.scheme-chip:hover { background: var(--soft); }
+.scheme-chip.active { border-color: var(--ink); box-shadow: var(--shadow-relief-inset); }
+.scheme-swatch {
+  width: 34px; height: 34px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; font-family: ui-monospace, Consolas, monospace;
+}
+.scheme-name { font-size: 10px; color: var(--mid); }
+.scheme-chip.active .scheme-name { color: var(--ink); }
+.logo-custom { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.logo-custom input[type='color'] { width: 36px; height: 26px; padding: 0 2px; cursor: pointer; }
+.logo-hint { font-size: 11px; margin: 0; }
+.logo-preview-box { padding: 16px; display: flex; align-items: center; justify-content: center; min-height: 260px; }
+.logo-preview-box img { width: 200px; height: 200px; display: block; }
+
+@media (max-width: 900px) {
+  .logo-cols { grid-template-columns: 1fr; }
+}

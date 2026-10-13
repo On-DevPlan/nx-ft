@@ -1,10 +1,15 @@
 // 分组管理页（第一层）：左侧多层目录树，右侧当前目录（面包屑 + 子目录 + 资源卡片）。
 // 搜索/标签筛选时切换为「结果视图」（平铺分组区块）；点树即回到浏览模式。
+//
+// 两个视图各成一个文件（manage-result.jsx / manage-browse.jsx）：这支 JSX 太长，
+// 混在一起时「改搜索结果样式」和「改目录浏览样式」会不停互相干扰。
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
-import { AssetCard, Crumbs, SubdirCard, TagCloud } from './parts.jsx';
+import { TagCloud } from './parts.jsx';
 import { ancestorsOf, buildTree, findNode, TreePanel } from './tree.jsx';
+import { ManageBrowse } from './manage-browse.jsx';
+import { ManageResult } from './manage-result.jsx';
 import { makeManageOps } from './useManageOps.js';
 
 const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源' };
@@ -52,7 +57,7 @@ export function ManagePage({ kind, initialDir, onOpen }) {
     }
   }, [dir, expanded, searchInput, activeTags, kind]);
 
-  // 选中目录的祖先链自动展开（从深链/持久化进来的目录 сразу 可见）
+  // 选中目录的祖先链自动展开（从深链/持久化进来的目录立刻可见）
   useEffect(() => {
     if (!dir) return;
     setExpanded((prev) => {
@@ -98,6 +103,12 @@ export function ManagePage({ kind, initialDir, onOpen }) {
     setSearchInput('');
     setSearch('');
     setActiveTags([]); // 点树 = 回浏览模式
+  };
+
+  const clearFilters = () => {
+    setSearchInput('');
+    setSearch('');
+    setActiveTags([]);
   };
 
   const toggleExpand = (path) =>
@@ -170,121 +181,30 @@ export function ManagePage({ kind, initialDir, onOpen }) {
 
           <section className="am-content">
             {filtered ? (
-              <>
-                <div className="am-crumbbar">
-                  <span className="am-sec-title">
-                    搜索结果 · {count.assets} 个资源
-                    {activeTags.length ? '（' + activeTags.map((t) => '#' + t).join(' + ') + '）' : ''}
-                  </span>
-                  <div className="am-spacer" />
-                  <button className="btn small ghost" onClick={() => { setSearchInput(''); setSearch(''); setActiveTags([]); }}>
-                    清除筛选
-                  </button>
-                </div>
-                {!tree.groups.length ? (
-                  <div className="empty">没有匹配的资源（共 {tree.total.assets} 个）</div>
-                ) : (
-                  tree.groups.map((g) => (
-                    <section key={g.path} className="am-group">
-                      <div className="am-group-head">
-                        <span className="am-group-name">{g.label}</span>
-                        <span className="mono muted am-group-path">{g.path}</span>
-                        <span className="tag">{g.assets.length} 资源</span>
-                      </div>
-                      <div className="am-cards">
-                        {g.assets.map((a) => (
-                          <AssetCard
-                            key={a.name}
-                            asset={a}
-                            groupPath={g.path}
-                            activeTags={activeTags}
-                            onOpen={onOpen}
-                            onTagToggle={toggleTag}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  ))
-                )}
-              </>
+              <ManageResult
+                tree={tree}
+                count={count}
+                activeTags={activeTags}
+                toggleTag={toggleTag}
+                onOpen={onOpen}
+                onClear={clearFilters}
+              />
             ) : (
-              <>
-                <div className="am-crumbbar">
-                  <Crumbs items={crumbItems} />
-                  <div className="am-spacer" />
-                  {dir && dirGroup ? (
-                    <button className="btn small ghost" onClick={() => removeGroup(dir)}>删除当前分组</button>
-                  ) : null}
-                </div>
-
-                {dir && !dirNode ? (
-                  <div className="empty">
-                    目录不存在或已删除
-                    <p className="muted">
-                      <button className="btn small" onClick={() => pickDir('')}>回到全部</button>
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {dirNode?.children.length ? (
-                      <>
-                        <div className="am-sec-title">子目录</div>
-                        <div className="am-subdirs">
-                          {dirNode.children.map((c) => (
-                            <SubdirCard
-                              key={c.path}
-                              node={c}
-                              onSelect={pickDir}
-                              onRemove={(path) => removeGroup(path)}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    ) : null}
-
-                    {(dirGroup?.assets.length || 0) > 0 ? (
-                      <>
-                        <div className="am-sec-title">资源</div>
-                        <div className="am-cards">
-                          {dirGroup.assets.map((a) => (
-                            <AssetCard
-                              key={a.name}
-                              asset={a}
-                              groupPath={dirGroup.path}
-                              activeTags={activeTags}
-                              onOpen={onOpen}
-                              onTagToggle={toggleTag}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    ) : null}
-
-                    {!dirNode?.children.length && !(dirGroup?.assets.length) ? (
-                      <div className="empty">
-                        {count.groups === 0 ? (
-                          <>
-                            还没有任何资源。先{' '}
-                            <button className="btn small" onClick={() => addGroup()}>新建分组</button>
-                            {' '}再{' '}
-                            <button className="btn small" onClick={() => addAsset()}>新建资源</button>
-                            <p className="muted">存储位置: <span className="mono">{tree.root}</span></p>
-                          </>
-                        ) : (
-                          <>
-                            此目录为空
-                            <p className="muted">
-                              <button className="btn small" onClick={() => addAsset()}>在此新建资源</button>
-                              {' '}
-                              <button className="btn small" onClick={() => addGroup()}>新建子分组</button>
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    ) : null}
-                  </>
-                )}
-              </>
+              <ManageBrowse
+                tree={tree}
+                count={count}
+                dir={dir}
+                dirNode={dirNode}
+                dirGroup={dirGroup}
+                crumbItems={crumbItems}
+                activeTags={activeTags}
+                toggleTag={toggleTag}
+                onOpen={onOpen}
+                pickDir={pickDir}
+                removeGroup={removeGroup}
+                addGroup={addGroup}
+                addAsset={addAsset}
+              />
             )}
           </section>
         </div>

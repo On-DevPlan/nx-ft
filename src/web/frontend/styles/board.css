@@ -1,0 +1,133 @@
+/* 第 6 层甲 / SVG 看板：看板页与分组页 + 全站公共件（面包屑 / 面板卡 / 统计条 / 规范标签）。
+ *
+ * 另两半在同目录：资源页与整页预览见 board-detail.css。
+ * 这一层沿用 tokens 里的变量，不引入新颜色——「需要注意」一律用对比度表达
+ * （墨色胶囊 / 粗体数字 / 下缘 2px 墨线），颜色只留给真正的错误（--bad）。
+ */
+
+/* ---------- 公共件 ---------- */
+
+.icon { display: inline-block; flex-shrink: 0; color: var(--ink); line-height: 0; }
+.icon svg { width: 100%; height: 100%; display: block; }
+.icon-blank { border: 1px dashed var(--soft-2); border-radius: 4px; }
+.icon-ghost { border: 1px dashed var(--soft-2); border-radius: 6px; }
+
+.crumb { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; min-width: 0; font-size: 13px; }
+.crumb-seg, .crumb-cur {
+  border: 0; background: none; padding: 3px 6px; border-radius: 6px;
+  font: inherit; color: var(--mid); cursor: pointer;
+}
+.crumb-seg:hover { background: var(--soft); color: var(--ink); }
+.crumb-cur { color: var(--ink); font-weight: 600; cursor: default; }
+.crumb-sep { color: var(--soft-2); }
+
+.page-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.page-head-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.panel-card { border: var(--border); border-radius: 10px; background: var(--paper); overflow: hidden; }
+.panel-card-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  min-height: var(--row-h); padding: 4px 12px; border-bottom: var(--border);
+  background: var(--soft); font-size: 12px; font-weight: 600;
+}
+.panel-card-head > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+.panel-card-extra { font-weight: 400; font-size: 11px; }
+.panel-card-body { padding: 12px; }
+
+/* 统计条：一屏之内说清「有多少、多少合规」。用分隔线切分，不用卡片堆叠。 */
+.statbar {
+  display: flex; align-items: stretch; flex-wrap: wrap;
+  border: var(--border); border-radius: 10px; background: var(--paper); overflow: hidden;
+}
+.statbar-cell {
+  display: flex; flex-direction: column; justify-content: center; gap: 1px;
+  min-width: 78px; padding: 8px 16px;
+}
+.statbar-cell + .statbar-cell { border-left: var(--border); }
+.statbar-v { font-size: 18px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.statbar-k { font-size: 10px; color: var(--mid); letter-spacing: 0.06em; }
+/* 待规范 > 0 时给一条墨色下缘线：注意到它，但不把整屏染红。 */
+.statbar-cell.hot { box-shadow: inset 0 -2px 0 var(--ink); }
+.statbar-cell.hot .statbar-v { font-weight: 800; }
+.statbar-cell.muted-cell .statbar-v { color: var(--mid); font-weight: 600; }
+.statbar-spec {
+  margin-left: auto; display: flex; align-items: center; padding: 0 14px;
+  border-left: var(--border); font-size: 11px; color: var(--mid);
+}
+
+/* 规范标签：合规 → 浅底灰字；待规范 → 墨色胶囊（靠对比度抓眼）；阻断 → --bad。 */
+.spec-badge {
+  display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 999px;
+  font-size: 10px; white-space: nowrap; background: var(--soft-2); color: var(--mid);
+}
+.spec-badge.ok { background: var(--paper); color: var(--mid); border: 1px solid var(--soft-2); }
+.spec-badge.warn { background: var(--ink); color: var(--paper); }
+.spec-badge.err { background: var(--bad); color: #fff; }
+
+.tag-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+
+/* ---------- 看板 / 分组页 ---------- */
+
+.svg-board { display: flex; flex-direction: column; gap: 14px; }
+
+.board-bar {
+  display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px;
+  border-bottom: var(--border);
+}
+.board-bar-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.board-search { flex: 1; min-width: 220px; height: var(--btn-h); font-size: var(--fs-core); }
+.board-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.board-acts-sep { width: 1px; height: 18px; background: var(--soft-2); margin: 0 2px; }
+
+.board-body { display: flex; flex-direction: column; gap: 18px; }
+.board-group { display: flex; flex-direction: column; gap: 8px; }
+
+.group-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.group-head-path {
+  border: 0; background: none; padding: 2px 0; font: inherit; font-weight: 700;
+  color: var(--ink); cursor: pointer; border-bottom: 1px solid transparent;
+}
+.group-head-path:hover { border-bottom-color: var(--ink); }
+.group-head-label { font-size: 12px; }
+.group-head-count { font-size: 11px; color: var(--mid); }
+.group-head-flagged { color: var(--ink); font-weight: 600; }
+.group-head-more { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+.icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(122px, 1fr)); gap: 8px; }
+
+.icon-tile {
+  display: flex; flex-direction: column; overflow: hidden;
+  border: var(--border); border-radius: 10px; background: var(--paper);
+  transition: border-color 0.12s, background 0.12s;
+}
+.icon-tile:hover { border-color: var(--mid); }
+.icon-tile-main {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 14px 8px 8px; border: 0; background: none; cursor: pointer;
+  font: inherit; color: var(--ink); width: 100%;
+}
+.icon-tile-main:hover { background: var(--soft); }
+.icon-tile-art { position: relative; display: grid; place-items: center; width: 100%; height: 44px; }
+/* 角标只挂异常（待规范 / 多风格），放在图形右上角，不占用名字那一行 */
+.icon-tile-marks { position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 3px; }
+.icon-tile-name { max-width: 100%; font-size: 11px; font-weight: 600; }
+.icon-tile-foot {
+  display: flex; align-items: center; gap: 4px; min-height: 26px; padding: 0 6px 0 8px;
+  border-top: var(--border); background: var(--soft); font-size: 10px;
+}
+.icon-tile-path { flex: 1; min-width: 0; color: var(--mid); font-size: 10px; }
+.icon-tile-count { flex-shrink: 0; color: var(--mid); font-size: 10px; }
+.icon-tile-act {
+  border: 0; background: none; padding: 0 2px; font: inherit; font-size: 10px;
+  color: var(--mid); cursor: pointer; flex-shrink: 0;
+  opacity: 0; transition: opacity 0.12s;
+}
+.icon-tile:hover .icon-tile-act, .icon-tile-act:focus { opacity: 1; }
+.icon-tile-act:hover { color: var(--ink); text-decoration: underline; }
+
+.board-foot { border-top: var(--border); padding-top: 10px; }
+.board-hints { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 11px; }
+.board-hint-cmd { background: var(--soft); border-radius: 4px; padding: 2px 6px; color: var(--ink); }
+
