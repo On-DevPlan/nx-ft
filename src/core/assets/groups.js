@@ -146,10 +146,15 @@ function rewritePathsUnder(kind, fromPath, mapPath) {
 export function removeGroup({ kind, group, force }) {
   assertKind(kind);
   const groupPath = parseGroupPath(group);
+  const dir = st.groupDir(kind, groupPath);
   const manifest = st.loadGroup(kind, groupPath);
-  if (!manifest) throw notFound(`分组不存在: ${groupPath}`);
-  const assetCount = Object.keys(manifest.assets).length;
-  const nested = listDirs(st.groupDir(kind, groupPath)).filter((n) => n !== st.ASSETS_SUBDIR).length;
+  const dirExists = existsSync(dir);
+  // 无 group.json、只有目录的「纯路径容器」（如建 abc/da 时自动生成的 abc）在面板上
+  // 就是一层普通文件夹，必须能删——早期只认清单，点删除一律 404「分组不存在」，
+  // 用户看到的是「点了没反应 + 一句莫名其妙的错」。
+  if (!manifest && !dirExists) throw notFound(`分组不存在: ${groupPath}`);
+  const assetCount = manifest ? Object.keys(manifest.assets).length : 0;
+  const nested = dirExists ? listDirs(dir).filter((n) => n !== st.ASSETS_SUBDIR).length : 0;
   if ((assetCount || nested) && !force) {
     return {
       status: 'blocked',
@@ -159,7 +164,7 @@ export function removeGroup({ kind, group, force }) {
       reason: '分组非空，加 --force 连同内容一起删除',
     };
   }
-  rmSync(st.groupDir(kind, groupPath), { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true });
   // 顺带清掉被删空的父目录链。判定「空壳」必须是真容器：既没有子目录、
   // 也没有自己的 group.json——只看子目录会误删「资源还没落盘成文件」的父分组
   // （它的 assets/ 目录尚未创建，但 group.json 里清清楚楚有一堆资源）。
