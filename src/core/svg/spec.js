@@ -211,7 +211,9 @@ export function auditSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) {
         `把作为主题色的那一色改成 ${spec.color}（svg spec fix --profile duotone --accent "#xxxxxx"）`
       );
     }
-  } else if (meta.colors.length) {
+  } else if (profile === 'line' && meta.colors.length) {
+    // 只有 line 档把「写死颜色」当问题：color 档（插画 / 品牌标 / 带动画的图形）
+    // 配色就是内容，报它等于让用户反复点一个修不掉的「待规范」。
     add(
       'warn',
       'hardcoded-color',
@@ -243,7 +245,8 @@ export function auditSvg(code, { spec = ICON_SPEC, profile = 'line' } = {}) {
 
   // 线宽检查是全文档的，不属于任何档位：只要哪个图元比规范粗/细，
   // 放回一组图标里就会显出来——哪怕根元素写得完全合规。
-  const offSpec = (meta.strokeWidths || []).filter((v) => !isSwOk(v));
+  // 但**只对线性档有意义**：color 档（插画 / 动画）的线宽是画面的一部分，不是「齐不齐」的问题。
+  const offSpec = profile === 'color' ? [] : (meta.strokeWidths || []).filter((v) => !isSwOk(v));
   if (offSpec.length) {
     add(
       'warn',
@@ -280,13 +283,20 @@ function propHasCurrentColor(src) {
   return hit;
 }
 
-// 自动识别一枚图标属于哪个档位——面板/看板不能要求用户每次手动指定：
+// 自动识别一枚资源属于哪个档位——面板/看板不能要求用户每次手动指定：
 //   duotone  有 currentColor（主题色）**且**还留着点缀色 → 双色图标，点缀色是有意的
-//   color    只有写死的色值，没有 currentColor → 纯配色图形（插画 / 品牌标）
+//   color    只有写死的色值 / 带 SMIL 或脚本驱动的动画 → 纯配色图形或动效，配色是内容
 //   line     颜色全走 currentColor（或压根没写颜色）→ 单色线性图标
+//
+// 动画类必须归到 color：图标那套「线宽 1.8 / 一律 currentColor」会把动画改坏
+// （关键帧与线宽都是动画的一部分），而归到 line 会让看板永远显示「待规范」。
+const MOTION_RE = /<\s*(animate|animateTransform|animateMotion|set|script)\b/i;
+
 export function detectProfile(src) {
-  const colors = collectColors(src);
-  const hasTheme = propHasCurrentColor(src);
+  const text = String(src ?? '');
+  if (MOTION_RE.test(text)) return 'color';
+  const colors = collectColors(text);
+  const hasTheme = propHasCurrentColor(text);
   if (colors.length && hasTheme) return 'duotone';
   if (colors.length) return 'color';
   return 'line';
@@ -422,13 +432,14 @@ export function normalizeSvg(code, { spec = ICON_SPEC, profile = 'line', accent 
       out = c.src;
       changed.push(`主题色 ${accent} → ${spec.color}（${c.hits} 处，其余配色保留）`);
     }
-  } else {
+  } else if (profile === 'line') {
     const c = unifyColors(out, spec.color);
     if (c.hits) {
       out = c.src;
       changed.push(`颜色 → ${spec.color}（${c.hits} 处）`);
     }
   }
+  // color 档：颜色一律保留（插画 / 品牌标 / 带动画的图形，配色就是内容）
 
   // 2) 线宽（全文档，含子图元）：line / duotone 都统一，目标值按缩放折算
   if (profile === 'line' || profile === 'duotone') {

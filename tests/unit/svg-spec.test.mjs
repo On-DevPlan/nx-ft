@@ -13,6 +13,7 @@ import {
   auditSvg,
   collectColors,
   collectStrokeWidths,
+  detectProfile,
   normalizeSvg,
   parseViewBox,
   parseSvg,
@@ -177,4 +178,42 @@ test('parseViewBox：解析与拒绝', () => {
   assert.equal(parseViewBox(''), null);
   assert.equal(parseViewBox('0 0 24'), null);
   assert.equal(parseViewBox(undefined), null);
+});
+
+// ---- 档位自动识别与 color 档的边界（用户需求：SVG 不一定是图标） ----
+
+test('detectProfile：按形态自动判档，动画一律归 color', () => {
+  const mono = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="currentColor" d="M0 0h1"/></svg>';
+  assert.equal(detectProfile(mono), 'line');
+
+  const duo = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="currentColor" d="M0 0h1"/><circle fill="#2B3445" r="3"/></svg>';
+  assert.equal(detectProfile(duo), 'duotone');
+
+  const illo = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle fill="#f00"/></svg>';
+  assert.equal(detectProfile(illo), 'color');
+
+  // 带动画：即便颜色全走 currentColor、线宽也合规，也不能按图标那套判
+  const anim = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle r="3" fill="currentColor"><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="2s" repeatCount="indefinite"/></circle></svg>';
+  assert.equal(detectProfile(anim), 'color', '动画不该被当成图标');
+});
+
+test('color 档不改颜色、不查线宽（插画 / 动画的配色与线宽都是内容）', () => {
+  const illo = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><circle fill="#f00" stroke="#0f0" stroke-width="3"/></svg>';
+
+  // 审计：color 档不报 hardcoded-color、不报 stroke-width
+  const codes = auditSvg(illo, { profile: 'color' }).issues.map((i) => i.code);
+  assert.ok(!codes.includes('hardcoded-color'), 'color 档不该报写死颜色');
+  assert.ok(!codes.includes('stroke-width'), 'color 档不该报线宽');
+  assert.ok(codes.includes('viewbox') || codes.includes('fixed-size'), '几何容器规则仍然查');
+
+  // 归一化：只动几何容器，颜色与线宽原样
+  const n = normalizeSvg(illo, { profile: 'color' });
+  assert.equal(n.ok, true);
+  assert.ok(n.code.includes('#f00') && n.code.includes('#0f0'), '配色必须保留');
+  assert.ok(!n.code.includes('currentColor'), '不该塞 currentColor');
+  assert.equal(n.code.includes('viewBox="0 0 24 24"'), true, 'viewBox 仍按规范归一');
+
+  // 对照：line 档会把同一份内容改成描边风格
+  const asLine = normalizeSvg(illo, { profile: 'line' });
+  assert.ok(asLine.code.includes('currentColor'), 'line 档才统一成 currentColor');
 });
