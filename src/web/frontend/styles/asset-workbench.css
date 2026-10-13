@@ -26,33 +26,45 @@
   padding: 0;
   display: flex; flex-direction: column;
   overflow: hidden;
-  gap: 8px;
+  background: var(--soft);
 }
-.wb-body .asset-preview { flex: 1 1 auto; min-height: 300px; }
+.wb-body .asset-preview { flex: 1 1 auto; min-height: 0; }
 
-/* 3 编辑器横向并排（HTML/CSS/JS） */
+/* 3 编辑器横向并排（HTML/CSS/JS），撑满上半面板。
+   用 flex 而非 grid：折叠某个编辑器时它自动收缩，不留空列。 */
 .wb-editors-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  padding: 8px 14px 0;
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  height: 100%;
   min-height: 0;
-  flex-shrink: 0;
 }
 .wb-editors-row .code-pane {
-  min-height: 200px;
-  max-height: 40vh;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  border: var(--border);
+  border-radius: 8px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.wb-editors-row .code-pane.collapsed {
+  flex: 0 0 auto;
+  height: auto;
+  align-self: flex-start;
 }
 .wb-editors-row .code-pane-body {
   flex: 1;
   min-height: 0;
 }
+.wb-editors-row .code-area { resize: none; height: 100%; }
 
 /* 预览：下半部分，居中撑满 */
 .wb-preview-row {
-  flex: 1;
+  height: 100%;
   min-height: 0;
   padding: 0 14px 14px;
   display: flex;
@@ -60,6 +72,7 @@
 .wb-preview-row .asset-preview {
   flex: 1;
   width: 100%;
+  border-radius: 8px;
 }
 
 /* 面包屑：左上角导航（工作台/管理页共用样式） */

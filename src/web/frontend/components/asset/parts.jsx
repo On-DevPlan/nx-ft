@@ -121,51 +121,84 @@ export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagTogg
   );
 }
 
-// 批量操作条：进入批量模式后顶部出现，列出「已选 N」「全选」「反选」「取消」「批量 X」。
-export function BatchBar({ count, total, onSelectAll, onInvert, onCancel, onBatchDelete, disabled }) {
-  if (count === 0 && !disabled) return null; // 空时不显示
+// 批量操作条：进入批量模式后顶部出现，列出「已选 N」「全选」「反选」「取消」+ 一组批量动作。
+// actions: [{ label, testId, onClick, danger, disabled }] —— 支持资源与目录不同动作。
+export function BatchBar({ count, dirCount = 0, total, onSelectAll, onInvert, onCancel, actions = [] }) {
   return (
     <div className="batch-bar" role="toolbar" aria-label="批量操作" data-testid="batch-bar">
       <div className="batch-bar-left">
         <button className="btn small" onClick={onSelectAll} data-testid="batch-select-all">
-          {count === total ? '取消全选' : '全选当前页'}
+          全选当前页
         </button>
         <button className="btn small ghost" onClick={onInvert} data-testid="batch-invert">反选</button>
         <button className="btn small ghost" onClick={onCancel} data-testid="batch-cancel">取消批量</button>
       </div>
       <div className="batch-bar-middle">
-        已选 <strong data-testid="batch-count">{count}</strong> / {total} 项
+        已选 <strong data-testid="batch-count">{count}</strong> 项资源
+        {dirCount > 0 ? (
+          <>
+            {' · '}
+            <strong data-testid="batch-dir-count">{dirCount}</strong> 个目录
+          </>
+        ) : null}
+        <span className="muted"> / 共 {total} 项</span>
       </div>
       <div className="batch-bar-right">
-        <button
-          className="btn small"
-          onClick={onBatchDelete}
-          disabled={count === 0}
-          data-testid="batch-delete"
-        >
-          批量删除
-        </button>
+        {actions.map((a) => (
+          <button
+            key={a.testId}
+            className={'btn small' + (a.danger ? ' danger' : '')}
+            onClick={a.onClick}
+            disabled={a.disabled}
+            data-testid={a.testId}
+          >
+            {a.label}
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
 // 子目录卡片：目录树之外的第二种钻取入口（大目标、带总数）。
-export function SubdirCard({ node, onSelect, onRemove }) {
+// 批量模式下显示勾选框；点勾选不触发钻取。
+export function SubdirCard({ node, onSelect, onRemove, selectable, selected, onToggle }) {
+  const handleCheck = (e) => {
+    e.stopPropagation();
+    onToggle && onToggle(node.path);
+  };
   return (
-    <button className="am-subdir" onClick={() => onSelect(node.path)} title={node.path}>
+    <div
+      className={'am-subdir' + (selected ? ' selected' : '')}
+      onClick={() => !selectable && onSelect(node.path)}
+      title={node.path}
+      data-testid={`subdir-card-${node.path}`}
+    >
+      {selectable ? (
+        <input
+          type="checkbox"
+          className="am-subdir-check"
+          aria-label={`选择目录 ${node.path}`}
+          checked={!!selected}
+          onClick={handleCheck}
+          onChange={handleCheck}
+          data-testid={`subdir-check-${node.path}`}
+        />
+      ) : null}
       <span className="am-subdir-name">{node.label || node.name}</span>
       <span className="am-subdir-count">{node.total} 资源</span>
-      <span
-        className="am-subdir-x"
-        title="删除该子分组"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(node.path);
-        }}
-      >
-        ×
-      </span>
-    </button>
+      {!selectable ? (
+        <span
+          className="am-subdir-x"
+          title="删除该子分组"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(node.path);
+          }}
+        >
+          ×
+        </span>
+      ) : null}
+    </div>
   );
 }

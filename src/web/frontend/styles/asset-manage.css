@@ -50,6 +50,10 @@
   background: var(--paper); color: var(--ink); font: inherit; text-align: left; cursor: pointer;
 }
 .am-subdir:hover { background: var(--soft); }
+.am-subdir.selected { background: var(--soft); border-color: var(--ink); }
+.am-subdir-check {
+  width: 16px; height: 16px; margin: 0; flex-shrink: 0; cursor: pointer;
+}
 .am-subdir-name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .am-subdir-count { margin-left: auto; color: var(--mid); font-size: 11px; flex-shrink: 0; }
 .am-subdir-x {

@@ -232,7 +232,6 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
                   label={KIND_LABEL[kind][slot]}
                   initial={ready ? (asset?.code?.[sel.style] || {})[slot] : ''}
                   readOnly={!ready}
-                  collapsed={slot === 'js'}
                   onSave={ops.save}
                   onChange={() => setTick((n) => n + 1)}
                 />

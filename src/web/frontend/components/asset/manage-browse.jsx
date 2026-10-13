@@ -7,7 +7,7 @@ import { AssetCard, Crumbs, SubdirCard } from './parts.jsx';
 export function ManageBrowse({
   tree, count, dir, dirNode, dirGroup, crumbItems,
   activeTags, toggleTag, onOpen, pickDir, removeGroup, addGroup, addAsset,
-  batchMode, selected, onToggle,
+  batchMode, selected, onToggle, selectedDirs, onToggleDir,
 }) {
   if (dir && !dirNode) {
     return (
@@ -39,7 +39,15 @@ export function ManageBrowse({
           <div className="am-sec-title">子目录</div>
           <div className="am-subdirs">
             {subdirs.map((c) => (
-              <SubdirCard key={c.path} node={c} onSelect={pickDir} onRemove={(p) => removeGroup(p)} />
+              <SubdirCard
+                key={c.path}
+                node={c}
+                onSelect={pickDir}
+                onRemove={(p) => removeGroup(p)}
+                selectable={batchMode}
+                selected={selectedDirs && selectedDirs.has(c.path)}
+                onToggle={onToggleDir}
+              />
             ))}
           </div>
         </>

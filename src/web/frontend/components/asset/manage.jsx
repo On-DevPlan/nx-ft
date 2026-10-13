@@ -38,6 +38,8 @@ export function ManagePage({ kind, initialDir, onOpen }) {
   const [err, setErr] = useState('');
   // 批量选择状态：key = `${groupPath}/${name}`
   const [selected, setSelected] = useState(() => new Set());
+  // 批量选择目录：value = 目录 path
+  const [selectedDirs, setSelectedDirs] = useState(() => new Set());
   const [batchMode, setBatchMode] = useState(false);
 
   // 深链（#/html/dir/…）带来的目录变化
@@ -61,7 +63,7 @@ export function ManagePage({ kind, initialDir, onOpen }) {
     }
   }, [dir, expanded, searchInput, activeTags, kind]);
 
-  // 批量操作切换
+  // 批量操作切换（资源）
   const toggleSelect = (groupPath, name) => {
     const key = `${groupPath}/${name}`;
     setSelected((prev) => {
@@ -73,27 +75,52 @@ export function ManagePage({ kind, initialDir, onOpen }) {
     setBatchMode(true);
   };
 
+  // 批量操作切换（目录）
+  const toggleSelectDir = (path) => {
+    setSelectedDirs((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+    setBatchMode(true);
+  };
+
   const enterBatch = () => setBatchMode(true);
   const cancelBatch = () => {
     setBatchMode(false);
     setSelected(new Set());
+    setSelectedDirs(new Set());
   };
 
-  const selectAllVisible = (visibleList) => {
+  const selectAllVisible = (assetList, dirList = []) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      visibleList.forEach(([g, a]) => next.add(`${g}/${a}`));
+      assetList.forEach(([g, a]) => next.add(`${g}/${a}`));
+      return next;
+    });
+    setSelectedDirs((prev) => {
+      const next = new Set(prev);
+      dirList.forEach((p) => next.add(p));
       return next;
     });
   };
 
-  const invertVisible = (visibleList) => {
+  const invertVisible = (assetList, dirList = []) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      visibleList.forEach(([g, a]) => {
+      assetList.forEach(([g, a]) => {
         const key = `${g}/${a}`;
         if (next.has(key)) next.delete(key);
         else next.add(key);
+      });
+      return next;
+    });
+    setSelectedDirs((prev) => {
+      const next = new Set(prev);
+      dirList.forEach((p) => {
+        if (next.has(p)) next.delete(p);
+        else next.add(p);
       });
       return next;
     });
@@ -102,13 +129,13 @@ export function ManagePage({ kind, initialDir, onOpen }) {
   const batchDelete = async () => {
     if (selected.size === 0) return;
     const ok = await dialog({
-      title: '批量删除',
+      title: '批量删除资源',
       message: `将删除 ${selected.size} 个资源。此操作不可撤销。`,
       okText: '确认删除',
       danger: true,
     });
     if (!ok) return;
-    let ok_count = 0;
+    let done = 0;
     for (const key of selected) {
       const [groupPath, name] = key.split('/');
       try {
@@ -117,12 +144,52 @@ export function ManagePage({ kind, initialDir, onOpen }) {
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ group: groupPath, name, force: true }),
         });
-        ok_count++;
+        done++;
       } catch {
         /* 单条失败不阻断其它 */
       }
     }
-    toast({ kind: 'ok', msg: `批量删除完成（${ok_count}/${selected.size}）` });
+    toast({ kind: 'ok', msg: `批量删除资源完成（${done}/${selected.size}）` });
+    cancelBatch();
+    reload();
+  };
+
+  const batchDeleteDirs = async () => {
+    if (selectedDirs.size === 0) return;
+    // 统计影响范围（含子目录与资源）
+    const impacted = { groups: 0, assets: 0 };
+    const countIn = (node) => {
+      if (!node) return;
+      impacted.groups += 1;
+      impacted.assets += node.direct?.length || 0;
+      (node.children || []).forEach(countIn);
+    };
+    for (const p of selectedDirs) countIn(findNode(root, p));
+
+    const ok = await dialog({
+      title: '批量删除目录',
+      message: `将删除 ${selectedDirs.size} 个目录，含 ${impacted.groups} 个子目录、${impacted.assets} 个资源与全部历史。此操作不可撤销。`,
+      okText: '确认删除',
+      danger: true,
+    });
+    if (!ok) return;
+
+    // 先删子目录（路径短的先删会让父目录路径失效；按路径长度降序）
+    const ordered = [...selectedDirs].sort((a, b) => b.split('/').length - a.split('/').length);
+    let done = 0;
+    for (const p of ordered) {
+      try {
+        await api(`/api/${kind}/groups-remove`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ group: p, force: true }),
+        });
+        done++;
+      } catch {
+        /* 单条失败不阻断其它 */
+      }
+    }
+    toast({ kind: 'ok', msg: `批量删除目录完成（${done}/${selectedDirs.size}）` });
     cancelBatch();
     reload();
   };
@@ -239,25 +306,44 @@ export function ManagePage({ kind, initialDir, onOpen }) {
       {batchMode ? (
         <BatchBar
           count={selected.size}
+          dirCount={selectedDirs.size}
           total={
-            filtered
+            (filtered
               ? (tree?.groups || []).reduce((s, g) => s + g.assets.length, 0)
-              : (tree?.groups.find((g) => g.path === dir)?.assets.length || 0)
+              : (tree?.groups.find((g) => g.path === dir)?.assets.length || 0)) +
+            (filtered ? (dirNode?.children?.length || 0) : (dirNode?.children?.length || 0))
           }
           onSelectAll={() => {
-            const list = filtered
+            const assetList = filtered
               ? (tree?.groups || []).flatMap((g) => g.assets.map((a) => [g.path, a.name]))
               : (tree?.groups.find((g) => g.path === dir)?.assets || []).map((a) => [dir, a.name]);
-            selectAllVisible(list);
+            const dirList = (dirNode?.children || []).map((c) => c.path);
+            selectAllVisible(assetList, dirList);
           }}
           onInvert={() => {
-            const list = filtered
+            const assetList = filtered
               ? (tree?.groups || []).flatMap((g) => g.assets.map((a) => [g.path, a.name]))
               : (tree?.groups.find((g) => g.path === dir)?.assets || []).map((a) => [dir, a.name]);
-            invertVisible(list);
+            const dirList = (dirNode?.children || []).map((c) => c.path);
+            invertVisible(assetList, dirList);
           }}
           onCancel={cancelBatch}
-          onBatchDelete={batchDelete}
+          actions={[
+            {
+              label: `批量删除资源${selected.size ? ` (${selected.size})` : ''}`,
+              testId: 'batch-delete',
+              onClick: batchDelete,
+              disabled: selected.size === 0,
+              danger: true,
+            },
+            {
+              label: `批量删除目录${selectedDirs.size ? ` (${selectedDirs.size})` : ''}`,
+              testId: 'batch-delete-dirs',
+              onClick: batchDeleteDirs,
+              disabled: selectedDirs.size === 0,
+              danger: true,
+            },
+          ]}
         />
       ) : (
         <div className="am-tools">
@@ -320,6 +406,8 @@ export function ManagePage({ kind, initialDir, onOpen }) {
                   batchMode={batchMode}
                   selected={selected}
                   onToggle={toggleSelect}
+                  selectedDirs={selectedDirs}
+                  onToggleDir={toggleSelectDir}
                 />
               )}
             </section>

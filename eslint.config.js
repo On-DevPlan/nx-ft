@@ -178,4 +178,21 @@ export default defineConfig([
     files: ['scripts/**/*.{js,mjs}', 'tools/**/*.{js,mjs}'],
     rules: { 'max-lines': 'off' },
   },
+
+  // ---- max-lines 例外登记表 ----
+  // 默认上限 300 行（见 BASE_RULES）。下列文件按「单个面板 = 单个文件」的组织方式
+  // 已经超过 300 行，**登记为显式例外**而不是再拆——理由是这里拆出去的每一块
+  // 都要通过 props 反向传回主体（树 / 面包屑 / 批量动作全在下游），
+  // 拆完反而是「一处改动要跳三个文件」。
+  //
+  // 登记规则（加新条目必须同时满足）：
+  //   1. 行数超 300 **且** 拆分会引入跨文件 props 回传（纯展示件不满足此条，应拆）
+  //   2. 在上表的行数上限里标记**实际值**，方便下次有人看一眼就知道离它多远
+  //   3. 每次新增条目都要在提交信息里说明为什么这次选择登记而非拆分
+  {
+    files: [
+      'src/web/frontend/components/asset/manage.jsx', // 分组管理页（树 + 面包屑 + 批量）~420 行
+    ],
+    rules: { 'max-lines': ['error', { max: 450, skipBlankLines: true, skipComments: true }] },
+  },
 ]);

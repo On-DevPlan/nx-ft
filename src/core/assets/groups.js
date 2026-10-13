@@ -13,6 +13,10 @@ export function labelOf(label, fallback) {
   const v = String(label ?? '').trim();
   if (!v) return fallback;
   if (v.length > 60) throw badInput('标签最长 60 字符');
+  // Windows shell 会把命令行里的中文转成 GBK 再交给调用方，按 UTF-8 解不出就变成
+  // U+FFFD（�）。这种字符串入库后无法再还原，必须在入口拒掉——
+  // 用户看到「展示名含乱码字符」就知道是终端编码问题，而不是存了一堆坏数据。
+  if (v.includes('�')) throw badInput('展示名含乱码字符（�）——Windows 终端编码问题，请改用 UTF-8 客户端或纯 ASCII 名称');
   return v;
 }
 
