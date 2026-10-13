@@ -141,15 +141,14 @@ export function ManagePage({ kind, initialDir, onOpen }) {
       try {
         await api(`/api/${kind}/rm`, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ group: groupPath, name, force: true }),
+          body: { group: groupPath, name, force: true },
         });
         done++;
       } catch {
         /* 单条失败不阻断其它 */
       }
     }
-    toast({ kind: 'ok', msg: `批量删除资源完成（${done}/${selected.size}）` });
+    toast(`批量删除资源完成（${done}/${selected.size}）`);
     cancelBatch();
     reload();
   };
@@ -181,15 +180,14 @@ export function ManagePage({ kind, initialDir, onOpen }) {
       try {
         await api(`/api/${kind}/groups-remove`, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ group: p, force: true }),
+          body: { group: p, force: true },
         });
         done++;
       } catch {
         /* 单条失败不阻断其它 */
       }
     }
-    toast({ kind: 'ok', msg: `批量删除目录完成（${done}/${selectedDirs.size}）` });
+    toast(`批量删除目录完成（${done}/${selectedDirs.size}）`);
     cancelBatch();
     reload();
   };

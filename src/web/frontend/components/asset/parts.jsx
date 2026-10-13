@@ -72,7 +72,9 @@ export function TagCloud({ tags, active = [], onToggle, onClear }) {
 // 资源卡片：点卡片进工作台；标签片可点即筛（不发散冒泡）。
 // 可选勾选框：批量模式下显示。选中态与父级 selected 集合联动。
 export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagToggle, selectable, selected, onToggle }) {
-  // 修：勾选框需要 onClick + onChange 双拦截，否则冒泡到外层 div 会触发 onOpen 跳转。
+  // 勾选框只在 onClick 里 toggle 一次：onChange 再绑同一段会造成
+  // 「点击一次触发两次 toggle」——选中立刻被自己取消（真实点击验证踩过）。
+  // onChange 仅用于受控组件的 React 契约，不做任何事。
   const handleCheck = (e) => {
     e.stopPropagation();
     onToggle && onToggle(groupPath, asset.name);
@@ -91,7 +93,7 @@ export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagTogg
           aria-label={`选择 ${asset.name}`}
           checked={!!selected}
           onClick={handleCheck}
-          onChange={handleCheck}
+          onChange={() => {}}
           data-testid={`asset-card-check-${asset.name}`}
         />
       ) : null}
@@ -162,7 +164,10 @@ export function BatchBar({ count, dirCount = 0, total, onSelectAll, onInvert, on
 
 // 子目录卡片：目录树之外的第二种钻取入口（大目标、带总数）。
 // 批量模式下显示勾选框；点勾选不触发钻取。
+// 删除按钮常驻可见（ui-ux-pro-max Priority 2 反模式「hover only」——
+// hover 才出现的破坏性操作等于不存在）。
 export function SubdirCard({ node, onSelect, onRemove, selectable, selected, onToggle }) {
+  // 同 AssetCard：只在 onClick 里 toggle 一次，onChange 置空（防 double-toggle）。
   const handleCheck = (e) => {
     e.stopPropagation();
     onToggle && onToggle(node.path);
@@ -181,23 +186,25 @@ export function SubdirCard({ node, onSelect, onRemove, selectable, selected, onT
           aria-label={`选择目录 ${node.path}`}
           checked={!!selected}
           onClick={handleCheck}
-          onChange={handleCheck}
+          onChange={() => {}}
           data-testid={`subdir-check-${node.path}`}
         />
       ) : null}
       <span className="am-subdir-name">{node.label || node.name}</span>
       <span className="am-subdir-count">{node.total} 资源</span>
       {!selectable ? (
-        <span
+        <button
           className="am-subdir-x"
-          title="删除该子分组"
+          title={`删除目录 ${node.path}`}
+          aria-label={`删除目录 ${node.label || node.name}`}
+          data-testid={`subdir-remove-${node.path}`}
           onClick={(e) => {
             e.stopPropagation();
             onRemove(node.path);
           }}
         >
           ×
-        </span>
+        </button>
       ) : null}
     </div>
   );
