@@ -9,5 +9,6 @@ export const VIEWS = [
   { id: 'home', title: '首页', component: lazy(() => import('../../modules/home/view.jsx')) },
   { id: 'html', title: 'HTML 资源', component: lazy(() => import('../../modules/html/view.jsx')) },
   { id: 'svg', title: 'SVG 资源', component: lazy(() => import('../../modules/svg/view.jsx')) },
+  { id: 'color', title: '色彩资源', component: lazy(() => import('../../modules/color/view.jsx')) },
   { id: 'logo', title: 'LOGO 生成', component: lazy(() => import('../../modules/logo/view.jsx')) },
 ];

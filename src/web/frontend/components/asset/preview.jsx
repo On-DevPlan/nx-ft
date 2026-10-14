@@ -67,8 +67,53 @@ export function buildSvgDoc(code) {
   ].join('\n');
 }
 
+// color：把 data JSON 解析后渲染成色板墙。每个 Palette 是一行 swatch 列表。
+// 这是「色板资源的裸预览」——完整的编辑体验在 ColorStudio 全屏页里。
+export function buildColorDoc(code) {
+  let data = {};
+  try {
+    data = JSON.parse(String(code?.data || '{}'));
+  } catch {
+    data = { _error: 'DATA 槽位的 JSON 无法解析' };
+  }
+  const palettes = Array.isArray(data.palettes) ? data.palettes : [data];
+  const swatches = (entry) => {
+    const hex = (entry?.hex || '').toString().toUpperCase();
+    return `<div class="sw"><div class="chip" style="background:${hex}"></div><div class="meta"><b>${hex || '—'}</b><span>${entry?.note || ''}</span></div></div>`;
+  };
+  const palettesHtml = palettes
+    .map(
+      (p) => `
+      <section class="palette">
+        <h2>${p.name || '未命名调色板'}</h2>
+        <div class="grid">${(p.colors || []).map(swatches).join('')}</div>
+      </section>`,
+    )
+    .join('');
+  const style = `
+    html,body{margin:0;font:13px/1.4 system-ui;background:#f5f6f7;color:#14161a}
+    .palette{padding:16px}
+    .palette h2{margin:0 0 12px;font-size:14px}
+    .grid{display:flex;flex-wrap:wrap;gap:8px}
+    .sw{width:120px;background:#fff;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden}
+    .chip{height:56px}
+    .meta{padding:6px 8px;font-size:11px;display:flex;flex-direction:column;gap:2px}
+    .meta b{font-family:ui-monospace,monospace;color:#14161a}
+    .meta span{color:#6b7280}
+  `;
+  return [
+    '<!doctype html><html><head><meta charset="utf-8">',
+    `<style>${style}</style>`,
+    '</head><body>',
+    palettesHtml,
+    '</body></html>',
+  ].join('\n');
+}
+
 export function buildPreviewDoc(kind, code) {
-  return kind === 'svg' ? buildSvgDoc(code) : buildHtmlDoc(code);
+  if (kind === 'svg') return buildSvgDoc(code);
+  if (kind === 'color') return buildColorDoc(code);
+  return buildHtmlDoc(code);
 }
 
 // 预览面板：srcDoc 一有变化就重挂载 iframe。

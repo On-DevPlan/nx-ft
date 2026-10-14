@@ -12,9 +12,10 @@ import home from '../modules/home/index.js';
 import skill from '../modules/skill/index.js';
 import html from '../modules/html/index.js';
 import svg from '../modules/svg/index.js';
+import color from '../modules/color/index.js';
 import logo from '../modules/logo/index.js';
 
-export const MODULES = [home, skill, html, svg, logo].sort((a, b) => (a.order ?? 100) - (b.order ?? 100));
+export const MODULES = [home, skill, html, svg, color, logo].sort((a, b) => (a.order ?? 100) - (b.order ?? 100));
 
 export const ACTIONS = MODULES.flatMap((m) =>
   (m.actions || []).map((a) => ({ ...a, module: m.id }))

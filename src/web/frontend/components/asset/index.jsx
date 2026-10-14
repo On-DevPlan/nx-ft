@@ -34,7 +34,7 @@ export function parseRoute(kind, hash) {
   return { mode: 'manage', dir: null };
 }
 
-export function AssetView({ kind }) {
+export function AssetView({ kind, toolbar, emptyState }) {
   const [route, setRoute] = useState(() => parseRoute(kind, typeof location !== 'undefined' ? location.hash : ''));
 
   useEffect(() => {
@@ -62,5 +62,5 @@ export function AssetView({ kind }) {
       />
     );
   }
-  return <ManagePage kind={kind} initialDir={route.dir} onOpen={openAsset} onNavigate={goManage} />;
+  return <ManagePage kind={kind} initialDir={route.dir} onOpen={openAsset} onNavigate={goManage} toolbar={toolbar} emptyState={emptyState} />;
 }

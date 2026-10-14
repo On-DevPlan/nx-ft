@@ -101,7 +101,7 @@ export function importDir({ kind, group, from, style = 'default', tags, recursiv
 
   let groupCreated = false;
   if (!st.loadGroup(kind, groupPath)) {
-    addGroup({ group: groupPath });
+    addGroup({ kind, group: groupPath });
     groupCreated = true;
   }
 

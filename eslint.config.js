@@ -228,4 +228,22 @@ export default defineConfig([
     ],
     rules: { 'max-lines': ['error', { max: 450, skipBlankLines: true, skipComments: true }] },
   },
+
+  // ---- vendored 区域：color-studio 是从 ve 项目 1:1 复刻的(用户要求「最原始的复制」) ----
+  // 浏览器全局 no-undef(Blob/FileReader/crypto/requestAnimationFrame 等)由 external 依赖的
+  // 运行环境(Vite + 浏览器)提供,前端单独开启的 no-undef 不该把外部代码也算上;
+  // max-lines / max-file-chars 也不该让「1:1 复刻」为了过闸门而拆散结构。
+  // ---- vendored 区域：color-studio 是从 ve 项目 1:1 复刻的(用户要求「最原始的复制」) ----
+  // 不修内部文件、不加注释、不删 import,关掉所有规则确保 1:1 复刻不被 lint 改写。
+  {
+    files: ['src/web/frontend/external/**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
+      'no-var': 'off',
+      'no-empty': 'off',
+      'max-lines': 'off',
+      'local/max-file-chars': 'off',
+    },
+  },
 ]);

@@ -2,6 +2,36 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.5.0
+
+### 色彩模块（新）：调色板资源 + 全屏 ColorStudio
+
+- **新增 `color` 资源域**：每个资源 = 一个调色板（Palette JSON，存 `data` 槽位），分组/风格/编辑历史与 html/svg 完全同构
+- **CLI 24 条命令**：共享 CRUD/历史 19 条 + 专属 5 条（`color list` / `entry add` / `entry rm` / `export` / `put` 带 default 风格）
+- **`color export --format css|json|tailwind|toml`**：整组调色板一键导出为 CSS 变量 / Tailwind config / 设计 tokens
+- **全屏 ColorStudio**（`#/color/edit/<组>/<调色板>/full`，强制 `position:fixed; inset:0`）：从 ve 项目 color-studio 1:1 复刻 55 文件——色盘 / 比例 / 笔刷三视图、导出/导入/案例三模态、滤镜栈、快捷键自定义
+- **三处跨包依赖替换**：KV 后端 → `/api/color/*` 本地路由（数据 100% 落盘 `~/.nx-ft/assets/groups/color/`）；JWT 鉴权 → 「本地存储」占位；Vue 跨框架桥 → 纯 React FileDropZone
+- **和声派生槽位身份**：`derivedFrom` 增加 `slot` 字段，切换 三角/类似/分裂互补/单色 时复用同一批槽位就地更新（不再重复创建色卡）；移除 `complementary` 规则，历史数据自动迁移
+- **网盘页体验**：色卡 swatch 缩略图（前 5 色）、卡片右上「Studio →」快捷直达全屏、空调色板 hero 引导（输入名一键建示例板）、noun 本地化（「调色板」）
+
+### 面板：资产域通用增强
+
+- `AssetView` 新增 `toolbar` / `emptyState` 插槽（领域注入动作与空态引导）
+- 资源卡片新增 `quickAction` 槽位（hover 快捷按钮）；`title` 按 kind 分支（「打开调色板」）
+- 工作台加载失败：中文错误提示 + 重试 / 返回网盘按钮（此前是英文堆栈直接吞掉）
+- 搜索占位 / 统计行按域适配（「搜索调色板 / 分组 / 标签」「1 个调色板」）
+
+### 本地化与交互细节（Studio 内）
+
+- 状态徽标（空闲/保存中/已同步/出错）、WCAG 等级（对黑: AA(合格)）、Cookbook 标题（色彩工坊 · 案例手册）、导出文件头全部中文化
+- ImportModal 3 处原生 `alert` → 页内 toast（项目「禁原生弹窗」约定）
+- 三个模态支持 **Esc 关闭**；底部快捷键提示改为 `<kbd>` 键帽渲染，跟随用户自定义键位实时同步
+- Studio 顶栏新增「← 返回工作台」，三态（网盘/工作台/全屏）导航闭环
+
+### 修复
+
+- 修 `svg import` 导入到不存在分组时必报「未知资源类型: undefined」的缺陷（`addGroup` 漏传 `kind`）
+
 ## 0.4.1
 
 ### 发布流水线：修好 OIDC 发布（仅 CI，无功能改动）

@@ -5,10 +5,11 @@ import { useState } from 'react';
 import { AssetCard, InlineCreateRow, SubdirCard } from './parts.jsx';
 
 export function ManageBrowse({
-  count, dir, dirNode, dirGroup,
+  count, dir, dirNode, dirGroup, kind = 'html',
   activeTags, toggleTag, onOpen, pickDir, removeGroup,
   createGroup, createAsset, guard,
   batchMode, selected, onToggle, selectedDirs, onToggleDir,
+  emptyState = null,
 }) {
   const [creating, setCreating] = useState(null); // null | 'dir' | 'asset'
 
@@ -112,6 +113,14 @@ export function ManageBrowse({
                 selectable={batchMode}
                 selected={selected && selected.has(`${dirGroup.path}/${a.name}`)}
                 onToggle={onToggle}
+                kind={kind}
+                quickAction={kind === 'color' ? {
+                  label: 'Studio',
+                  title: '打开全屏 ColorStudio(色盘 / 比例 / 笔刷)',
+                  onClick: () => {
+                    location.hash = `#/color/edit/${encodeURIComponent(dirGroup.path)}/${encodeURIComponent(a.name)}/full`;
+                  },
+                } : null}
               />
             ))}
           </div>
@@ -119,13 +128,17 @@ export function ManageBrowse({
       ) : null}
 
       {empty ? (
-        <div className="empty">
-          {count.groups === 0 ? (
-            <>还没有任何内容。点上方「+ 新建文件夹」或「+ 新建资源」开始。</>
-          ) : (
-            <>此文件夹为空</>
-          )}
-        </div>
+        emptyState ? (
+          <div className="empty empty-custom">{emptyState}</div>
+        ) : (
+          <div className="empty">
+            {count.groups === 0 ? (
+              <>还没有任何内容。点上方「+ 新建文件夹」或「+ 新建资源」开始。</>
+            ) : (
+              <>此文件夹为空</>
+            )}
+          </div>
+        )
       ) : null}
     </>
   );

@@ -32,3 +32,4 @@ src/web/public/
 # 加这条是因为真踩过两次：提交时用 `git add -A`，把浏览器截图的 PNG 一起扫进版本库，
 # 事后还得专门提交一次「清理误提交的截图」。根目录限定（/*.png）不影响 assets/ 下的图片。
 /*.png
+.claude/settings.local.json

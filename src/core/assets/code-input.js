@@ -20,6 +20,9 @@ export const CODE_KEYS = {
     ['css', 'code-css'],
     ['js', 'code-js'],
   ],
+  color: [
+    ['data', 'code-data'],
+  ],
 };
 
 export function collectFiles(ctx, kind) {
@@ -37,6 +40,11 @@ export function codeFlags(kind) {
       'code-html': { type: 'string', hint: 'html|-' },
       'code-css': { type: 'string', hint: 'css|-' },
       'code-js': { type: 'string', hint: 'js|-' },
+    };
+  }
+  if (kind === 'color') {
+    return {
+      'code-data': { type: 'string', hint: 'JSON 字符串或 -' },
     };
   }
   return {

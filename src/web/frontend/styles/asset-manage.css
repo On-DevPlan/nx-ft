@@ -88,6 +88,11 @@
 }
 .am-card:hover { background: var(--soft); }
 .am-card.selected { background: var(--soft); border-color: var(--ink); }
+.am-card--has-quick .am-card-quick { opacity: 0.9; }
+.am-card-quick { position: absolute; top: 6px; right: 6px; height: 20px; padding: 0 8px; font: 600 11px/1 system-ui; color: var(--ink); background: var(--paper); border: 1px solid var(--soft-2); border-radius: 5px; cursor: pointer; opacity: 0; transition: opacity .15s, background .12s, border-color .12s; }
+.am-card-quick:hover { background: var(--ok); color: #fff; border-color: var(--ok); }
+.am-card-swatches { display: flex; gap: 3px; }
+.am-card-swatch { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,.08); display: inline-block; }
 .am-card-label { font-weight: 600; font-size: 14px; }
 .am-card-name { font-size: 11px; color: var(--mid); }
 .am-card-tags { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
