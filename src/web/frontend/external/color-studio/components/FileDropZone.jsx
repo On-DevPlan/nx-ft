@@ -29,13 +29,13 @@ export function FileDropZone({ accept, multiple = false, onSelect, children, lab
       onDragLeave={() => setHover(false)}
       onDrop={onDrop}
       style={{
-        border: `2px dashed ${hover ? 'var(--sl-color-primary, #2563eb)' : 'var(--sl-color-border, #e5e7eb)'}`,
+        border: `2px dashed ${hover ? 'var(--sl-color-primary)' : 'var(--sl-color-border)'}`,
         borderRadius: 8,
         padding: 24,
         textAlign: 'center',
         cursor: 'pointer',
-        background: hover ? 'var(--sl-color-surface-alt, #f3f4f6)' : 'transparent',
-        color: 'var(--sl-color-text-secondary, #6b7280)',
+        background: hover ? 'var(--sl-color-surface-alt)' : 'transparent',
+        color: 'var(--sl-color-text-secondary)',
         font: '13px/1.4 var(--sl-font-family, system-ui)',
         transition: 'background .15s, border-color .15s',
       }}

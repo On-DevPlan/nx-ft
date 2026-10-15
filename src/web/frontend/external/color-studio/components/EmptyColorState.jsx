@@ -67,17 +67,17 @@ export function EmptyColorState({ onCreate, onCreated, reload }) {
         padding: '40px 24px',
         maxWidth: 520,
         margin: '24px auto',
-        background: 'var(--sl-color-surface-alt, #f8fafc)',
-        border: '1px dashed var(--sl-color-border, #e5e7eb)',
+        background: 'var(--sl-color-surface-alt)',
+        border: '1px dashed var(--sl-color-border)',
         borderRadius: 12,
       }}
     >
-      <h2 style={{ margin: '0 0 8px', font: '600 18px/1.4 system-ui', color: 'var(--sl-color-text, #14161a)' }}>
+      <h2 style={{ margin: '0 0 8px', font: '600 14px/1.4 system-ui', color: 'var(--sl-color-text)' }}>
         还没有调色板
       </h2>
-      <p style={{ margin: '0 0 18px', font: '13px/1.6 system-ui', color: 'var(--sl-color-text-secondary, #6b7280)' }}>
+      <p style={{ margin: '0 0 18px', font: '12px/1.6 system-ui', color: 'var(--sl-color-text-secondary)' }}>
         色彩资源按「分组」管理,每个调色板是一个 Palette JSON,自动持久化到{' '}
-        <code style={{ fontFamily: 'monospace', background: '#e5e7eb', padding: '1px 4px', borderRadius: 3 }}>
+        <code style={{ fontFamily: 'monospace', background: 'var(--sl-color-surface-deep)', padding: '1px 4px', borderRadius: 3 }}>
           ~/.nx-ft/assets/groups/color/&lt;组&gt;/&lt;调色板&gt;/data
         </code>
         。建好之后自动进入全屏 Studio(色盘 / 比例 / 笔刷 三视图)。
@@ -92,9 +92,9 @@ export function EmptyColorState({ onCreate, onCreated, reload }) {
             flex: '1 1 140px',
             minWidth: 120,
             padding: '6px 10px',
-            border: '1px solid var(--sl-color-border, #d1d5db)',
+            border: '1px solid var(--sl-color-border)',
             borderRadius: 6,
-            font: '13px system-ui',
+            font: '12px system-ui',
             background: '#fff',
           }}
           data-testid="empty-palette-name"
@@ -118,7 +118,7 @@ export function EmptyColorState({ onCreate, onCreated, reload }) {
           空白调色板
         </button>
       </div>
-      <p style={{ margin: '14px 0 0', font: '11px system-ui', color: 'var(--sl-color-text-dim, #9ca3af)' }}>
+      <p style={{ margin: '14px 0 0', font: '11px system-ui', color: 'var(--sl-color-text-dim)' }}>
         也可以用 CLI:<code style={{ fontFamily: 'monospace', marginLeft: 6 }}>nx-ft color group add &lt;组&gt;</code> →{' '}
         <code style={{ fontFamily: 'monospace' }}>nx-ft color add &lt;组&gt; &lt;调色板&gt; --code-data - &lt; &lt;EOF …</code>
       </p>
