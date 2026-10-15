@@ -24,6 +24,9 @@ src/web/public/
 # Tool artifacts / scratch tools (本地工具产物，不入库)
 .tool/
 
+# 会话草稿：原型 / 验证脚本（HTML 原型本地交付、临时核对的 mjs）
+temp/
+
 # Playwright MCP 调试产物（浏览器自动化临时日志/快照）
 .playwright-mcp/
 .claude/
