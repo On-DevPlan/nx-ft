@@ -44,7 +44,7 @@ body {
 .btn.ghost:hover:not(:disabled) { background: var(--soft); }
 .btn.small { height: 22px; padding: 0 8px; font-size: 11px; border-radius: 6px; }
 .btn.primary { background: var(--ok); border-color: var(--ok); color: #fff; }
-.btn.primary:hover:not(:disabled) { background: #2c9747; }
+.btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--ok) 88%, var(--ink)); }
 .btn.danger { background: var(--paper); border-color: var(--bad); color: var(--bad); }
 .btn.danger:hover:not(:disabled) { background: var(--soft); }
 .btn.danger.ghost { border-color: var(--soft-2); }

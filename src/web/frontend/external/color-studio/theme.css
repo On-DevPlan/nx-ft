@@ -1,26 +1,28 @@
 /* color-studio 主题桥接:ve 的 index.css 用 var(--sl-*, fallback) 模式,
    自身不写 :root 变量。挂这一层让 studio 在 nx-ft 里有真实主题值,
-   不靠 fallback 兜底。 */
+   全部别名到全局令牌,桥接层自己不引入任何新色值。 */
 
 .sl-cs-root {
-  /* 表面色 */
-  --sl-color-surface: #ffffff;
-  --sl-color-surface-alt: #f3f4f6;
+  /* 表面色：纸面 / 浅灰面板 / 更深一档的 hover 底 */
+  --sl-color-surface: var(--paper);
+  --sl-color-surface-alt: var(--soft);
+  --sl-color-surface-deep: var(--soft-2);
 
-  /* 文字 */
-  --sl-color-text: #14161a;
-  --sl-color-text-secondary: #6b7280;
-  --sl-color-text-dim: #6b7280;
+  /* 文字：主文 / 次要 / 暗注 */
+  --sl-color-text: var(--ink);
+  --sl-color-text-secondary: var(--mid);
+  --sl-color-text-dim: var(--mid);
 
   /* 边框 / 主色 */
-  --sl-color-border: #e5e7eb;
-  --sl-color-primary: #2563eb;
-  --sl-color-on-primary: #ffffff;
+  --sl-color-border: var(--soft-2);
+  --sl-color-border-strong: color-mix(in srgb, var(--mid) 35%, var(--soft-2));
+  --sl-color-primary: var(--accent);
+  --sl-color-on-primary: var(--paper);
 
-  /* 字号 / 字体 */
+  /* 字号 / 字体（字号守三档制 11/12/14） */
   --sl-font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --sl-font-family-mono: ui-monospace, "SF Mono", Consolas, monospace;
-  --sl-font-size-sm: 13px;
+  --sl-font-size-sm: 12px;
   --sl-font-size-xs: 11px;
 
   /* 间距 */

@@ -38,7 +38,7 @@
 .btn-chev {
   display: inline-block;
   margin-left: 4px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--mid);
   transition: transform 0.15s ease;
 }

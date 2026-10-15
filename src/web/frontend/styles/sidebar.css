@@ -10,7 +10,7 @@
  */
 
 .gside {
-  --sb-blue: #007aff;
+  --sb-blue: var(--accent);
   --sb-fol: color-mix(in srgb, var(--sb-blue) 64%, #fff);
   --sb-focus: color-mix(in srgb, var(--sb-blue) 38%, transparent);
   --sb-drop: color-mix(in srgb, var(--ink) 45%, transparent); /* 拖入描边/插入线：墨色 45% —— 有对比但不砸 */
@@ -64,7 +64,7 @@
   border-radius: 0 16px 16px 0; /* 半圆弧：右侧正半圆 */
   cursor: pointer;
   z-index: 2;              /* 收起时压在 main 内容上，保证可点 */
-  box-shadow: 2px 2px 6px rgba(20, 22, 26, 0.06);
+  box-shadow: var(--shadow-relief);
   transform-origin: left center; /* 按下的缩放贴着侧边栏，不把把手拽离边线 */
   transition: background 0.12s, color 0.12s, transform 0.12s;
 }

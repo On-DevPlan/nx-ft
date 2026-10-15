@@ -154,11 +154,9 @@ body.sp-dragging .pv-veil { pointer-events: auto; cursor: inherit; }
   transform-origin: center center;
   will-change: transform;
   /* 机身外壳用 box-shadow 画——不占布局：iframe 内容盒严丝合缝就是 375×667。
-     用 border 画的话，8px 边框会把内容盒挤成 359×651，预览就不是手机尺寸了。 */
-  box-shadow:
-    0 0 0 6px #1c1f24,
-    0 0 0 7px rgba(255, 255, 255, 0.16),
-    0 10px 32px rgba(20, 22, 26, 0.22);
+     用 border 画的话，8px 边框会把内容盒挤成 359×651，预览就不是手机尺寸了。
+     阴影值统一收在 tokens.css 的 --shadow-device。 */
+  box-shadow: var(--shadow-device);
 }
 /* 手机里的 iframe 铺满画框（.pv-frame 已是 absolute inset:0） */
 .pv-frame-mobile { border-radius: 24px; }

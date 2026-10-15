@@ -62,11 +62,11 @@
 .style-pill:hover { background: transparent; }
 .style-pill-art { display: grid; place-items: center; width: 13px; height: 13px; }
 /* 胶囊里的「当前」跟着收一号，否则 26px 高的胶囊会被徽标撑起来 */
-.style-pill .tag { height: 15px; padding: 0 5px; font-size: 10px; }
+.style-pill .tag { height: 15px; padding: 0 5px; font-size: 11px; }
 /* 胶囊下方的描述：常驻可见，2 行截断；padding 与 pill 一致让文字左右对齐 */
 .style-pill-desc {
   padding: 0 10px;
-  font-size: 10px; color: var(--mid); line-height: 1.35;
+  font-size: 11px; color: var(--mid); line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -120,16 +120,13 @@
   display: inline-flex; align-items: center; justify-content: center;
   height: 22px; padding: 0 9px; border-radius: 999px;
   border: 1px solid var(--ok);
-  background: #eaf5ee;
   background: color-mix(in srgb, var(--ok) 10%, var(--paper));
   /* 文字取压暗的绿：--ok 原色压在这种浅底上只有 3.4:1，11px 小字够不上 AA 的 4.5:1 */
-  color: #1a7f37;
   color: color-mix(in srgb, var(--ok) 70%, var(--ink));
   font: inherit; font-size: 11px; font-weight: 600;
   cursor: pointer; transition: background .12s, border-color .12s;
 }
 .save-chip:hover:not(:disabled) {
-  background: #d8eedd;
   background: color-mix(in srgb, var(--ok) 18%, var(--paper));
 }
 .save-chip:disabled { cursor: default; opacity: 0.85; }
