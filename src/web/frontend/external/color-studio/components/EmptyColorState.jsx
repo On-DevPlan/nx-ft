@@ -19,6 +19,8 @@ const SAMPLE_PALETTE = JSON.stringify(
   2,
 );
 
+const HOME_GROUP = '未分类'; // 与管理页 createAssetIn 的落点约定一致：根级资源进保留分组
+
 export function EmptyColorState({ onCreate, onCreated, reload }) {
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState('主色板');
@@ -30,16 +32,26 @@ export function EmptyColorState({ onCreate, onCreated, reload }) {
       const data = withSample
         ? SAMPLE_PALETTE.replace('"示例调色板"', JSON.stringify(name.trim()))
         : JSON.stringify({ name: name.trim(), harmony: null, colors: [], sortBy: 'manual' });
-      const res = await fetch('/api/color/asset-code', {
+      // 先建组（已存在则服务端返回 skipped，幂等），再建资源。
+      // 旧实现 POST /api/color/asset-code 且 group 传空串：put 是「改写已有资源」的
+      // 保存接口，空组也过不了参数校验——两条路都走不通，此按钮从未成功过。
+      const g = await fetch('/api/color/groups', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ group: '', name: slug(name), style: 'default', slot: 'data', 'code-data': data }),
+        body: JSON.stringify({ group: HOME_GROUP }),
+      });
+      if (!g.ok) throw new Error(await g.text());
+      const gj = await g.json();
+      if (gj.ok === false) throw new Error(gj.error);
+      const res = await fetch('/api/color/assets', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ group: HOME_GROUP, name: slug(name), style: 'default', 'code-data': data }),
       });
       if (!res.ok) throw new Error(await res.text());
       const json = await res.json();
       if (json.ok === false) throw new Error(json.error);
-      const finalName = slug(name);
-      onCreated?.(finalName);
+      onCreated?.(HOME_GROUP, slug(name));
       reload?.();
     } catch (e) {
       alert('创建失败: ' + (e?.message || e));

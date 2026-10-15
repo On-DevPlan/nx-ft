@@ -70,7 +70,14 @@ export default function ColorView() {
   return (
     <AssetView
       kind="color"
-      emptyState={<EmptyColorState />}
+      emptyState={
+        <EmptyColorState
+          // 建好直接进全屏 Studio（EmptyColorState 文案承诺的动线）
+          onCreated={(group, name) => {
+            location.hash = `#/color/edit/${encodeURIComponent(group)}/${encodeURIComponent(name)}/full`;
+          }}
+        />
+      }
       // 域动作统一从 AssetView 的 toolbar 插槽进「更多」菜单（与 html 域 zip-io 同一通道）。
       // 按钮走 components/btn 的 Btn——裸 button / 内联样式不合前端按钮规范。
       toolbar={() => (
