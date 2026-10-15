@@ -1,5 +1,8 @@
-// 面板壳：tab 导航 + 当前视图。**这个文件几乎不需要改**——
-// 新增面板 = 在 registry.js 登记一行 + 写一个 view.jsx。
+// 面板壳：布局（Layout）+ tab 导航 + 当前视图。
+//
+// 布局本身在 components/layout/index.jsx：顶部 header、下方「侧边栏 | main」。
+// 这里只决定「当前视图要不要侧边栏」——registry 条目带 sidebar 的视图（html / svg）
+// 走 mode a 双栏，其余（home / logo）走 mode b 全宽；模式不另设配置，避免两处真相。
 //
 // 视图可带自己的子路由（如 #/svg/edit/ui/nav/search）：
 // 这里只取 hash 首段判视图，剩余段落归视图自己解释（见 AssetView / SvgView 的路由解析），
@@ -18,6 +21,7 @@ import { Suspense, useEffect, useRef } from 'react';
 import { VIEWS } from './registry.js';
 import { useStore } from './store.jsx';
 import { ErrorBoundary } from './components/ui.jsx';
+import { Layout } from './components/layout/index.jsx';
 
 function viewFromHash() {
   const h = location.hash.replace(/^#\/?/, '');
@@ -50,54 +54,64 @@ export default function App() {
 
   const current = views.find((v) => v.id === ui.view) || views[0];
   const appName = boot?.app?.name || 'nx-ft';
+  const Side = current?.sidebar; // 有侧边栏的视图 = mode a；没有 = mode b
 
   return (
-    <>
-      <header>
-        <div className="brand">
-          <img src="/logo-rounded.png" alt="" />
-          {appName}
-          <span className="sub">本机工具：CLI 与 Web 面板同源</span>
-        </div>
-        <nav>
-          {/* 顶部 tab = 回到该面板的**根**路由，不把上一级页面的子路径带过去 */}
-          {views.map((v) => (
-            <button
-              key={v.id}
-              className={'tab' + (current && current.id === v.id ? ' active' : '')}
-              onClick={() => {
-                if (location.hash !== '#/' + v.id) location.hash = '#/' + v.id;
-              }}
-            >
-              {v.title}
-            </button>
-          ))}
-          {views.length === 0 && (
-            <span className="muted" style={{ padding: '6px 12px' }}>
-              暂无视图
-            </span>
-          )}
-        </nav>
-        <div className="meta">{boot ? `v${boot.app.version}` : ''}</div>
-      </header>
-      <main>
-        {!current ? (
-          <div className="empty">
-            <p>
-              还没有注册任何视图。在 <code>src/modules/&lt;域&gt;/view.jsx</code> 写一个，
-              再在 <code>src/web/frontend/registry.js</code> 登记一行。
-            </p>
+    <Layout
+      mode={Side ? 'a' : 'b'}
+      header={
+        <>
+          <div className="brand">
+            <img src="/logo-rounded.png" alt="" />
+            {appName}
+            <span className="sub">本机工具：CLI 与 Web 面板同源</span>
           </div>
-        ) : (
-          <ErrorBoundary key={current.id}>
-            <Suspense fallback={<div className="muted" style={{ padding: 24 }}>加载中…</div>}>
-              <section className="panel active">
-                <current.component />
-              </section>
-            </Suspense>
-          </ErrorBoundary>
-        )}
-      </main>
-    </>
+          <nav>
+            {/* 顶部 tab = 回到该面板的**根**路由，不把上一级页面的子路径带过去 */}
+            {views.map((v) => (
+              <button
+                key={v.id}
+                className={'tab' + (current && current.id === v.id ? ' active' : '')}
+                onClick={() => {
+                  if (location.hash !== '#/' + v.id) location.hash = '#/' + v.id;
+                }}
+              >
+                {v.title}
+              </button>
+            ))}
+            {views.length === 0 && (
+              <span className="muted" style={{ padding: '6px 12px' }}>
+                暂无视图
+              </span>
+            )}
+          </nav>
+          <div className="meta">{boot ? `v${boot.app.version}` : ''}</div>
+        </>
+      }
+      sidebar={
+        Side ? (
+          <Suspense fallback={null}>
+            <Side />
+          </Suspense>
+        ) : null
+      }
+    >
+      {!current ? (
+        <div className="empty">
+          <p>
+            还没有注册任何视图。在 <code>src/modules/&lt;域&gt;/view.jsx</code> 写一个，
+            再在 <code>src/web/frontend/registry.js</code> 登记一行。
+          </p>
+        </div>
+      ) : (
+        <ErrorBoundary key={current.id}>
+          <Suspense fallback={<div className="muted" style={{ padding: 24 }}>加载中…</div>}>
+            <section className="panel active">
+              <current.component />
+            </section>
+          </Suspense>
+        </ErrorBoundary>
+      )}
+    </Layout>
   );
 }

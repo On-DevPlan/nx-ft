@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import * as groups from '../../src/core/assets/groups.js';
 import * as assets from '../../src/core/assets/assets.js';
 import * as assetStyles from '../../src/core/assets/styles.js';
+import { buildAssetDetail } from '../../src/core/svg/board.js';
 import { sandbox } from './sandbox.mjs';
 
 test('资源：创建带首风格，add 到不存在分组报 notFound', () => {
@@ -135,4 +136,23 @@ test('标签：归一化（小写/空白转-）/ 去重 / 添加 / 移除 / 非�
     () => assets.addTags({ kind: 'html', group: 'ui/buttons', name: 'btn', tags: ['x'.repeat(25)] }),
     /最长 24 字符/
   );
+});
+
+// 主描述曾经「只写不读」：setAssetDesc 把 desc 存进了资源条目，但 buildAssetDetail
+// 只返回 styles[].desc（每个风格的），漏了资源级的主描述 —— 前端 data.desc 恒为
+// undefined，于是「填写描述 → 保存」写盘明明成功了，界面却一直显示「还没有主描述」。
+// 这条测试盯的就是「写进去的，必须能从详情接口读回来」。
+test('主描述：写进去后 buildAssetDetail 要带回来（资源级与风格级是两个字段）', () => {
+  sandbox();
+  groups.addGroup({ kind: 'svg', group: 'icons/nav' });
+  assets.createAsset({ kind: 'svg', group: 'icons/nav', name: 'clock', style: 'default' });
+
+  // 没写时返回空串而不是 undefined —— 前端靠它判断要不要显示「还没有主描述」占位
+  assert.equal(buildAssetDetail('svg', { group: 'icons/nav', name: 'clock' }).desc, '');
+
+  assets.setAssetDesc({ kind: 'svg', group: 'icons/nav', name: 'clock', desc: '一只钟' });
+  const d = buildAssetDetail('svg', { group: 'icons/nav', name: 'clock' });
+  assert.equal(d.desc, '一只钟');
+  // 互不串：主描述落在 d.desc，风格描述落在 d.styles[].desc
+  assert.equal(d.styles[0].desc, '');
 });

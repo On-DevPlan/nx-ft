@@ -5,6 +5,7 @@
 // 给 24pt 网格叠加、给明暗两种底色——用来验证 currentColor 那条规范真的成立。
 import { useEffect, useState } from 'react';
 import { useStore } from '../../store.jsx';
+import { Btn, BtnBar } from '../btn/index.jsx';
 import { Copyable } from '../ui.jsx';
 import { stamp } from './parts.jsx';
 import { Icon } from './svg-inline.jsx';
@@ -54,31 +55,40 @@ export default function FullScreen({ group, name }) {
             <span className="tag">合规</span>
           )}
         </div>
-        <div className="fullpage-acts">
+        <BtnBar>
+          {/* 工具区从左到右：尺寸 / 底色（均为 toggle 组，用 Btn + on 状态高亮）→ 显示 24pt 网格
+              → 复制源码 → 返回资源页（页面级「出口」动作）。BtnBar 不引入「一个主按钮」的强制——
+              本页的主操作就是「看图」，没有真创建/保存可点；返回属于导航，不是主操作。 */}
           <div className="seg">
             {SIZES.map((s) => (
-              <button key={s} className={'seg-btn' + (s === size ? ' active' : '')} onClick={() => setSize(s)}>
+              <Btn
+                key={s}
+                size="sm"
+                className={s === size ? 'on' : ''}
+                onClick={() => setSize(s)}
+              >
                 {s}
-              </button>
+              </Btn>
             ))}
           </div>
           <div className="seg">
             {BACKDROPS.map((b) => (
-              <button key={b.id} className={'seg-btn' + (b.id === bg ? ' active' : '')} onClick={() => setBg(b.id)}>
+              <Btn
+                key={b.id}
+                size="sm"
+                className={b.id === bg ? 'on' : ''}
+                onClick={() => setBg(b.id)}
+              >
                 {b.label}
-              </button>
+              </Btn>
             ))}
           </div>
-          <button className={'btn ghost' + (grid ? '' : '')} onClick={() => setGrid((g) => !g)}>
+          <Btn variant="secondary" onClick={() => setGrid((g) => !g)}>
             {grid ? '隐藏 24pt 网格' : '显示 24pt 网格'}
-          </button>
-          <Copyable className="btn ghost" text={svg} title="复制这枚图标的 SVG 源码">
-            复制源码
-          </Copyable>
-          <button className="btn" onClick={back}>
-            返回资源页 (Esc)
-          </button>
-        </div>
+          </Btn>
+          <Copyable btn text={svg} title="复制这枚图标的 SVG 源码">复制源码</Copyable>
+          <Btn onClick={back}>返回资源页 (Esc)</Btn>
+        </BtnBar>
       </div>
 
       {err ? <div className="empty bad">接口调用失败：{err}</div> : null}

@@ -6,6 +6,13 @@
 import { useEffect, useState } from 'react';
 import { ManagePage } from './manage.jsx';
 import { WorkbenchPage } from './workbench.jsx';
+import { AssetZipIoBtns } from './zip-io.jsx';
+import { useStore } from '../../store.jsx';
+
+// 用「一资源一目录三件套」zip 约定（core/assets/set.js）的 kind——目前只有 html。
+// svg 的平铺单文件约定由 SvgDrive 自己接（components/svg/zip-io.jsx），两条约定
+// 服务端不同，前端各配各的 strategy 子组件，不做成一个通用件猜 kind。
+const ZIP_IO_KINDS = ['html'];
 
 const enc = encodeURIComponent;
 const dec = (s) => {
@@ -36,6 +43,8 @@ export function parseRoute(kind, hash) {
 
 export function AssetView({ kind }) {
   const [route, setRoute] = useState(() => parseRoute(kind, typeof location !== 'undefined' ? location.hash : ''));
+  const { boot } = useStore();
+  const bin = boot?.app?.name || 'nx-ft';
 
   useEffect(() => {
     const onHash = () => setRoute(parseRoute(kind, location.hash));
@@ -62,5 +71,19 @@ export function AssetView({ kind }) {
       />
     );
   }
-  return <ManagePage kind={kind} initialDir={route.dir} onOpen={openAsset} onNavigate={goManage} />;
+  // 领域扩展插槽：html 域在这里挂 zip 导入 / 导出（goManage 之外的页面级动作）。
+  // 导入的默认分组 / 导出的作用域 = 当前（= 侧边栏高亮）目录；根路由 = 全库。
+  const ioGroup = route.mode === 'edit' ? route.group : route.dir || '';
+  const toolbar = ZIP_IO_KINDS.includes(kind)
+    ? (reload) => <AssetZipIoBtns kind={kind} bin={bin} group={ioGroup} onDone={reload} />
+    : undefined;
+  return (
+    <ManagePage
+      kind={kind}
+      initialDir={route.dir}
+      onOpen={openAsset}
+      onNavigate={goManage}
+      toolbar={toolbar}
+    />
+  );
 }

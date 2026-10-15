@@ -12,7 +12,6 @@
 .am-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .am-title { font-size: 14px; font-weight: 700; }
 .am-count { font-size: 11px; }
-.am-spacer { flex: 1; }
 .am-search { width: 260px; height: var(--row-h); font-size: var(--fs-core); }
 
 /* 管理页双层：左目录树 + 右内容 */
@@ -101,15 +100,7 @@
   cursor: pointer;
 }
 
-.am-tools {
-  display: flex; align-items: center; gap: 6px;
-  padding: 2px 0;
-}
-
 /* 网盘式工具行：内联新建（点 + 号后原位出现的输入行） */
-.am-actions {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-}
 .inline-create-wrap {
   display: flex; flex-direction: column; gap: 4px;
 }

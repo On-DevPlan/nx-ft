@@ -2,6 +2,7 @@
 // 与 components/asset/useAssetOps.js 同构（都是「会弹窗、会调接口」的那一层），
 // 差别只在：这里多了「按规范修复」与「编辑历史回退」——图标集特有的两个动作。
 import { api } from '../../api/client.js';
+import { Btn } from '../btn/index.jsx';
 import { stamp } from './parts.jsx';
 
 export function makeDetailOps({
@@ -14,11 +15,11 @@ export function makeDetailOps({
     guard(async () => {
       const style = cur();
       if (!style) {
-        toast('先新建一个风格');
+        toast.warn('先新建一个风格');
         return;
       }
       if (!isDirty()) {
-        toast('没有改动');
+        toast.warn('没有改动');
         return;
       }
       const r = await api('/api/svg/asset-code', {
@@ -26,7 +27,8 @@ export function makeDetailOps({
         body: { ...ref, style, ...readCode() },
       });
       await reload();
-      toast(r.status === 'skipped' ? '内容无变化' : `已保存（${r.changed.join(', ')}；历史 ${r.historyCount} 条）`);
+      if (r.status === 'skipped') toast.warn('内容无变化');
+      else toast.ok(`已保存（${r.changed.join(', ')}；历史 ${r.historyCount} 条）`);
     });
 
   const newStyle = () =>
@@ -102,7 +104,7 @@ export function makeDetailOps({
     guard(async () => {
       const style = cur();
       if (!style) {
-        toast('先选一个风格');
+        toast.warn('先选一个风格');
         return;
       }
       const current = asset?.styles?.find((s) => s.name === style)?.desc || '';
@@ -133,7 +135,8 @@ export function makeDetailOps({
       if (!tags.length) return;
       const r = await api('/api/svg/tags-add', { method: 'POST', body: { ...ref, tags } });
       await reload();
-      toast(r.status === 'skipped' ? '标签已存在' : '已加标签: ' + (r.added || []).join(', '));
+      if (r.status === 'skipped') toast.warn('标签已存在');
+      else toast.ok('已加标签: ' + (r.added || []).join(', '));
     });
 
   const removeTag = (tag) =>
@@ -167,7 +170,7 @@ export function makeDetailOps({
       });
       await reload();
       if (!r.changed.length) {
-        toast('这个风格已经合规，无需修复');
+        toast.warn('这个风格已经合规，无需修复');
         return;
       }
       toast('已按规范修复：' + (r.changed[0].changed || []).join('，'));
@@ -190,14 +193,15 @@ export function makeDetailOps({
               <div key={h.id} className="hist-row">
                 <span className="mono">{h.id}</span>
                 <span className="muted mono">{stamp(h.at)}</span>
-                <button
-                  className="btn small ghost"
+                <Btn
+                  size="sm"
+                  variant="secondary"
                   onClick={async () => {
                     await restore(style, h.id);
                   }}
                 >
                   回退到这条
-                </button>
+                </Btn>
               </div>
             ))
           ) : (

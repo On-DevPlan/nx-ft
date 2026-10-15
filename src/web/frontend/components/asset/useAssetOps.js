@@ -18,7 +18,7 @@ export function makeAssetOps({
   const save = () =>
     guard(async () => {
       if (!sel.group || !sel.name || !sel.style || !ready) {
-        if (ready && !sel.style) toast('先新建一个风格（右上角「新风格」）');
+        if (ready && !sel.style) toast.warn('先新建一个风格（右上角「新风格」）');
         return;
       }
       if (!isDirty()) return;
@@ -27,7 +27,8 @@ export function makeAssetOps({
         body: { group: sel.group, name: sel.name, style: sel.style, ...readCode() },
       });
       await loadAsset(sel);
-      toast(r.status === 'skipped' ? '内容无变化' : '已保存（改动前状态已进历史）');
+      if (r.status === 'skipped') toast.warn('内容无变化');
+      else toast.ok('已保存（改动前状态已进历史）');
     });
 
   const newStyle = () =>
@@ -135,7 +136,8 @@ export function makeAssetOps({
         body: { group: sel.group, name: sel.name, tags },
       });
       await loadAsset(sel);
-      toast(r.status === 'skipped' ? '标签已存在' : '已加标签: ' + (r.added || []).join(', '));
+      if (r.status === 'skipped') toast.warn('标签已存在');
+      else toast.ok('已加标签: ' + (r.added || []).join(', '));
     });
 
   const removeTag = (tag) =>

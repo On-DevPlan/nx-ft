@@ -9,6 +9,7 @@
 // 地址栏与「当前在哪个目录」始终一致，可分享、可后退。
 import { useMemo, useState } from 'react';
 import { useStore } from '../../store.jsx';
+import { Btn, BtnBar, BtnBarSpacer } from '../btn/index.jsx';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
 import { ancestorsOf, buildTree, findNode, TreePanel } from '../asset/tree.jsx';
 import { makeManageOps } from '../asset/useManageOps.js';
@@ -80,9 +81,9 @@ export default function Workspace({ path = '' }) {
       <aside className="ws-tree" style={{ width: pane.w }}>
         <div className="ws-tree-head">
           <span className="ws-tree-title">目录</span>
-          <button className="btn small ghost" onClick={() => ops.addGroup()} title="新建分组">
+          <Btn size="sm" variant="secondary" onClick={() => ops.addGroup()} title="新建分组">
             + 分组
-          </button>
+          </Btn>
         </div>
         <div className="ws-tree-body">
           <TreePanel
@@ -130,24 +131,22 @@ export default function Workspace({ path = '' }) {
               );
             })}
           </nav>
-          <div className="page-head-acts">
-            <button className="btn" onClick={() => ops.addAsset()}>
-              新建图标
-            </button>
-            <button className="btn ghost" onClick={() => ops.addGroup()}>
+          <BtnBar className="page-head-acts">
+            <BtnBarSpacer />
+            {/* 次级按钮：新建子分组 / 改名 / 删除（破坏性）；主按钮：新建图标（压到行右） */}
+            <Btn variant="secondary" onClick={() => ops.addGroup()}>
               新建子分组
-            </button>
-            <button className="btn ghost" onClick={() => ops.renameGroup()} disabled={!path}>
+            </Btn>
+            <Btn variant="secondary" onClick={() => ops.renameGroup()} disabled={!path}>
               改名 / 移动
-            </button>
-            <button
-              className="btn ghost danger"
-              onClick={() => ops.removeGroup(path)}
-              disabled={!path}
-            >
+            </Btn>
+            <Btn variant="danger" onClick={() => ops.removeGroup(path)} disabled={!path}>
               删除本组
-            </button>
-          </div>
+            </Btn>
+            <Btn variant="primary" onClick={() => ops.addAsset()}>
+              新建图标
+            </Btn>
+          </BtnBar>
         </div>
 
         <div className="board-bar">
@@ -159,20 +158,20 @@ export default function Workspace({ path = '' }) {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
-            <div className="board-acts">
-              <button className="btn ghost" onClick={() => batch.importDir()}>
+            <BtnBar className="board-acts">
+              <Btn variant="secondary" onClick={() => batch.importDir()}>
                 批量导入
-              </button>
-              <button className="btn ghost" onClick={() => batch.exportDir()}>
+              </Btn>
+              <Btn variant="secondary" onClick={() => batch.exportDir()}>
                 批量导出
-              </button>
-              <button className="btn ghost" onClick={() => batch.check()}>
+              </Btn>
+              <Btn variant="secondary" onClick={() => batch.check()}>
                 规范自检
-              </button>
-              <button className="btn ghost" onClick={() => batch.fix()}>
+              </Btn>
+              <Btn variant="secondary" onClick={() => batch.fix()}>
                 一键归一化
-              </button>
-            </div>
+              </Btn>
+            </BtnBar>
           </div>
           <TagCloud
             tags={data?.availableTags || []}
@@ -197,9 +196,9 @@ export default function Workspace({ path = '' }) {
           {data && !filtered && !exists ? (
             <Empty>
               分组 <code className="mono">{path}</code> 不存在（或已删除）。
-              <button className="btn small ghost" onClick={() => nav.board()}>
+              <Btn size="sm" variant="secondary" onClick={() => nav.board()}>
                 回到根目录
-              </button>
+              </Btn>
             </Empty>
           ) : null}
           {data && !filtered && exists ? (
@@ -279,13 +278,13 @@ function DirBody({ path, dirs, own, scope, data, bin, ops, nav, batch }) {
           {path ? (
             <>
               这个目录还是空的。先{' '}
-              <button className="btn small" onClick={() => ops.addAsset()}>
+              <Btn size="sm" onClick={() => ops.addAsset()}>
                 新建图标
-              </button>{' '}
+              </Btn>{' '}
               放一枚进来，或{' '}
-              <button className="btn small ghost" onClick={() => ops.addGroup()}>
+              <Btn size="sm" variant="secondary" onClick={() => ops.addGroup()}>
                 建个子分组
-              </button>
+              </Btn>
               分类。也可以让 AI 直接写：
               <code className="mono">
                 {bin} svg put {path} add-icon --style default --code -
@@ -294,13 +293,13 @@ function DirBody({ path, dirs, own, scope, data, bin, ops, nav, batch }) {
           ) : (
             <>
               还没有任何目录。
-              <button className="btn small" onClick={() => ops.addGroup()}>
+              <Btn size="sm" onClick={() => ops.addGroup()}>
                 新建分组
-              </button>{' '}
+              </Btn>{' '}
               开始，或{' '}
-              <button className="btn small ghost" onClick={() => batch.importDir()}>
+              <Btn size="sm" variant="secondary" onClick={() => batch.importDir()}>
                 批量导入
-              </button>
+              </Btn>
               一个现成的图标目录——两棵树的根目录是分开的，这里的目录只属于 SVG。
             </>
           )}

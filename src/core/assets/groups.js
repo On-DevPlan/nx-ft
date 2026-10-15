@@ -46,6 +46,7 @@ export function listTree(kind, { search = '', tags = [] } = {}) {
       return {
         path: groupPath,
         label: manifest.group.label || manifest.group.name,
+        order: manifest.group.order,
         assets: assets
           .filter((a) => {
             const at = a.tags || [];
@@ -142,6 +143,35 @@ function rewritePathsUnder(kind, fromPath, mapPath) {
     manifest.group.name = np.split('/').pop();
     st.saveGroup(kind, groupPath, manifest);
   }
+}
+
+// 同级排序：order 是「该父分组下全部子分组的完整新顺序」。
+// 校验是同一集合的重排（不多不少、不重复），然后按数组序写 group.order = 0..n-1。
+// 排序规则（buildTree/listTree 两侧一致）：有 order 的按序在前，没有的按名字垫底——
+// 老分组不迁移也天然成立，拖过一次就有了序号。
+export function reorderSiblings({ kind, parent, order }) {
+  assertKind(kind);
+  // 最外层的 parent 是空串——parseGroupPath 会拒收空路径（1~8 段），这里先兜住
+  const parentPath = parent ? parseGroupPath(parent) : '';
+  if (!Array.isArray(order) || !order.length) throw badInput('需要 --order <逗号分隔的完整顺序>');
+  const paths = order.map((p) => parseGroupPath(p));
+  if (new Set(paths).size !== paths.length) throw badInput('order 里有重复的分组路径');
+
+  const depth = parentPath ? parentPath.split('/').length + 1 : 1;
+  const direct = st
+    .scanGroups(kind)
+    .map((s) => s.groupPath)
+    .filter((p) => p.split('/').length === depth);
+  const missing = direct.filter((p) => !paths.includes(p));
+  if (missing.length) throw badInput(`order 缺少这些同级分组: ${missing.join(', ')}`);
+
+  direct.sort().forEach((p) => {
+    const manifest = st.loadGroup(kind, p);
+    if (!manifest) return;
+    manifest.group.order = paths.indexOf(p);
+    st.saveGroup(kind, p, manifest);
+  });
+  return { status: 'ok', parent: parentPath || '(最外层)', order: paths };
 }
 
 export function removeGroup({ kind, group, force }) {

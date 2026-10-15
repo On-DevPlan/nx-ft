@@ -3,49 +3,88 @@
 
 .detail { max-width: none; }
 
-.detail-ident {
-  display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
-  border: var(--border); border-radius: 10px; background: var(--paper); padding: 14px;
+/* 顶部两条信息条：ident 行 + 描述行。
+   改前这里是 ident 卡片（106px）加一块「描述·风格对比」面板（257px），两段竖排，
+   把主工作区顶到折叠线以下 493px 处（用户实测「挡视线」）。压成两条后是 225px。
+   取舍与其它候选方案见 temp/detail-layout-proto.html。 */
+.ident-row {
+  display: flex; align-items: center; gap: 10px;
+  border: var(--border); border-radius: 10px; background: var(--paper); padding: 6px 10px;
 }
-.detail-ident-art {
-  display: grid; place-items: center; width: 64px; height: 64px; flex-shrink: 0;
-  border: var(--border); border-radius: 10px; background: var(--soft);
+.ident-row-art {
+  display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto;
+  border: var(--border); border-radius: 8px; background: var(--soft);
 }
-.detail-ident-main { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
-.detail-ident-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.detail-ident-label { font-size: 14px; font-weight: 700; }
-.detail-ident-title .mono { font-size: 11px; }
-.detail-ident-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; }
-.detail-ident-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.ident-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ident-row-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ident-row-name { font-size: 14px; font-weight: 700; }
+.ident-row-title .mono { font-size: 11px; }
+.ident-row-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; }
+.ident-row-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
 
-.style-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 8px; }
-.style-card {
-  display: flex; flex-direction: column; overflow: hidden;
+/* 描述 + 风格一条：主描述一句话 + 风格胶囊。点「编辑」时原地展开成表单
+   （.ds-line-edit 换成竖排块级，好放多个输入框）。 */
+.ds-line {
+  display: flex; align-items: center; gap: 10px;
   border: var(--border); border-radius: 10px; background: var(--paper);
+  padding: 6px 10px; min-height: 40px;
 }
-.style-card.cur { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-.style-card-art { display: grid; place-items: center; height: 46px; width: 100%; }
-.style-card-main {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 10px 8px 8px; border: 0; background: none; cursor: pointer; font: inherit; color: var(--ink);
+.ds-line-edit { display: block; padding: 12px; }
+.ds-label { flex: 0 0 auto; font-size: 11px; color: var(--mid); }
+.ds-text {
+  flex: 1; min-width: 96px; font-size: 12px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.style-card-main:hover { background: var(--soft); }
-.style-card-name { max-width: 100%; font-size: 12px; font-weight: 600; }
-/* 风格描述：多风格并排时唯一说清「这套实现的特征」的地方（svg style desc 写）。
-   没写时显示一个淡淡的破折号占位，卡片高度不会因为有没有描述而参差。 */
-.style-card-desc { max-width: 100%; font-size: 11px; color: var(--mid); line-height: 1.3; }
-.style-card-badges { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; }
-.style-card-act {
-  border: 0; border-top: var(--border); background: var(--soft); padding: 5px 8px;
+
+/* 风格单元：border 圆角小卡片。pill 是 cell 内的内容，不再有独立的胶囊形态，
+   hover 反馈由 cell 整体接住（边框变墨色）—— 避免「card + 胶囊」两层视觉嵌套。
+   cur 时 cell 边框 + 底色双墨，pill 文字加粗，一眼看清当前是哪一个。 */
+.style-pills { display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; }
+.style-pill-cell {
+  display: flex; flex-direction: column; gap: 3px;
+  border: 1px solid var(--soft-2); border-radius: 10px;
+  padding: 6px;
+  background: var(--paper);
+  cursor: pointer;
+}
+.style-pill-cell:hover { border-color: var(--ink); }
+.style-pill-cell.cur {
+  border-color: var(--ink);
+  background: var(--soft);
+}
+.style-pill-cell.cur .style-pill { font-weight: 600; }
+.style-pill {
+  display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px;
+  border: 0; border-radius: 999px; background: transparent;
   font: inherit; font-size: 11px; color: var(--ink); cursor: pointer;
 }
-.style-card-act:hover { background: var(--soft-2); }
+/* pill 不再独立响应 hover：cell 自己变墨边就够反馈了，pill 内部加高亮会跟 cell 撞。 */
+.style-pill:hover { background: transparent; }
+.style-pill-art { display: grid; place-items: center; width: 13px; height: 13px; }
+/* 胶囊里的「当前」跟着收一号，否则 26px 高的胶囊会被徽标撑起来 */
+.style-pill .tag { height: 15px; padding: 0 5px; font-size: 10px; }
+/* 胶囊下方的描述：常驻可见，2 行截断；padding 与 pill 一致让文字左右对齐 */
+.style-pill-desc {
+  padding: 0 10px;
+  font-size: 10px; color: var(--mid); line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.style-pill-cell.cur .style-pill-desc { color: var(--ink); }
 
 /* 编辑区左右**可拖拽**（SplitPane），不再是写死的 380px 侧栏。
    工作区给一个确定高度——两层 SplitPane（左右 + 右栏上下）都靠它才能分配空间；
-   clamp 兜住极端视口：太矮时仍能用，太高时不至于把预览拉成一条。 */
+   clamp 兜住极端视口：太矮时仍能用，太高时不至于把预览拉成一条。
+
+   `flex: 0 0 auto` 不能省：.sp-wrap 默认是 `flex: 1`，也就是 flex-basis: 0%，
+   它会把上面这条 height 从「高度」降级成「基准」再被 0% 顶掉，高度退回「内容撑」。
+   后果是两层 SplitPane 的百分比（70% / 30%）全都失去基准 → 预览既不跟随容器、
+   也拖不动，只剩 <iframe> 自带的 150px 默认高度在撐着。 */
 .detail [data-testid='detail-split'] {
   height: clamp(460px, calc(100vh - 300px), 1000px);
+  flex: 0 0 auto;
   align-items: stretch;
 }
 .detail [data-testid='detail-split'] > .sp-pane:first-child { padding-right: 14px; }
@@ -53,22 +92,52 @@
 
 /* 预览填满它那一格（原来高度写死，拖分隔条也不动） */
 .detail-side-preview { height: 100%; display: flex; }
-.detail-side-preview .asset-preview { flex: 1; min-height: 0; }
-.detail-side-preview .asset-frame-wrap { min-height: 0; }
+.detail-side-preview .pv { flex: 1; min-height: 0; }
 
 .detail-editors { display: grid; gap: 10px; }
 
+/* 左栏编辑：panel-card 吃满高度，多栏编辑器贴边填满（无内距，页签贴顶） */
+.detail [data-testid='detail-split'] > .sp-pane:first-child .panel-card {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.detail .panel-card-body-editor {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 保存态（编辑面板头右侧）：绿框 + 浅底，不是实心色块。
+   全页唯一的实心绿是页头那颗主按钮（components/btn/index.jsx 的第 1 条规矩），
+   面板头里再铺一块实心绿就成了「两个主按钮」——而且「已保存」是状态、不是操作。
+   十六进制兜底：旧内核不认 color-mix 时仍是浅绿底，不会掉成透明/继承成色块。 */
+.save-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 22px; padding: 0 9px; border-radius: 999px;
+  border: 1px solid var(--ok);
+  background: #eaf5ee;
+  background: color-mix(in srgb, var(--ok) 10%, var(--paper));
+  /* 文字取压暗的绿：--ok 原色压在这种浅底上只有 3.4:1，11px 小字够不上 AA 的 4.5:1 */
+  color: #1a7f37;
+  color: color-mix(in srgb, var(--ok) 70%, var(--ink));
+  font: inherit; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: background .12s, border-color .12s;
+}
+.save-chip:hover:not(:disabled) {
+  background: #d8eedd;
+  background: color-mix(in srgb, var(--ok) 18%, var(--paper));
+}
+.save-chip:disabled { cursor: default; opacity: 0.85; }
+
 .issue-list { display: flex; flex-direction: column; }
 
-/* 描述面板：显示模式（只读核对）/ 编辑模式（逐条 inline 编辑） */
-.desc-view { display: flex; flex-direction: column; gap: 8px; }
-.desc-main { margin: 0; font-size: 12px; line-height: 1.6; }
-.desc-styles { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
-.desc-styles li {
-  display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px;
-  padding: 4px 0; border-top: 1px solid var(--soft-2); font-size: 12px;
-}
-.desc-style-name { color: var(--mid); }
+/* 描述编辑器（DescEditor）：只读那一半已经并进顶部的 .ds-line，
+   这里只剩逐条 inline 编辑的表单。 */
 .desc-edit { display: flex; flex-direction: column; gap: 8px; }
 .desc-field { display: flex; flex-direction: column; gap: 4px; }
 .desc-label { font-size: 11px; color: var(--mid); }
@@ -119,14 +188,10 @@
 .fullpage-title .mono { font-weight: 700; }
 .fullpage-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-.seg { display: inline-flex; border: var(--border); border-radius: 8px; overflow: hidden; background: var(--paper); }
-.seg-btn {
-  border: 0; border-right: var(--border); background: none; padding: 0 9px; height: 26px;
-  font: inherit; font-size: 11px; color: var(--mid); cursor: pointer;
-}
-.seg-btn:last-child { border-right: 0; }
-.seg-btn:hover { background: var(--soft); color: var(--ink); }
-.seg-btn.active { background: var(--ink); color: var(--paper); font-weight: 600; }
+/* 整页预览的尺寸/底色 toggle 组：内含 Btn，由 Btn 自身的边框/圆角撑外观；
+   容器只管排版（gap 分隔 + 不让换行错位）。.btn.on 由下方 override 给选中态。 */
+.seg { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.seg .btn.on { background: var(--soft-2); color: var(--ink); font-weight: 600; }
 
 .fullpage-stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: auto; padding: 28px; }
 .fullpage-stage.on-soft { background: var(--soft); }
@@ -172,5 +237,5 @@
 }
 @media (max-width: 640px) {
   .icon-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
-  .detail-ident-acts { margin-left: 0; }
+  .ident-row-acts { margin-left: 0; }
 }

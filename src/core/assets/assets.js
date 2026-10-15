@@ -129,6 +129,35 @@ export function renameAsset({ kind, group, name, label, to }) {
   return { status: 'ok', group: groupPath, name: target, label: entry.label, renamed };
 }
 
+// 资源搬家：跨分组移动（清单键迁移，代码目录整搬——风格与历史一起走）。
+// 与 renameAsset 的分工：rename 只在同分组内改键与目录；move 换分组。
+// 两种正常情况：源与目标同分组（原地不动，返回 skipped）；
+// 源资源还没有目录（没写过代码——只动清单键，目录无从搬起）。
+export function moveAsset({ kind, from, name, to }) {
+  assertKind(kind);
+  const fromPath = parseGroupPath(from);
+  const toPath = parseGroupPath(to);
+  if (fromPath === toPath) {
+    return { status: 'skipped', group: fromPath, name, reason: '源与目标是同一分组' };
+  }
+  const src = resolveAsset(kind, fromPath, name);
+  const targetManifest = st.loadGroup(kind, toPath);
+  if (!targetManifest) throw notFound(`目标分组不存在: ${toPath}（先用 group add 建组）`);
+  if (targetManifest.assets[src.entryName]) {
+    return { status: 'blocked', group: toPath, name: src.entryName, reason: '目标分组已有同名资源' };
+  }
+  if (st.assetExists(kind, toPath, src.entryName)) {
+    return { status: 'blocked', group: toPath, name: src.entryName, reason: '目标位置已有同名资源目录' };
+  }
+
+  st.moveAssetDir(kind, fromPath, toPath, src.entryName);
+  delete src.manifest.assets[src.entryName];
+  targetManifest.assets[src.entryName] = src.entry;
+  st.saveGroup(kind, fromPath, src.manifest);
+  st.saveGroup(kind, toPath, targetManifest);
+  return { status: 'ok', from: fromPath, to: toPath, name: src.entryName };
+}
+
 export function removeAsset({ kind, group, name, force }) {
   assertKind(kind);
   const { groupPath, entryName, entry, manifest } = resolveAsset(kind, group, name);

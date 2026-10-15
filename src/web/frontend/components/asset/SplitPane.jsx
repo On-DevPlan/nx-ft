@@ -74,14 +74,22 @@ export function SplitPane({
     dragging.current = false;
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
+    document.body.classList.remove('sp-dragging');
   }, []);
 
   useEffect(() => {
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
+    // 拖动中切走窗口（alt-tab、点别的应用）会让 mouseup 落在外面收不到，
+    // 回来时分隔条还挂在鼠标上。失焦即当作松手。
+    window.addEventListener('blur', onUp);
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('blur', onUp);
+      // 拖拽中途卸载（比如按住分隔条时用键盘把路由切走）也要把 body 上的状态摘干净：
+      // sp-dragging 留着会让预览遮罩一直接管指针，预览从此点不动、滚不动。
+      onUp();
     };
   }, [onMove, onUp]);
 
@@ -93,6 +101,10 @@ export function SplitPane({
     dragging.current = true;
     document.body.style.cursor = direction === 'horizontal' ? 'col-resize' : 'row-resize';
     document.body.style.userSelect = 'none';
+    // 预览是 iframe 承载的：指针一旦移到它上方，mousemove/mouseup 就被 iframe 自己的
+    // document 吃掉，父窗口再也收不到——分隔条会「粘住」，松开鼠标还在跟着走。
+    // 这个类让预览里的遮罩层在拖拽期间接管指针（见 styles/preview.css）。
+    document.body.classList.add('sp-dragging');
     e.preventDefault();
   };
 

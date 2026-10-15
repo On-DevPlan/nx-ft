@@ -33,23 +33,26 @@ header .meta {
   font-family: ui-monospace, Consolas, monospace;
 }
 
+/* Tab 三态 —— 纯文字级，零色块/边框/底色/装饰线：
+   - 默认   = 浅灰文字
+   - hover  = 文字变中灰（仍在灰阶内，不引新色）
+   - active = 文字变墨色 + 加粗（"在此"的唯一锚点就是文字本身）
+   不加底色：背景的 header 已经是 paper 白，再叠浅灰底 = 双重色块；
+   选中用色块会把"nav 嵌在 header 里"的轻盈感压成"按钮组"。 */
 .tab {
-  border: 1px solid transparent;
+  border: 0;
   background: none;
   padding: 5px 10px;
   height: var(--btn-h);
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   color: var(--mid);
   font-size: 12px;
 }
-.tab:hover { background: var(--soft); }
+.tab:hover { color: var(--ink); }
 .tab.active {
   color: var(--ink);
-  border-color: var(--soft-2);
-  background: var(--soft);
-  font-weight: 600;
-  box-shadow: var(--shadow-relief);
+  font-weight: 700;
 }
 
 main { padding: 16px; }
@@ -58,3 +61,43 @@ main { padding: 16px; }
 
 /* 并排卡片用 .cols，避免每个视图各写一套 flex */
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+
+/* --- 布局组件（Layout）：顶部 header + 下方「侧边栏 | main」 ---
+ * mode a 双栏 / mode b 全宽。规则全部挂在 .shell 命名空间下，
+ * 组件没被渲染时一条都不命中——先落样式再接入，中间态对现有页面零影响。
+ * 高度用 100vh 撑满、滚动各自收在 main 内容区与侧边栏内部：
+ * 不依赖 html/body 的 height，也就没有全局副作用（body 保持常规文档流）。
+ * 侧边栏宽度由它自己的组件决定（可折叠的组件宽度会变），这里只管列。
+ *
+ * main 内部再分两层：上工具区（.shell-bar，常驻）/ 下内容区（.shell-content，滚动）。
+ * 因此 main 自身不吃 padding（原 main{padding:16px} 由 .shell-row>main 覆盖为 0），
+ * 内距分给 bar 与 content 各自——没给 toolbar 时与单层版式逐像素等价。 */
+.shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.shell > header { flex: none; }
+.shell-row { flex: 1; display: flex; min-height: 0; }
+.shell-side { flex: none; display: flex; min-height: 0; }
+.shell-row > main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0; }
+.shell-bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: var(--border);
+}
+/* 没有视图往工具区送内容时整条隐藏（ShellBar 传送门拆干净后 :empty 命中） */
+.shell-bar:empty { display: none; }
+/* 工具区右侧的动作组：给组容器加 style={{marginLeft:'auto'}}（与 header 的 .meta 同一套做法） */
+.shell-content { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
+
+/* --- 工具区下拉里用的 chevron 角标 ---
+ * 工具区自己的 .btn-menu*（位置 / 打开态 / 面板样式）都搬去 styles/btn.css 了；
+ * 这里只留一个 chevron 旋转角标，给 workbench 那个 22x22 的 wb-tab-more 复用
+ * （它不是下拉按钮，是贴在 tab 上的一枚小图标，单独保留一套视觉）。 */
+.gmenu-chev {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--mid);
+  transition: transform 0.15s ease;
+}

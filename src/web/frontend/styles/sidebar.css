@@ -1,0 +1,335 @@
+/* 第 4 层 / 全局侧边栏：iOS 风格的文件夹树。
+ *
+ * scoping：全部类名走 .gside / .g 前缀；新增颜色变量挂在 .gside 上，
+ * 不进 tokens.css（它只收「全局换肤」级别的变量，侧边栏的蓝是组件私有色）。
+ *
+ * 视觉上遵守面板硬标准：11/12 两档字号、28px 行高、6px 圆角、发丝边分隔；
+ * 侧边栏自己的部分是结构性的——文件夹双色图标（闭合/开口两态）、chevron 旋转、
+ * 展开动画（grid-template-rows 0fr→1fr）；选中是中性灰底 + 加粗（VS Code 的分量）。
+ * 唯一的新 hex 是 --sb-blue（选中与文件夹主色）；其余深浅全部 color-mix 派生。
+ */
+
+.gside {
+  --sb-blue: #007aff;
+  --sb-fol: color-mix(in srgb, var(--sb-blue) 64%, #fff);
+  --sb-focus: color-mix(in srgb, var(--sb-blue) 38%, transparent);
+  --sb-drop: color-mix(in srgb, var(--ink) 45%, transparent); /* 拖入描边/插入线：墨色 45% —— 有对比但不砸 */
+  --side-w: 232px;
+
+  position: relative; /* 把手 .gside-collapse（head 里的真按钮）以这条边为定位基准 */
+  flex: none;
+  width: var(--side-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--paper);
+  border-right: var(--border);
+  transition: margin-left 0.24s cubic-bezier(0.32, 0.72, 0, 1), border-right-color 0.24s;
+}
+
+/* ---- 收起 / 展开 ----
+ * 收起 = 整列用负 margin 滑出（不缩 width：缩了内容会往 main 上重排/外溢），
+ * 滑出去的半个屏交给 .shell 的 overflow:hidden 兜住。
+ * 把手（.gside-collapse）是独立的绝对定位按钮，跟着盒子右缘走，
+ * 收起后正好停在 main 左缘，永远可见可点。 */
+.gside.fold {
+  margin-left: calc(-1 * var(--side-w));
+  border-right-color: transparent; /* 收起后边线归位成隐形，展开时随滑动淡入 */
+}
+
+/* 折叠把手：真按钮（在 head 里渲染），视觉定位到侧边栏顶部。
+ * 位置：贴侧边栏顶边（top 0），与头部（搜索那行）同排。
+ * 凸出宽度卡在 16px，不是随便定的：主区左内距正好 16px（实测 crumbs.left = 侧边栏右缘 + 16，
+ * 内容标题也从 x=+16 起）。凸出 16 = 正好占满空当、边缘与主区内容齐平但不压字；
+ * 超过 16（试过 24）就会盖住内容区左上角的标题。收起后 main 左移，把手仍占 0~16。
+ * 形状：半圆弧（宽 16 / 高 32 / 右侧圆角 16 = 正半圆），平边贴着侧边栏边线。
+ * 之前的 ::after 伪元素拿掉了：回调挂在 head 侧的 onCollapseToggle，伪元素收不到事件；
+ * 改真按钮后点击直达、键盘也能聚焦，副作用是 head 那个按钮要 position:absolute 跳出来。 */
+.gside-collapse {
+  position: absolute;
+  top: 0;                  /* 贴顶边，与头部（搜索那行）同排 */
+  right: -16px;            /* 16 = 主区左内距：占满空当，不压字 */
+  width: 16px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  padding: 0;
+  color: var(--ink);
+  /* 偏白：默认几乎只剩 2.5% 的墨色，hover 才浮上来一点——靠边框/阴影来定形 */
+  background: rgba(20, 22, 26, 0.025);
+  border: var(--border);
+  border-left: 0;          /* 平边贴着侧边栏边线，不出现双线 */
+  border-radius: 0 16px 16px 0; /* 半圆弧：右侧正半圆 */
+  cursor: pointer;
+  z-index: 2;              /* 收起时压在 main 内容上，保证可点 */
+  box-shadow: 2px 2px 6px rgba(20, 22, 26, 0.06);
+  transform-origin: left center; /* 按下的缩放贴着侧边栏，不把把手拽离边线 */
+  transition: background 0.12s, color 0.12s, transform 0.12s;
+}
+.gside-collapse:hover { background: rgba(20, 22, 26, 0.08); }
+.gside-collapse:active { transform: scale(0.9); }
+.gside-collapse svg { width: 10px; height: 10px; }
+/* 展开态指向左（点它收起，边缘向左走）；折叠态默认指向右（点它展开） */
+.gside-collapse .flip { transform: scaleX(-1); }
+
+/* 组件里的裸按钮（chevron / 清空 / 头部 + / 行内操作）——全库没有 button 元素重置，
+ * 不补这段会吃 UA 默认样式：outset 边框 + padding 把 16px 图标挤成 0 宽（实机踩过）。
+ * 只点这几个类名，不要写成 `.gside button`——侧边栏里也有 .btn（新建行的创建/取消），
+ * 一条元素级重置会把它们的描边一起剥掉。 */
+.gchev,
+.gsearch-clr,
+.gicon-btn,
+.gacts button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* ---- 头部：搜索 + 新建（+） ---- */
+.gside-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 4px;
+}
+.gicon-btn {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  color: var(--mid);
+}
+.gicon-btn:hover { background: var(--soft); color: var(--ink); }
+
+/* ---- 新建文件夹行（头部 + 展开后出现在树上方） ---- */
+.gcreate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 10px 4px;
+}
+.gcreate-input {
+  flex: 1;
+  min-width: 0;
+  height: var(--row-h);
+  padding: 0 8px;
+  border: 1px solid var(--soft-2);
+  border-radius: 4px;
+  background: var(--paper);
+  font: inherit;
+  font-size: 12px;
+}
+.gcreate-input:focus { outline: none; box-shadow: var(--shadow-relief-inset); }
+.gcreate-err { flex-basis: 100%; font-size: 11px; }
+
+/* ---- 搜索框 ---- */
+.gside-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+.gsearch-ico {
+  position: absolute;
+  left: 8px;
+  display: inline-flex;
+  color: var(--mid);
+  pointer-events: none;
+}
+.gside-search input {
+  width: 100%;
+  height: 28px;
+  border: 1px solid var(--soft-2);
+  border-radius: 6px;
+  background: var(--soft);
+  color: var(--ink);
+  padding: 0 24px 0 26px;
+  font-size: 12px;
+  outline: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.gside-search input::placeholder { color: var(--mid); }
+.gside-search input:focus { background: var(--paper); border-color: var(--sb-blue); }
+.gsearch-clr {
+  position: absolute;
+  right: 5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--soft-2);
+  color: var(--mid);
+  cursor: pointer;
+}
+.gsearch-clr:hover { color: var(--ink); }
+
+/* ---- 树 ---- */
+.gside-tree { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 8px 12px; }
+.gside-tree:focus { outline: none; }
+.gside-tree:focus-visible { outline: 2px solid var(--sb-focus); outline-offset: -2px; border-radius: 8px; }
+
+.gsec-title {
+  font-size: 11px;
+  color: var(--mid);
+  letter-spacing: 0.02em;
+  padding: 10px 6px 4px;
+}
+.gsec-hint,
+.gside-empty {
+  font-size: 11px;
+  color: var(--mid);
+  padding: 8px 6px;
+}
+
+.grow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--row-h);
+  border-radius: 6px;
+  padding-right: 8px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--ink);
+  transition: background 0.12s, color 0.12s;
+}
+.grow:hover { background: var(--soft); }
+.grow:active { background: var(--soft-2); }
+/* 选中：浅底（var(--soft-2)）+ 细边框（1px var(--mid)）—— 边框用 mid 中性灰而不是墨色，
+   墨色在白底上太重、像在喊"我被选中了"；mid 亮度约 45% 墨色，给出边界但不抢字与图标的分量。
+   用 outline 而非 border：避免选中行比未选中行高 2px（盒尺寸不变，只多一圈内描边）。
+   圆角保持 0（扁平色带），与 hover 的圆角胶囊形成"临时态 vs 常态"的对比。 */
+.grow.on {
+  background: var(--soft-2);
+  border-radius: 0;
+  outline: 1px solid var(--mid);
+  outline-offset: -1px;
+}
+
+.gchev {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  color: var(--mid);
+  cursor: pointer;
+  border-radius: 4px;
+}
+.gchev.leaf { visibility: hidden; }
+.gchev svg { transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1); }
+.gnode.open > .grow .gchev svg { transform: rotate(90deg); }
+
+.gglyph {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--mid);
+  display: inline-flex;
+}
+
+.gname {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 当前行的名字加粗：灰底之外的第二层确认（对比度，不用颜色喊） */
+.grow.on .gname { font-weight: 600; }
+.gcount {
+  flex: none;
+  font-size: 11px;
+  color: var(--mid);
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* 行内操作（改名 / 删除）：hover 或选中行才出现，平时不占视觉 */
+.gacts { display: none; gap: 2px; flex: none; align-items: center; }
+.grow:hover .gacts,
+.grow.on .gacts { display: inline-flex; }
+.gacts button {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  color: var(--mid);
+}
+.gacts button:hover { background: var(--soft-2); color: var(--ink); }
+
+/* 整棵树那一行（本区的头）：加粗，与目录行区分。它不是目录——没有行内操作、
+   也不能被拖；但它是「回到最外层」的落点（拖上去 = 移到根）。 */
+.grow.root { font-weight: 600; }
+
+/* ---- 拖拽换层级（交互参照 VS Code）----
+ * 默认光标 + 浏览器拖影，被拖行降透明度；命中落点用 1px 墨色描边/插入线
+ * （用对比度表达，不用颜色喊——但 2px 实心墨色太重，改成 1px + 45% 墨色）。
+ * 不合法的落点既不给提示、也不 preventDefault——浏览器自己显示禁止光标。 */
+.grow.dragging { opacity: 0.45; }
+.grow.drop-on,
+.gsec-title.drop-on { outline: 1px solid var(--sb-drop); outline-offset: -1px; }
+/* 同级排序的插入线：压在行的上/下边缘，不动布局 */
+.grow.drop-line-top { box-shadow: inset 0 1px 0 var(--sb-drop); }
+.grow.drop-line-bottom { box-shadow: inset 0 -1px 0 var(--sb-drop); }
+.gsec-title { display: flex; align-items: center; gap: 8px; }
+.gsec-title .drop-hint { margin-left: auto; font-weight: 400; color: var(--mid); }
+
+/* 文件夹两态：闭合 / 开口交叉淡入，展开时还有一点上浮 */
+.gfol { transition: opacity 0.15s, transform 0.2s cubic-bezier(0.32, 0.72, 0, 1); }
+.gfol-pa { fill: var(--sb-blue); }
+.gfol-pf { fill: var(--sb-fol); }
+.gfol-open { opacity: 0; transform: translateY(-1px); }
+.gnode.open > .grow .gfol-closed { opacity: 0; }
+.gnode.open > .grow .gfol-open { opacity: 1; transform: none; }
+
+/* 展开动画：高度交给 grid-template-rows，不测高、不监听 transitionend */
+.gkids { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
+.gnode.open > .gkids { grid-template-rows: 1fr; }
+.gkids-in { min-height: 0; overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gside,
+  .gside * { transition-duration: 0.01ms !important; }
+}
+.gside-create-row {
+  /* VS Code 风格就地编辑：与普通行同高（var(--row-h)），底色保持透明——它就是一行 */
+  background: transparent;
+  height: var(--row-h);
+}
+.gside-create-input {
+  /* 唯一可见的视觉重量：聚焦时一根细下边。失焦时无框——不喧宾夺主 */
+  flex: 1;
+  min-width: 0;
+  margin: 0 6px 0 0;
+  padding: 0 4px;
+  height: 22px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.gside-create-input:focus {
+  border-bottom-color: var(--ink);
+}

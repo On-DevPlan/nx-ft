@@ -3,35 +3,39 @@
 //   noun="图标"                —— 文案
 //   toolbar={(reload) => 节点}  —— svg 特有的看板动作（导入 / 导出 / 自检 / 归一化），
 //                                 这些动作完成后需要刷新列表，所以收 reload 而不是静态节点。
+import { createPortal } from 'react-dom';
+import { Btn } from '../btn/index.jsx';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
 import { useStore } from '../../store.jsx';
 import { useBatch } from './batch.jsx';
 import { SvgGallery } from './gallery.jsx';
+import { SvgZipIoBtns } from './zip-io.jsx';
 import { ManagePage } from '../asset/manage.jsx';
 
 const enc = encodeURIComponent;
 const encPath = (p) => p.split('/').map(enc).join('/');
 
-function SvgBoardActions({ reload }) {
+function SvgBoardActions({ reload, group }) {
   const toast = useToast();
   const guard = useGuard();
   const { dialog, node: dlgNode } = useDialog();
   const { boot } = useStore();
   const bin = boot?.app?.name || 'nx-ft';
-  // group: '' 让批量动作作用于根（看板全局）；进入分组后由 ManagePage 的 dir 决定作用域
-  const batch = useBatch({ bin, dialog, guard, toast, reload, group: '' });
+  // 批量动作的作用域 = 当前目录（SvgDrive 把路由里的 path 传进来；根 = 全库）
+  const batch = useBatch({ bin, dialog, guard, toast, reload, group });
 
   return (
     <>
-      <div className="am-actions">
-        <button className="btn small ghost" onClick={() => batch.importDir()}>批量导入</button>
-        <button className="btn small ghost" onClick={() => batch.downloadZip()} data-testid="export-zip">
-          批量导出
-        </button>
-        <button className="btn small ghost" onClick={() => batch.check()}>规范自检</button>
-        <button className="btn small ghost" onClick={() => batch.fix()}>一键归一化</button>
-      </div>
-      {dlgNode}
+      {/* 导入 / 导出走 btn/zip-io.jsx 的通用外壳 + 本域 strategy（components/svg/zip-io.jsx）——
+          选文件 / 下载 / busy / toast / 浮层逃出菜单（详见 zip-io.jsx 注释）全在那边收口。
+          group="" 保持与旧「批量导出」同口径（作用于全库；进入分组后按需再收窄）。
+          onDone 让导入完成后 ManagePage 跟着 reload 树。 */}
+      <SvgZipIoBtns bin={bin} group={group} onDone={reload} />
+      <Btn size="sm" variant="secondary" onClick={() => batch.check()}>规范自检</Btn>
+      <Btn size="sm" variant="secondary" onClick={() => batch.fix()}>一键归一化</Btn>
+      {/* 规范自检 / 一键归一化的对话框同样会被收起的菜单藏住，一起 portal 出去
+          （io 的浮层在 zip-io.jsx 里各自逃，不在这里） */}
+      {createPortal(dlgNode, document.body)}
     </>
   );
 }
@@ -60,7 +64,7 @@ export function SvgDrive({ path = '' }) {
           ),
         },
       ]}
-      toolbar={(reload) => <SvgBoardActions reload={reload} />}
+      toolbar={(reload) => <SvgBoardActions reload={reload} group={path} />}
       onNavigate={(dir) => {
         location.hash = dir ? `#/svg/dir/${encPath(dir)}` : '#/svg';
       }}

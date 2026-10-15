@@ -3,6 +3,7 @@
 //   ResultView   搜索或标签命中时的平铺结果（不做目录层级——检索时层级是干扰）
 //   BatchHints   库级操作的等价 CLI 命令（「AI 能照着做」的入口）
 import { boardCommands } from './cli.js';
+import { Btn } from '../btn/index.jsx';
 import { Empty, IconTile } from './parts.jsx';
 
 export function DirCard({ node, onOpen, onRename, onRemove }) {
@@ -32,9 +33,9 @@ export function ResultView({ data, tags, onOpen, onClear }) {
     return (
       <Empty>
         没有匹配的图标。
-        <button className="btn small ghost" onClick={onClear}>
+        <Btn size="sm" variant="secondary" onClick={onClear}>
           清除筛选
-        </button>
+        </Btn>
       </Empty>
     );
   }

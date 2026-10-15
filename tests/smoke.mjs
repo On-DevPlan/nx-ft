@@ -4,10 +4,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile, spawnSync } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// 造 zip 夹具用：与 CLI 内部同一份写入器，避免测试里手搓二进制格式
+import { zipStore } from '../src/core/zip.js';
 
 const exec = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -193,4 +195,32 @@ test('资产冒烟：分组改名 / 移动 + 资源改名', async () => {
     assetsDir: dir,
   }).catch((e) => e);
   assert.ok(bad, '移进自己的子树必须被拒绝');
+});
+
+test('批量导入冒烟：CLI --from x.zip 与目录导入同一入口', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'nx-ft-smoke-zip-'));
+  const zipPath = join(dir, 'icons.zip');
+  writeFileSync(
+    zipPath,
+    zipStore([
+      { name: 'outline/plus.svg', data: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>加号</title><path d="M12 5v14M5 12h14"/></svg>' },
+      { name: 'outline/minus.svg', data: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>减号</title><path d="M5 12h14"/></svg>' },
+    ])
+  );
+
+  const imported = JSON.parse(
+    (await run(`svg import from-zip --from ${zipPath} --label-from title --json`, tmpdir(), { assetsDir: dir })).stdout
+  );
+  assert.equal(imported.imported.length, 2, 'zip 里的两枚都该导入');
+  assert.equal(imported.groupCreated, true, '新分组该被创建');
+
+  const board = JSON.parse((await run('svg board --json', tmpdir(), { assetsDir: dir })).stdout);
+  assert.deepEqual(board.groups.map((g) => g.path), ['from-zip'], '导入的分组要出现在看板里');
+
+  // 再导一次：跳过而不是静默覆盖
+  const again = JSON.parse(
+    (await run(`svg import from-zip --from ${zipPath} --json`, tmpdir(), { assetsDir: dir })).stdout
+  );
+  assert.equal(again.imported.length, 0);
+  assert.equal(again.skipped.length, 2);
 });

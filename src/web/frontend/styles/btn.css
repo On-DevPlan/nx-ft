@@ -1,0 +1,72 @@
+/* 统一按钮族（components/btn/index.jsx）的样式：动作行 / 下拉壳 / 下拉面板。
+ *
+ * 只定义自己的类名（.btn-bar*、.btn-menu*、.btn-chev），不覆盖 .btn 本体——
+ * .btn 的主次与尺寸仍在 atomic.css 里，那一层是六个孪生项目共用的，改它要三思。
+ * 这里只管「组合」：一行怎么排、菜单壳怎么长、面板里的项长什么样。
+ *
+ * 两处是刻意与旧实现不同、不是抄漏：
+ *   - 菜单项文字与分组标签左对齐（旧实现里项 8px、标签 10px，差 2px）；
+ *   - 次级下拉也带会翻转的箭头（旧实现里「更多 ▾」是写死在文案里的纯文字）。
+ */
+.btn-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* 工具区里只有它一个孩子时要撑满，主按钮才真的落在容器最右 */
+  flex: 1;
+  min-width: 0;
+}
+.btn-bar-spacer { flex: 1; }
+/* 主按钮永远在最右：调用方把它写在中间也落到行尾（顺序由 CSS 兜住，不靠人记） */
+.btn-bar > .btn.primary,
+.btn-bar > .btn-menu.is-primary { margin-left: auto; }
+
+/* --- 下拉壳 --- */
+.btn-menu { position: relative; }
+.btn-menu > summary { list-style: none; }
+.btn-menu > summary::-webkit-details-marker { display: none; }
+/* 打开态：软底 + 1px 软底边连接菜单，箭头翻 180°。
+   这一条同时盖掉 .btn.primary 的绿框白字——菜单开着时这个按钮已经是「状态指示」，
+   不是「主操作」，继续喊绿色会和菜单本身打架。 */
+.btn-menu[open] > summary {
+  background: var(--soft);
+  border-color: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 -1px 0 var(--soft-2);
+}
+.btn-menu > summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 6px; }
+.btn-chev {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 10px;
+  color: var(--mid);
+  transition: transform 0.15s ease;
+}
+.btn-menu[open] > summary .btn-chev { transform: rotate(180deg); }
+
+/* --- 下拉面板 --- */
+.btn-menu-panel {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 30;
+  min-width: 200px; padding: 4px;
+  background: var(--paper); border: var(--border); border-radius: 10px;
+  /* 立体感用面板唯一的 --shadow-relief，不自造 rgba 阴影（A01 硬标准） */
+  box-shadow: var(--shadow-relief);
+  display: flex; flex-direction: column; align-items: stretch;
+}
+/* 靠左对齐的面板：按钮在行首时，右对齐的面板会往左飘出容器 */
+.btn-menu-panel.from-left { left: 0; right: auto; }
+.btn-menu-panel .btn-menu-lbl { font-size: 11px; color: var(--mid); padding: 6px 10px 2px; letter-spacing: 0.04em; }
+/* 菜单项：抹掉描边、加高到 28px、文字左对齐，且与上面的分组标签同一条左线（10px）。
+   行高与字号在这里定死，不看外层是哪个尺寸上下文——菜单项的行高是面板的事。 */
+.btn-menu-panel .btn {
+  border: 0; height: 28px; padding: 0 10px; font-size: 11px;
+  justify-content: flex-start; border-radius: 6px;
+}
+.btn-menu-panel .btn:hover:not(:disabled) { background: var(--soft); }
+/* 当前项：加粗 + 右侧「当前」（靠 margin-left:auto 推到最右）。
+   不用实心绿——面板里是一堆同级项，颜色喊出来的「选中」既抢主操作的位，
+   也和面板「用对比度表达注意」的规矩相反。 */
+.btn-menu-panel .btn.on { font-weight: 600; }
+.btn-menu-panel .btn-menu-now { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--mid); }
+.btn-menu-panel .btn-menu-group { display: contents; }
+.btn-menu-panel hr { border: 0; border-top: var(--border); margin: 4px 0; }

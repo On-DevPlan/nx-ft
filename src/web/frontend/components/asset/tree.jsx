@@ -1,4 +1,5 @@
 // 目录树：由分组的扁平清单（listTree.groups）在前端重建层级。
+// 同级顺序 = group.order（侧边栏拖拽排序写入）在前，没排序的按名字跟在后面。
 //
 // 中间层目录可能没有自己的 group.json（只是路径容器），树节点因此有两种形态：
 //   路径容器：只有子节点，没有直接资源
@@ -14,7 +15,7 @@ export function buildTree(groups) {
     if (byPath.has(path)) return byPath.get(path);
     const segs = path.split('/');
     const parent = ensure(segs.slice(0, -1).join('/'));
-    const node = { name: segs[segs.length - 1], path, label: null, children: [], direct: [], total: 0 };
+    const node = { name: segs[segs.length - 1], path, label: null, order: null, children: [], direct: [], total: 0 };
     parent.children.push(node);
     byPath.set(path, node);
     return node;
@@ -24,6 +25,7 @@ export function buildTree(groups) {
     const node = ensure(g.path);
     node.label = g.label;
     node.direct = g.assets;
+    node.order = g.order ?? null;
   }
 
   const count = (n) => {
@@ -31,7 +33,15 @@ export function buildTree(groups) {
     return n.total;
   };
   count(root);
-  root.children.sort((a, b) => a.name.localeCompare(b.name));
+  // 逐层排序：有 order 的按序在前，没 order 的按名字垫底（reorder 只写点过名的）
+  const byOrder = (a, b) =>
+    (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER) ||
+    a.name.localeCompare(b.name);
+  const sortLevel = (n) => {
+    n.children.sort(byOrder);
+    n.children.forEach(sortLevel);
+  };
+  sortLevel(root);
   return root;
 }
 

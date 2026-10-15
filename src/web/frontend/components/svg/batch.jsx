@@ -5,6 +5,7 @@
 // 「点了确定，然后不知道刚才到底改了什么」。
 import { useState } from 'react';
 import { api } from '../../api/client.js';
+import { Btn } from '../btn/index.jsx';
 import { Modal } from '../ui.jsx';
 import { ISSUE_LABEL } from './parts.jsx';
 
@@ -32,7 +33,7 @@ export function useBatch({ bin, dialog, guard, toast, reload, group }) {
       const g = scope ?? group;
       const r = await api('/api/svg/spec-check' + (g ? '?group=' + encodeURIComponent(g) : ''));
       if (r.hint) {
-        toast('没有匹配的分组。' + r.hint);
+        toast.warn('没有匹配的分组。' + r.hint);
         return;
       }
       const lines = [];
@@ -61,11 +62,11 @@ export function useBatch({ bin, dialog, guard, toast, reload, group }) {
       if (g) body.group = g;
       const plan = await api('/api/svg/spec-fix', { method: 'POST', body });
       if (plan.hint) {
-        toast('没有匹配的分组。' + plan.hint);
+        toast.warn('没有匹配的分组。' + plan.hint);
         return;
       }
       if (!plan.changed.length) {
-        toast('没有需要归一化的图标（已合规 ' + plan.unchanged + ' 个）');
+        toast.warn('没有需要归一化的图标（已合规 ' + plan.unchanged + ' 个）');
         return;
       }
       const ok = await dialog({
@@ -121,7 +122,7 @@ export function useBatch({ bin, dialog, guard, toast, reload, group }) {
       const opts = { group: target, from, 'label-from': 'title' };
       const plan = await api('/api/svg/import', { method: 'POST', body: { ...opts, 'dry-run': true } });
       if (!plan.total) {
-        toast('该目录下没有找到 .svg');
+        toast.warn('该目录下没有找到 .svg');
         return;
       }
       const ok = await dialog({
@@ -207,9 +208,7 @@ export function useBatch({ bin, dialog, guard, toast, reload, group }) {
           <code className="mono">{bin} svg spec fix</code> · <code className="mono">{bin} svg import</code> ·{' '}
           <code className="mono">{bin} svg export</code>
         </span>
-        <button className="btn" onClick={close}>
-          知道了
-        </button>
+        <Btn onClick={close}>知道了</Btn>
       </div>
     </Modal>
   ) : null;

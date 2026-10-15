@@ -1,5 +1,6 @@
 // 资产域共享的呈现件：面包屑、标签云、相对时间、资源卡片、子目录卡片。
 import { Fragment, useState } from 'react';
+import { Btn } from '../btn/index.jsx';
 
 export function relTime(iso) {
   if (!iso) return '';
@@ -129,11 +130,11 @@ export function BatchBar({ count, dirCount = 0, total, onSelectAll, onInvert, on
   return (
     <div className="batch-bar" role="toolbar" aria-label="批量操作" data-testid="batch-bar">
       <div className="batch-bar-left">
-        <button className="btn small" onClick={onSelectAll} data-testid="batch-select-all">
+        <Btn size="sm" onClick={onSelectAll} testId="batch-select-all">
           全选当前页
-        </button>
-        <button className="btn small ghost" onClick={onInvert} data-testid="batch-invert">反选</button>
-        <button className="btn small ghost" onClick={onCancel} data-testid="batch-cancel">取消批量</button>
+        </Btn>
+        <Btn size="sm" variant="secondary" onClick={onInvert} testId="batch-invert">反选</Btn>
+        <Btn size="sm" variant="secondary" onClick={onCancel} testId="batch-cancel">取消批量</Btn>
       </div>
       <div className="batch-bar-middle">
         已选 <strong data-testid="batch-count">{count}</strong> 项资源
@@ -147,15 +148,16 @@ export function BatchBar({ count, dirCount = 0, total, onSelectAll, onInvert, on
       </div>
       <div className="batch-bar-right">
         {actions.map((a) => (
-          <button
+          <Btn
             key={a.testId}
-            className={'btn small' + (a.danger ? ' danger' : '')}
+            size="sm"
+            variant={a.danger ? 'danger' : 'secondary'}
             onClick={a.onClick}
             disabled={a.disabled}
-            data-testid={a.testId}
+            testId={a.testId}
           >
             {a.label}
-          </button>
+          </Btn>
         ))}
       </div>
     </div>
@@ -200,12 +202,27 @@ export function InlineCreateRow({ placeholder, confirmText = '创建', hint, onC
           data-testid={testId ? `${testId}-input` : undefined}
         />
         {hint ? <span className="muted inline-create-hint">{hint}</span> : null}
-        <button className="btn small" disabled={busy} onMouseDown={(e) => { e.preventDefault(); submit(); }}>
+        <Btn
+          size="sm"
+          busy={busy}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
           {busy ? '创建中…' : confirmText}
-        </button>
-        <button className="btn small ghost" disabled={busy} onMouseDown={(e) => { e.preventDefault(); onCancel(); }}>
+        </Btn>
+        <Btn
+          size="sm"
+          variant="secondary"
+          disabled={busy}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            onCancel();
+          }}
+        >
           取消
-        </button>
+        </Btn>
       </div>
       {err ? <div className="inline-create-err bad" data-testid={testId ? `${testId}-err` : undefined}>{err}</div> : null}
     </div>

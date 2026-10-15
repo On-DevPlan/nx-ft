@@ -14,9 +14,8 @@
   width: 22px; height: 22px; padding: 0; cursor: pointer;
   border: 1px solid var(--soft-2); border-radius: 6px;
 }
-.gal-swatch.active {
-  outline: 2px solid var(--ink); outline-offset: 1px;
-}
+/* .gal-swatch.active 故意不画描边 / 背景：选了哪个色 = 墙上图标就是这个色，
+   反馈由墙承担，swatch 自己保持干净。要加选中视觉（横线 / 放大等）从这加。 */
 .gal-custom {
   display: inline-flex; align-items: center; justify-content: center;
   width: 22px; height: 22px; border: 1px dashed var(--soft-2); border-radius: 6px;
@@ -27,6 +26,9 @@
 }
 
 .gal-sizes { display: flex; align-items: center; gap: 4px; }
+/* 选项组的「当前项」：只靠浅墨填色 + 加粗表达，不动边框 / 不画描边——
+   边框保持默认 var(--soft-2)，选中态跟未选中态在轮廓上没差异。 */
+.gal-sizes .btn.on { background: var(--soft-2); font-weight: 600; }
 .gal-deep { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--mid); }
 .gal-deep input { margin: 0; }
 .gal-search { width: 180px; }

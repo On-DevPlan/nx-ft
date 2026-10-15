@@ -169,6 +169,12 @@ export default defineConfig([
         console: 'readonly',
         alert: 'readonly',
         confirm: 'readonly',
+        CSS: 'readonly', // CSS.escape：侧边栏键盘导航按 data-key 定位行
+        Event: 'readonly', // 资源树变更信号（tree-signal.js）走 window 事件
+        CustomEvent: 'readonly', // 多栏编辑器 sash 起止（code-workbench/sash.js）
+        ResizeObserver: 'readonly', // 预览手机视口的容器自适应缩放（preview/index.jsx）
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
       },
     },
     rules: { 'no-undef': 'error' },

@@ -75,8 +75,12 @@ export function buildBoard(kind, { search = '', tags = [] } = {}) {
 }
 
 // 单个资源的「全风格」视图：资源页要做多风格并排对比，需要每个风格各自的源码 + 审计。
-// desc 一并带出来——它是上游用来记「这套实现的特征」的字段（svg style desc 写），
-// 多风格并排时正是最该显示的东西：光看名字看不出 alt 和 bold 差在哪。
+// 两类描述都要带出来，语义不同：
+//   · asset.desc —— 资源级「主描述」，回答「这是什么场景」（svg desc 写）
+//   · style.desc —— 每个风格「这一套实现的特征」（svg style desc 写），
+//     多风格并排时正是最该显示的东西：光看名字看不出 alt 和 bold 差在哪
+// 主描述曾经漏在这里没返回（只返回了 styles[].desc），前端 data.desc 恒为 undefined，
+// 于是「填写描述 → 保存」明明写盘成功了，界面却一直显示「还没有主描述」。
 export function buildAssetDetail(kind, { group, name }) {
   const asset = loadAsset({ kind, group, name, code: false });
   const styles = asset.styles.map((s) => {
@@ -102,6 +106,7 @@ export function buildAssetDetail(kind, { group, name }) {
     group: asset.group,
     name: asset.name,
     label: asset.label,
+    desc: asset.desc || '',
     tags: asset.tags,
     activeStyle: asset.activeStyle,
     spec: ICON_SPEC,

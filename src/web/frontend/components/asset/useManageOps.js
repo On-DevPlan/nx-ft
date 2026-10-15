@@ -25,7 +25,8 @@ export function makeManageOps({
     const r = await api(`/api/${kind}/groups`, { method: 'POST', body: { group: path } });
     await reload();
     setDir(r.path || path);
-    toast(r.status === 'skipped' ? '分组已存在' : '已创建文件夹: ' + (r.path || path));
+    if (r.status === 'skipped') toast.warn('分组已存在');
+    else toast.ok('已创建文件夹: ' + (r.path || path));
     return r;
   };
 
@@ -52,7 +53,8 @@ export function makeManageOps({
       const r = await api(`/api/${kind}/groups`, { method: 'POST', body: { group: path } });
       await reload();
       setDir(r.path || path);
-      toast(r.status === 'skipped' ? '分组已存在' : '已创建分组: ' + r.path);
+      if (r.status === 'skipped') toast.warn('分组已存在');
+      else toast.ok('已创建分组: ' + r.path);
     });
 
   // 改名 / 移动是同一件事（目录挪到新路径）。一个对话框问目标路径——
@@ -75,7 +77,7 @@ export function makeManageOps({
         body: { group: path, to, label },
       });
       if (r.status === 'blocked') {
-        toast(`没改成：${r.reason}`);
+        toast.bad(`没改成：${r.reason}`);
         return;
       }
       await reload();

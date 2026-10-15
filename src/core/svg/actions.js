@@ -128,10 +128,10 @@ export function svgActions() {
       id: 'svg.import',
       cli: ['svg', 'import'],
       http: ['POST', '/api/svg/import'],
-      summary: '批量导入：把目录下的 .svg 一次性建成资源（--dry-run 先看计划）',
+      summary: '批量导入：把目录（或 .zip 包）里的 .svg 一次性建成资源（--dry-run 先看计划）',
       args: ['group'],
       flags: {
-        from: { type: 'string', required: true, hint: '目录' },
+        from: { type: 'string', required: true, hint: '目录或 .zip 文件（zip 恒按递归收）' },
         style: { type: 'string', hint: '默认 default' },
         tags: { type: 'array', hint: 'icon,line' },
         recursive: { type: 'boolean' },

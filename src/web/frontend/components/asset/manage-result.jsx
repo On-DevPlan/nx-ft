@@ -2,6 +2,7 @@
 //
 // 与 manage-browse.jsx 是同一页面的两个互斥分支。这里不显示目录树选中态，
 // 因为「搜索」的语义是跨目录找东西，而不是「在某个目录里找」。
+import { Btn, BtnBarSpacer } from '../btn/index.jsx';
 import { AssetCard } from './parts.jsx';
 
 export function ManageResult({ tree, count, activeTags, toggleTag, onOpen, onClear, batchMode, selected, onToggle }) {
@@ -12,8 +13,8 @@ export function ManageResult({ tree, count, activeTags, toggleTag, onOpen, onCle
           搜索结果 · {count.assets} 个资源
           {activeTags.length ? '（' + activeTags.map((t) => '#' + t).join(' + ') + '）' : ''}
         </span>
-        <div className="am-spacer" />
-        <button className="btn small ghost" onClick={onClear}>清除筛选</button>
+        <BtnBarSpacer />
+        <Btn size="sm" onClick={onClear}>清除筛选</Btn>
       </div>
 
       {!tree.groups.length ? (

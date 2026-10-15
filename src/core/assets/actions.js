@@ -39,6 +39,18 @@ export function makeActions(kind) {
         r.status === 'skipped' ? `分组已存在: ${r.path}` : `已创建分组: ${r.path}（${r.label}）`,
     },
     {
+      id: kind + '.group.reorder',
+      cli: [kind, 'group', 'reorder'],
+      http: ['POST', A('groups-reorder')],
+      summary: '调整同级分组顺序（--order 给出该层级全部子分组的新顺序）',
+      flags: {
+        parent: { type: 'string', hint: '父分组；缺省 = 最外层' },
+        order: { type: 'array', required: true, hint: '完整新顺序，如 ui,a,b' },
+      },
+      run: (ctx) => groups.reorderSiblings({ kind, parent: ctx.parent || '', order: ctx.order }),
+      render: (r) => `已调整同级顺序: ${r.parent} → ${r.order.join(' · ')}`,
+    },
+    {
       id: kind + '.group.rename',
       cli: [kind, 'group', 'rename'],
       http: ['POST', A('groups-rename')],
@@ -197,6 +209,21 @@ export function makeActions(kind) {
         r.status === 'skipped'
           ? `标签不存在: [${renders.fmtTags(r.tags)}]`
           : `已移除: ${r.removed.map((t) => '#' + t).join(' ')} → [${renders.fmtTags(r.tags)}]`,
+    },
+    {
+      id: kind + '.move',
+      cli: [kind, 'move'],
+      http: ['POST', A('asset-move')],
+      summary: '移动资源到别的分组（风格与历史随资源一起搬；目标分组不存在会报错）',
+      args: ['group', 'name'],
+      flags: { to: { type: 'string', required: true, hint: '目标分组' } },
+      run: (ctx) => assets.moveAsset({ kind, from: ctx.group, name: ctx.name, to: ctx.to }),
+      render: (r) =>
+        r.status === 'blocked'
+          ? `拒绝移动: ${r.from}/${r.name} —— ${r.reason}`
+          : r.status === 'skipped'
+            ? `原地不动: ${r.from}/${r.name}`
+            : `已移动: ${r.from}/${r.name} → ${r.to}`,
     },
     {
       id: kind + '.rm',

@@ -1,0 +1,164 @@
+/* 预览容器（components/preview）：工具条 + 可缩放可平移的画布 + iframe。
+ *
+ * 类名一律 pv- 前缀——组件自带全部样式，页面只管给它一个尺寸
+ * （.wb-preview-row / .detail-side-preview 那边各一行覆盖）。
+ * 没有 min-height 兜底是故意的：面板可以被分隔条拖到任意小，写死下限只会让它溢出被裁。
+ */
+
+.pv {
+  border: var(--border);
+  border-radius: 10px;
+  background: var(--paper);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: var(--row-h);
+  padding: 0 10px;
+  border-bottom: var(--border);
+  background: var(--soft);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.pv-title { color: var(--ink); }
+.pv-acts { display: flex; align-items: center; gap: 6px; }
+.pv-acts .pv-on { background: var(--soft-2); color: var(--ink); }
+
+/* 缩放簇：三个连体按钮。比放三个 .btn 短一截，28px 的工具条里塞得下。
+   24px 是 WCAG 2.2 SC 2.5.8 的目标尺寸下限——三个贴边连排，间距豁免救不了它。 */
+.pv-zoom { display: flex; }
+.pv-zoom > * {
+  height: 24px;
+  padding: 0;
+  border: var(--border);
+  border-left: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.pv-zoom > :first-child { border-left: var(--border); border-radius: 6px 0 0 6px; }
+.pv-zoom > :last-child { border-radius: 0 6px 6px 0; }
+.pv-zoom > :hover { background: var(--soft); }
+.pv-zoom > :active { background: var(--soft-2); }
+.pv-zbtn { width: 24px; }
+.pv-zpct { min-width: 52px; padding: 0 6px; }
+
+/* 舞台：内容画在这里。底色比内容浅一档，缩到 100% 以下时内容边界一眼可见。 */
+.pv-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--soft);
+}
+
+/* 画布：与舞台同尺寸，靠 transform 整体缩放/平移。
+   origin 0 0 是 zoom.js 里那套坐标约定的前提（内容点 c 落在 x + k*c），改它要连数学一起改。 */
+.pv-canvas {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.pv-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--paper);
+}
+
+/* 指针遮罩：平时透明放行，两种时刻接管指针——
+   1) 抓手模式：拖拽平移、滚轮缩放；
+   2) 分隔条拖拽期间：iframe 会把指针事件吃进自己的 document（独立浏览上下文），
+      不接管的话 SplitPane 挂在 window 上的 mousemove/mouseup 在指针进入预览区
+      那一刻就断了，分隔条会粘住。cursor: inherit 让分隔条的 resize 光标透出来。 */
+.pv-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  touch-action: none;
+}
+.pv-veil.grab { pointer-events: auto; cursor: grab; }
+.pv-veil.grab:active { cursor: grabbing; }
+body.sp-dragging .pv-veil { pointer-events: auto; cursor: inherit; }
+/* 键盘平移的焦点要看得见（与 .sp-divider:focus-visible 同一待遇） */
+.pv-veil:focus-visible { outline: 2px solid var(--ink); outline-offset: -1px; }
+
+/* 全屏态：铺满整页（原来这套规则叫 .asset-full，随组件一起搬过来） */
+.pv-full {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  border: 0;
+  border-radius: 0;
+}
+.pv-full .pv-head { height: 44px; padding: 0 14px; font-size: 14px; font-weight: 600; }
+
+/* ===== 设备视口切换（手机 | PC）=====
+ * 与 .pv-zoom 同一套连体按钮做法：24px 高、贴边连排、白底描边。
+ * 只在调用方给了 onViewportChange 时才渲染（SVG 详情页视口固定，看不到这组）。 */
+.pv-viewport { display: inline-flex; }
+.pv-vpbtn {
+  height: 24px;
+  padding: 0 10px;
+  border: var(--border);
+  border-left: 0;
+  background: var(--paper);
+  color: var(--mid);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pv-vpbtn:first-child { border-left: var(--border); border-radius: 6px 0 0 6px; }
+.pv-vpbtn:last-child { border-radius: 0 6px 6px 0; }
+.pv-vpbtn:hover { background: var(--soft); }
+.pv-vpbtn:active { background: var(--soft-2); }
+/* 当前视口：加粗 + 深字 + 软底——与 .tab.active 同一条「用对比度表达注意」的规矩 */
+.pv-vpbtn.on { background: var(--soft-2); color: var(--ink); font-weight: 600; }
+
+/* ===== 手机视口（iPhone 7/8/9 = 375×667）=====
+ * 画框是**真机尺寸**：iframe 逻辑尺寸就是 375×667，响应式断点/字号/点击区都是手机真值。
+ * 容器装不下时只把整机按倍率缩放（fit 由 JS 用 ResizeObserver 算，再叠加抓手缩放/平移），
+ * 绝不改 iframe 尺寸——改尺寸会让页面按响应式重排，看到的就不是手机了。 */
+.pv-mobile-wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: hidden;
+  background: var(--soft);
+}
+.pv-mobile-frame {
+  position: relative; /* iframe 是 absolute inset:0，必须有个定位祖先把它框在 375×667 里 */
+  width: 375px;
+  height: 667px;
+  flex: none;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--paper);
+  transform-origin: center center;
+  will-change: transform;
+  /* 机身外壳用 box-shadow 画——不占布局：iframe 内容盒严丝合缝就是 375×667。
+     用 border 画的话，8px 边框会把内容盒挤成 359×651，预览就不是手机尺寸了。 */
+  box-shadow:
+    0 0 0 6px #1c1f24,
+    0 0 0 7px rgba(255, 255, 255, 0.16),
+    0 10px 32px rgba(20, 22, 26, 0.22);
+}
+/* 手机里的 iframe 铺满画框（.pv-frame 已是 absolute inset:0） */
+.pv-frame-mobile { border-radius: 24px; }

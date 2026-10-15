@@ -63,30 +63,6 @@
   width: 32px; height: 2px;
 }
 
-/* ---- 工作台分隔条（编辑区 ↔ 预览区） ---- */
-
-.wb-split {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.wb-split-editors {
-  display: grid;
-  gap: 8px;
-  padding: 0 14px;
-  overflow: auto;
-}
-
-.wb-split-preview {
-  padding: 0 14px 14px;
-  overflow: hidden;
-}
-.wb-split-preview .asset-preview {
-  height: 100%;
-}
-
 /* ---- 管理页分隔条（目录树 ↔ 内容区） ---- */
 
 .am-split {

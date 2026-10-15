@@ -6,11 +6,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
-import { TagCloud, BatchBar, Crumbs } from './parts.jsx';
+import { TagCloud, BatchBar } from './parts.jsx';
 import { buildTree, findNode } from './tree.jsx';
 import { ManageBrowse } from './manage-browse.jsx';
 import { ManageResult } from './manage-result.jsx';
 import { makeManageOps } from './useManageOps.js';
+import { ManageBar } from './manage-bar.jsx';
+import { ShellBar } from '../layout/index.jsx';
+import { notifyTreeChanged, onTreeChanged } from './tree-signal.js';
 
 const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源' };
 const STATE_KEY = (kind) => `nx-ft-manage-${kind}`;
@@ -42,7 +45,10 @@ export function ManagePage({
   const { dialog, node } = useDialog();
 
   const [tree, setTree] = useState(null);
-  const [dir, setDir] = useState(() => initialDir ?? loadState(kind).dir ?? '');
+  // dir 只认 URL（initialDir 来自 hash）：侧边栏高亮与这里必须同源——
+  // 「新建落在哪」看的就是它。从 localStorage 恢复上次目录会让两边错位
+  // （实测过：侧边栏高亮着根，新建却落进了上次打开的子目录）。
+  const [dir, setDir] = useState(() => initialDir ?? '');
   const [searchInput, setSearchInput] = useState(() => loadState(kind).search || '');
   const [search, setSearch] = useState(searchInput);
   const [activeTags, setActiveTags] = useState(() => loadState(kind).tags || []);
@@ -65,14 +71,12 @@ export function ManagePage({
 
   useEffect(() => {
     try {
-      localStorage.setItem(
-        STATE_KEY(kind),
-        JSON.stringify({ dir, search: searchInput, tags: activeTags, view: viewId })
-      );
+      // dir 不落盘：它由 URL 负责（见上），落盘反而造成两边错位
+      localStorage.setItem(STATE_KEY(kind), JSON.stringify({ search: searchInput, tags: activeTags, view: viewId }));
     } catch {
       /* 隐私模式静默 */
     }
-  }, [dir, searchInput, activeTags, viewId, kind]);
+  }, [searchInput, activeTags, viewId, kind]);
 
   const reload = useCallback(async () => {
     const q = new URLSearchParams();
@@ -86,6 +90,25 @@ export function ManagePage({
 
   useEffect(() => {
     guard(() => reload().catch(() => setErr('加载失败')));
+  }, [reload]);
+
+  // 「会改动数据」的动作走这个：重取本页的树 + 喊一声让侧边栏（另一棵树）也重取。
+  // 筛选/搜索引起的重取仍走 reload —— 别拿信号去吵侧边栏。
+  const reloadTree = useCallback(async () => {
+    const t = await reload();
+    notifyTreeChanged();
+    return t;
+  }, [reload]);
+
+  // 反向：侧边栏（或别处）改了目录，本页跟着重取
+  useEffect(() => onTreeChanged(() => guard(() => reload().catch(() => {}))), [reload]);
+
+  // 路由是真相：hash 一变就重取树。侧边栏建目录/改名后会跳进新目录，
+  // 内容区（子目录卡片、资源列表）必须跟着换数据，否则会停在上一代树上。
+  useEffect(() => {
+    const onHash = () => guard(() => reload().catch(() => {}));
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
   }, [reload]);
 
   const root = useMemo(() => buildTree(tree?.groups || []), [tree]);
@@ -115,7 +138,7 @@ export function ManagePage({
   const { removeGroup, createGroup, createAsset, renameGroup } = makeManageOps({
     kind,
     dir,
-    reload,
+    reload: reloadTree,
     setDir,
     dialog,
     guard,
@@ -224,7 +247,7 @@ export function ManagePage({
     }
     toast(`批量删除资源完成（${done}/${selected.size}）`);
     cancelBatch();
-    reload();
+    reloadTree();
   };
 
   const batchDeleteDirs = async () => {
@@ -259,7 +282,7 @@ export function ManagePage({
     }
     toast(`批量删除目录完成（${done}/${selectedDirs.size}）`);
     cancelBatch();
-    reload();
+    reloadTree();
   };
 
   const count = tree?.count || { groups: 0, assets: 0 };
@@ -279,61 +302,63 @@ export function ManagePage({
     }),
   ];
 
+  // 工具区的「新建子目录」：落在当前（= 侧边栏高亮）目录下，建完跳进去——
+  // 与侧边栏头部那个「+」同一套语义，两处入口不该有两套规矩。
+  const createDirIn = async (name) => {
+    // createGroup 已 toast（ok / warn），这里不再叠一条「已创建目录」
+    await createGroup(dir, name);
+    setSearchInput('');
+    setSearch('');
+    setActiveTags([]);
+    setViewId('default');
+    setBatchMode(false);
+    go(path);
+  };
+
+  // 工具区的「新建资源」：根目录下的资源要落进保留文件夹「未分类」
+  // （存储模型要求资源必须住在文件夹里，网盘的根目录也能放文件）。
+  // 建完清筛选，让新资源在列表里可见。
+  const createAssetIn = async (name) => {
+    const HOME_DIR = '未分类';
+    if (!dir) await createGroup('', HOME_DIR);
+    await createAsset(dir || HOME_DIR, name);
+    setSearchInput('');
+    setSearch('');
+    setActiveTags([]);
+    setViewId('default');
+    setBatchMode(false);
+    await reloadTree();
+  };
+
   return (
     <div className="asset-manage">
+      {/* V3 工具区：面包屑 + 新建资源 + 搜索 + 更多菜单，经 ShellBar 传送进
+          Layout 的工具条；视图切换 / 领域批量（svg）/ 目录动作收进菜单。 */}
+      <ShellBar>
+        <ManageBar
+          crumbs={crumbItems}
+          inDir={!!(dir && dirGroup)}
+          onRenameDir={() => renameGroup(dir)}
+          onRemoveDir={() => removeGroup(dir)}
+          onCreateAsset={createAssetIn}
+          onCreateDir={createDirIn}
+          search={searchInput}
+          onSearch={setSearchInput}
+          viewId={viewId}
+          onView={setViewId}
+          defaultViewLabel={defaultViewLabel}
+          views={views}
+          onBatch={enterBatch}
+          extra={typeof toolbar === 'function' ? toolbar(reloadTree) : toolbar}
+        />
+      </ShellBar>
+
       <div className="am-head">
         <span className="am-title">{KIND_TITLE[kind]}</span>
         <span className="muted am-count">
           {tree ? `${count.groups} 个分组 · ${count.assets} 个资源` : '加载中…'}
           {tree && filtered && tree.total.assets !== count.assets ? `（筛选自 ${tree.total.assets} 个）` : ''}
         </span>
-        <div className="am-spacer" />
-        <input
-          className="am-search"
-          spellCheck="false"
-          placeholder="搜索名称 / 分组 / 标签 / 风格"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          data-testid="manage-search"
-        />
-        {views.length ? (
-          <div className="am-views" role="group" aria-label="视图切换">
-            <button
-              className={'btn small' + (viewId === 'default' ? ' primary' : '')}
-              onClick={() => setViewId('default')}
-              data-testid="view-default"
-            >
-              {defaultViewLabel}
-            </button>
-            {views.map((v) => (
-              <button
-                key={v.id}
-                className={'btn small' + (viewId === v.id ? ' primary' : '')}
-                onClick={() => setViewId(v.id)}
-                data-testid={`view-${v.id}`}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {/* 地址栏：页面级，所有视图（列表 / 画廊 / 搜索结果）共用——
-          放在视图内部的话，换视图就会把「我在哪」弄丢（真踩过：画廊模式没面包屑）。 */}
-      <div className="am-crumbbar">
-        <Crumbs items={crumbItems} />
-        <div className="am-spacer" />
-        {dir && dirGroup ? (
-          <>
-            <button className="btn small ghost" onClick={() => renameGroup(dir)} data-testid="rename-current-group">
-              改名 / 移动
-            </button>
-            <button className="btn small ghost danger" onClick={() => removeGroup(dir)} data-testid="remove-current-group">
-              删除当前文件夹
-            </button>
-          </>
-        ) : null}
       </div>
 
       <TagCloud
@@ -342,9 +367,6 @@ export function ManagePage({
         onToggle={toggleTag}
         onClear={() => setActiveTags([])}
       />
-
-      {/* 领域扩展插槽：svg 看板动作等；函数形态收 reload 供动作完成后刷新列表 */}
-      {typeof toolbar === 'function' ? toolbar(reload) : toolbar}
 
       {batchMode ? (
         <BatchBar
@@ -390,7 +412,7 @@ export function ManagePage({
               onOpen,
               pickDir,
               batchMode,
-              reload,
+              reload: reloadTree,
             })
         ) : filtered ? (
           <ManageResult
@@ -415,9 +437,6 @@ export function ManagePage({
             onOpen={onOpen}
             pickDir={pickDir}
             removeGroup={removeGroup}
-            createGroup={createGroup}
-            createAsset={createAsset}
-            guard={guard}
             batchMode={batchMode}
             selected={selected}
             onToggle={toggleSelect}
@@ -425,13 +444,6 @@ export function ManagePage({
             onToggleDir={toggleSelectDir}
           />
         )
-      ) : null}
-      {!batchMode ? (
-        <div className="am-tools">
-          <button className="btn small ghost" onClick={enterBatch} data-testid="enter-batch">
-            批量操作
-          </button>
-        </div>
       ) : null}
       {node}
     </div>

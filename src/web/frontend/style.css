@@ -4,11 +4,16 @@
  *   tokens           设计变量 —— 改这里 = 全局换肤
  *   atomic           原子类（按钮 / 卡片 / 行 / 标签…）—— **各项目已高度一致，改它请三思**
  *   layout           壳的版式（头部 / tab 栏 / 面板 / 栅格）—— **这层按你的项目自由改**
+ *   toast            轻提示（边框主义：淡底 + ok/bad/warn 描边）
+ *   code-workbench   多栏代码编辑器（页签 / 分栏 / sash）—— HTML 与 SVG 共用
+ *   preview          预览容器组件（工具条 + 缩放平移画布）—— 组件自带样式，别在别处改它
  *   asset-manage     资产域第一层：管理页（搜索 + 标签云 + 分组卡片网格）
- *   asset-workbench  资产域第二层：全屏工作台（面包屑 + 风格/描述 + 三编辑框 + 预览）
+ *   asset-workbench  资产域第二层：全屏工作台（面包屑 + 风格/描述 + 预览壳）
  *   logo             LOGO 生成页
  *   board            SVG 看板：看板页 / 分组页 + 面板公共件
  *   board-detail     SVG 看板：资源页 / 整页预览 / 批量结果
+ *   gallery          画廊
+ *   sidebar          侧边栏组件（iOS 风格目录树，.g 前缀 scoping）
  *
  * 为什么要拆：早期把全部规则混在一张表里，六个孪生项目各改各的，同一个 .btn
  * 在不同项目里长成了三样；而布局差异（顶部导航 / 左侧栏）又把文件撑到 500 行开外，
@@ -19,15 +24,21 @@
  * 变量必须在最前；board 复用 asset-manage 里的 .tag-cloud；board-detail 续在 board 之后。
  *
  * 视觉规范（本骨架的硬标准，别用 AI 默认审美覆盖）：
- *   - 无 emoji；黑白灰为主，只有 --bad 一个语义色
+ *   - 无 emoji；主体黑白灰；语义色仅用于 toast（ok / bad / warn）与代码着色
  *   - 密度双层：行高 28px、按钮 32px、核心字号 12px
  *   - 分隔靠 1px 浅底线，主体视觉连续，不靠卡片阴影堆叠
  *   - 立体感只用在按钮（--shadow-relief 三件套），边界清晰但不喧哗
- *   - 「需要注意」用对比度表达（墨色 / 粗体 / 下缘线），不用颜色喊
+ *   - toast 用边框主义（淡底 + 主色描边），不用墨底实心条
  */
 @import './styles/tokens.css';
 @import './styles/atomic.css';
 @import './styles/layout.css';
+@import './styles/btn.css';
+@import './styles/toast.css';
+@import './styles/code-workbench.css';
+/* 组件样式（自带全部规则，页面只负责给它尺寸）——排在页面层之前，
+   让 asset-workbench / board-detail 那些带上下文的覆盖规则后来居上 */
+@import './styles/preview.css';
 @import './styles/asset-manage.css';
 @import './styles/asset-workbench.css';
 @import './styles/split.css';
@@ -35,3 +46,4 @@
 @import './styles/board.css';
 @import './styles/board-detail.css';
 @import './styles/gallery.css';
+@import './styles/sidebar.css';

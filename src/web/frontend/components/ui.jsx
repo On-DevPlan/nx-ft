@@ -1,52 +1,33 @@
-// 通用 UI 件：toast、对话框、弹窗、错误边界、diff 渲染。
+// 通用 UI 件：对话框、弹窗、错误边界、diff 渲染；toast 见 ./toast（此处再导出，旧 import 不断）。
 // 约定延续自 vanilla 版：无 emoji、不用浏览器原生弹窗（alert/confirm/prompt 一律页内实现）。
 import { Component, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Btn } from './btn/index.jsx';
+import { useToast } from './toast/index.jsx';
 
-// ---- toast：页内轻提示（自动消失） ----
+export { Toast, ToastProvider, useToast, normalizeTone } from './toast/index.jsx';
 
-const ToastCtx = createContext(null);
-
-export function ToastProvider({ children }) {
-  const [msgs, setMsgs] = useState([]);
-  const idRef = useRef(0);
-
-  const toast = useCallback((msg) => {
-    const id = ++idRef.current;
-    setMsgs((m) => [...m, { id, msg }]);
-    setTimeout(() => setMsgs((m) => m.filter((x) => x.id !== id)), 2800);
-  }, []);
-
-  return (
-    <ToastCtx.Provider value={toast}>
-      {children}
-      <div className="toast-stack">
-        {msgs.map((m) => <div key={m.id} className="toast show">{m.msg}</div>)}
-      </div>
-    </ToastCtx.Provider>
-  );
-}
-
-export function useToast() {
-  return useContext(ToastCtx) || ((m) => console.log(m));
-}
-
-// 操作守卫：包一层，失败自动 toast 错误信息（对应 vanilla 版的 guard()）
+// 操作守卫：包一层，失败自动 toast.bad（对应 vanilla 版的 guard()）
 export function useGuard() {
   const toast = useToast();
   return useCallback(async (fn) => {
-    try { return await fn(); } catch (e) { toast(String((e && e.message) || e)); }
+    try { return await fn(); } catch (e) { toast.bad(String((e && e.message) || e)); }
   }, [toast]);
 }
 
 // ---- 点击即复制：所有路径/长标识的展示标准 ----
 // 点一下复制全文；hover 显示「点击复制」提示；复制成功 toast 确认。
-export function Copyable({ text, className = '', title, children }) {
+//
+// `btn` 为 true 时把元素升级为按钮族 Btn（替代原本的「`.btn` 类套在 span 上」——
+// 那种写法在统一按钮族之后属于违规：它长得像按钮但不是 Btn 组件、不是原生按钮）。
+// 文字型（detail-parts.jsx 那两处代码块）保持 span 不动。
+export function Copyable({ text, className = '', title, btn, size = 'sm', variant = 'secondary', children, ...rest }) {
   const toast = useToast();
   const copy = async () => {
     const v = String(text ?? '');
+    const ok = () => toast.ok('已复制: ' + (v.length > 60 ? v.slice(0, 57) + '...' : v));
     try {
       await navigator.clipboard.writeText(v);
-      toast('已复制: ' + (v.length > 60 ? v.slice(0, 57) + '...' : v));
+      ok();
     } catch {
       // 剪贴板 API 不可用（非安全上下文等）：退回 execCommand
       try {
@@ -57,12 +38,19 @@ export function Copyable({ text, className = '', title, children }) {
         ta.select();
         document.execCommand('copy');
         ta.remove();
-        toast('已复制: ' + (v.length > 60 ? v.slice(0, 57) + '...' : v));
+        ok();
       } catch {
-        toast('复制失败（剪贴板不可用）');
+        toast.bad('复制失败（剪贴板不可用）');
       }
     }
   };
+  if (btn) {
+    return (
+      <Btn size={size} variant={variant} className={className} title={title || '点击复制'} onClick={copy} {...rest}>
+        {children !== undefined ? children : text}
+      </Btn>
+    );
+  }
   return (
     <span
       className={'copyable' + (className ? ' ' + className : '')}
@@ -108,13 +96,13 @@ export function useDialog() {
           />
         ) : null}
         <div className="dlg-acts">
-          <button className="btn ghost" onClick={() => close(null)}>取消</button>
-          <button
-            className={'btn' + (state.danger ? ' danger' : '')}
+          <Btn variant="secondary" onClick={() => close(null)}>取消</Btn>
+          <Btn
+            variant={state.danger ? 'danger' : 'secondary'}
             onClick={() => close(state.input ? (inputRef.current?.value.trim() ?? null) : true)}
           >
             {state.okText || '确定'}
-          </button>
+          </Btn>
         </div>
       </div>
     </div>
@@ -150,7 +138,7 @@ export class ErrorBoundary extends Component {
         <div className="muted" style={{ marginBottom: 10 }}>
           其他面板不受影响，可以切到别的 tab 继续操作；控制台有完整堆栈。
         </div>
-        <button className="btn" onClick={() => this.setState({ error: null })}>重试</button>
+        <Btn onClick={() => this.setState({ error: null })}>重试</Btn>
       </div>
     );
   }
@@ -170,7 +158,7 @@ export function Modal({ title, onClose, children }) {
       <div className="modal-box">
         <div className="modal-title">
           <span>{title}</span>
-          <button className="btn small ghost" onClick={onClose}>关闭</button>
+          <Btn size="sm" variant="secondary" onClick={onClose}>关闭</Btn>
         </div>
         <div className="modal-body">{children}</div>
       </div>

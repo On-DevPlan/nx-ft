@@ -11,12 +11,29 @@
   --mid: #8b9096;
   --bad: #b3261e;
   --ok: #2da44e;
+  --warn: #b8860b;
+  /* 边框主义提示底：主色低透明填充（描边仍用不透明主色） */
+  --ok-soft: color-mix(in srgb, var(--ok) 14%, transparent);
+  --bad-soft: color-mix(in srgb, var(--bad) 14%, transparent);
+  --warn-soft: color-mix(in srgb, var(--warn) 14%, transparent);
 
   --border: 1px solid var(--soft-2);
   --row-h: 28px;
   --btn-h: 32px;
   --fs-core: 12px;
   --radius-btn: 8px;
+
+  /* 代码语法着色（只有代码编辑器用）。
+     面板主体守「黑白灰 + 只有 --bad 一个语义色」，但代码着色是另一回事——
+     无色的代码读不出结构。所以这里单独开一组，取值全部压暗、彼此拉不开太大差距，
+     免得一块彩色代码在安静的面板里吵起来。 */
+  --syn-com: #8b9096; /* 注释：直接复用 --mid，注释就该退到背景里 */
+  --syn-tag: #2f6fbf; /* 标签名 / CSS 选择器 */
+  --syn-attr: #7a4fbf; /* 属性名 / CSS 属性 */
+  --syn-str: #2da44e; /* 字符串：--ok 同色，语义也对得上 */
+  --syn-num: #b35309; /* 数字 / 单位 / 十六进制色值 */
+  --syn-key: #b3261e; /* 关键字：--bad 同色——代码里 keyword 确实该是最扎眼的 */
+  --syn-fn: #8a6d00; /* 函数 / 方法 / at-rule */
 
   /* 立体感三件套：常态 / 按下 / 内凹（表单聚焦）。
      只在这三处用，别扩散到卡片和列表——那会让界面变吵。 */

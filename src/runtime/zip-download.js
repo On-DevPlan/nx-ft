@@ -2,21 +2,33 @@
 //
 // 为什么单独一条路径、不走 api.js 的 JSON 路由：那个路由的所有出口都是 sendJson
 // （{ok, data} 信封），而 zip 是二进制、要带 Content-Disposition。硬塞进 JSON 层
-// 只会两边都别扭——这里显式分流，规则也简单：路径以 .zip 结尾就交给这个模块。
-import { exportZip } from '../core/svg/set.js';
+// 只会两边都别扭——这里显式分流，规则也简单：/api/<kind>/export.zip 交给这个模块。
+import { exportZip as exportSvgZip } from '../core/svg/set.js';
+import { exportZip as exportAssetZip } from '../core/assets/set.js';
 
-export const ZIP_PATH = '/api/svg/export.zip';
+// 路径按 kind 走：/api/svg/export.zip、/api/html/export.zip
+export const EXPORT_ZIP_RE = /^\/api\/([a-z]+)\/export\.zip$/;
 
-export async function handleZipDownload(req, res, url) {
+// 与上传端同一张分派表：svg 平铺单文件 / html 一资源一目录三件套。
+// 两者返回同构（filename / buffer / count / skipped），这里无需区分。
+const EXPORTERS = { svg: exportSvgZip, html: exportAssetZip };
+
+export async function handleZipDownload(req, res, url, kind) {
   if (req.method !== 'GET') {
     res.writeHead(405, { 'content-type': 'text/plain; charset=utf-8' });
     res.end('Method Not Allowed');
     return;
   }
+  const exportZip = EXPORTERS[kind];
+  if (!exportZip) {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end(`未知资源类型: ${kind}`);
+    return;
+  }
   try {
     const group = url.searchParams.get('group') || '';
     const style = url.searchParams.get('style') || '';
-    const out = exportZip({ kind: 'svg', group, style });
+    const out = exportZip({ kind, group, style });
     // 文件名里的中文要按 RFC 5987 编码，否则部分浏览器会得到乱码文件名
     const ascii = out.filename.replace(/[^\x20-\x7e]/g, '_');
     res.writeHead(200, {

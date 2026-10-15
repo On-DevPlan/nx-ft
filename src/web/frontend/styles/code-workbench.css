@@ -1,0 +1,170 @@
+/* Multi-pane code editor (components/code-workbench).
+ * Shared by HTML workbench + SVG detail. Tabs / split / sash / drop zones.
+ * CodeEditor chrome stays in asset-workbench.css.
+ */
+
+.wb-edit-pane {
+  flex: 1 1 0%;
+  align-self: stretch;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  overflow: hidden;
+}
+.wb-panels {
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  --wb-pair: 100;
+  --wb-a: 50;
+}
+.wb-panels-row { flex-direction: row; }
+.wb-panels-col { flex-direction: column; }
+body.wb-sash-drag .wb-panels > .wb-panel { pointer-events: none; }
+body.wb-sash-drag .wb-panels > .wb-panel[data-resize="a"] {
+  flex: var(--wb-a) 1 0% !important;
+}
+body.wb-sash-drag .wb-panels > .wb-panel[data-resize="b"] {
+  flex: calc(var(--wb-pair) - var(--wb-a)) 1 0% !important;
+}
+body.wb-sash-drag .code-pane .code-hl {
+  contain: strict;
+  content-visibility: auto;
+}
+.wb-panel {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  contain: layout paint;
+}
+.wb-sash {
+  flex-shrink: 0;
+  background: var(--soft);
+  position: relative;
+  transition: background 0.15s;
+  touch-action: none;
+}
+.wb-sash:hover,
+.wb-sash:focus-visible { background: var(--soft-2); }
+.wb-sash:focus-visible { outline: 2px solid var(--ink); outline-offset: -1px; }
+.wb-sash-row { width: 6px; cursor: col-resize; }
+.wb-sash-col { height: 6px; cursor: row-resize; }
+.wb-sash::before {
+  content: '';
+  position: absolute;
+  background: var(--mid);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+}
+.wb-sash:hover::before { opacity: 0.5; }
+.wb-sash-row::before { width: 2px; height: 32px; }
+.wb-sash-col::before { width: 32px; height: 2px; }
+.wb-tabs {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  background: var(--soft);
+  border-bottom: var(--border);
+}
+.wb-tabs-settings {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  flex-shrink: 0;
+  border: 0;
+  border-left: var(--border);
+  background: none;
+  color: var(--mid);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.wb-tabs-settings:hover { background: var(--soft-2); color: var(--ink); }
+.wb-tabs-settings:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.wb-tab {
+  border: 0;
+  border-right: var(--border);
+  background: none;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--mid);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.wb-tab:first-child { border-left: var(--border); }
+.wb-tab:hover { background: var(--soft-2); color: var(--ink); }
+.wb-tab.active {
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 600;
+  margin-bottom: -1px;
+  padding-bottom: 8px;
+}
+.wb-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.wb-tab-drop-before { box-shadow: inset 2px 0 0 var(--ink); }
+.wb-tab-drop-end {
+  width: 2px;
+  align-self: stretch;
+  background: var(--ink);
+  flex-shrink: 0;
+  margin: 4px 0;
+}
+.wb-editor {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  contain: layout paint size;
+}
+.wb-slot {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.wb-slot-hidden { display: none; }
+.wb-editor .code-pane {
+  flex: 1 1 0%;
+  min-width: 0;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: var(--border);
+  border-top: 0;
+  border-radius: 0;
+  background: var(--paper);
+  overflow: hidden;
+}
+.wb-editor .code-pane-body {
+  flex: 1;
+  min-height: 0;
+}
+.wb-editor .code-area { resize: none; height: 100%; }
+.wb-dz {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: color-mix(in srgb, var(--syn-tag) 22%, transparent);
+  will-change: transform;
+}
+.wb-dz-left   { transform: scaleX(0.5); transform-origin: left center; }
+.wb-dz-right  { transform: scaleX(0.5); transform-origin: right center; }
+.wb-dz-top    { transform: scaleY(0.5); transform-origin: center top; }
+.wb-dz-bottom { transform: scaleY(0.5); transform-origin: center bottom; }

@@ -1,0 +1,40 @@
+/* 轻提示：边框主义 —— 淡色底 + 语义主色描边，不用墨底/重阴影。 */
+
+.toast-stack {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--soft-2);
+  word-break: break-word;
+}
+
+.toast-ok {
+  background: var(--ok-soft);
+  border-color: var(--ok);
+}
+
+.toast-bad {
+  background: var(--bad-soft);
+  border-color: var(--bad);
+}
+
+.toast-warn {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+}

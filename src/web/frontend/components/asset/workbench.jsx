@@ -1,17 +1,33 @@
-// 资源工作台（全屏独立页）：左上角面包屑返回，右上角风格与描述，主体三编辑器 + 实时预览。
+// 资源工作台:左上角面包屑返回,右上角风格与描述,主体「左编辑 | 右预览」左右两栏。
 // 由 AssetView 依据 hash 子路由（#/html/edit/<组>/<名>）挂载。
+// 默认嵌在面板里（侧边栏保留）；「大屏模式」是用户主动选择的覆盖态（.wb-fullscreen）。
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../api/client.js';
+import { Btn, BtnBar, BtnBarSpacer, BtnMenu, BtnMenuItem } from '../btn/index.jsx';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
-import { CodeEditor } from './CodeEditor.jsx';
-import { buildPreviewDoc, PreviewPane } from './preview.jsx';
 import { Crumbs } from './parts.jsx';
 import { makeAssetOps } from './useAssetOps.js';
 import { SplitPane } from './SplitPane.jsx';
+import { buildPreviewDoc } from '../preview/doc.js';
+import { PreviewPane } from '../preview/index.jsx';
+import { WorkbenchEditor } from './workbench-editor.jsx';
+import { readSlotCode } from '../code-workbench/index.jsx';
 
 const KIND_SLOTS = { html: ['html', 'css', 'js'], svg: ['svg', 'css', 'js'] };
 const KIND_LABEL = { html: { html: 'HTML', css: 'CSS', js: 'JS' }, svg: { svg: 'SVG', css: 'CSS', js: 'JS' } };
 const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源' };
+
+// 视口偏好的 localStorage 键:跨资源全局记一份(手机 / PC 预览是用户偏好,不跟资源走)
+const VIEWPORT_KEY = 'nx-ft-wb-viewport';
+
+function loadViewport() {
+  try {
+    const v = localStorage.getItem(VIEWPORT_KEY);
+    return v === 'pc' ? 'pc' : 'mobile'; // 只认白名单值;无存档/脏数据一律手机(iPhone 375×667)
+  } catch {
+    return 'mobile';
+  }
+}
 
 export function WorkbenchPage({ kind, group, name, onNavigate }) {
   const toast = useToast();
@@ -22,19 +38,39 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
   const [sel, setSel] = useState({ group, name, style: '' });
   const [ready, setReady] = useState(false);
   const [err, setErr] = useState('');
-  const [tick, setTick] = useState(0); // 输入计数：驱动脏标记与预览刷新
+  const [tick, setTick] = useState(0); // 输入计数:驱动脏标记与预览刷新
   const [full, setFull] = useState(false);
+  const [viewport, setViewport] = useState(loadViewport); // 手机 / PC 预览视口
+  const [big, setBig] = useState(false); // 大屏模式:主动选择的整页覆盖态
+  // 编辑区布局由 WorkbenchEditor 自持；默认布局仅在用户点齿轮时落盘。
 
   const savedRef = useRef(null);
   const mainRef = useRef(null);
 
-  // 从 DOM 读当前代码（预览与保存的真相）；限定在本工作台容器内。
+  // 视口偏好落盘(隐私模式静默)
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEWPORT_KEY, viewport);
+    } catch {
+      /* 隐私模式静默 */
+    }
+  }, [viewport]);
+
+  // 从 DOM 读当前代码（预览与保存的真相）；与 SVG 详情共用 readSlotCode。
   const readCode = useCallback(() => {
+    const slots = KIND_SLOTS[kind];
+    const root = mainRef.current;
+    if (!root) {
+      const out = {};
+      for (const slot of slots) out[slot] = String(savedRef.current?.[slot] ?? '');
+      return out;
+    }
+    const fromDom = readSlotCode(root, slots);
     const out = {};
-    const areas = mainRef.current ? mainRef.current.querySelectorAll('.code-area') : [];
-    KIND_SLOTS[kind].forEach((slot, i) => {
-      out[slot] = areas[i] ? areas[i].value : String(savedRef.current?.[slot] ?? '');
-    });
+    for (const slot of slots) {
+      const mounted = root.querySelector(`[data-slot="${slot}"] .code-area`);
+      out[slot] = mounted ? fromDom[slot] : String(savedRef.current?.[slot] ?? '');
+    }
     return out;
   }, [kind]);
 
@@ -134,7 +170,8 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
 
   if (err) {
     return (
-      <div className="wb">
+      // 错误态走大屏:看错误信息时就该聚焦在内容上,不必再给侧边栏腾位。
+      <div className="wb wb-fullscreen">
         <div className="wb-bar">
           <Crumbs items={[{ label: KIND_TITLE[kind], onClick: () => onNavigate(group) }, { label: err }]} />
         </div>
@@ -146,7 +183,7 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
   }
 
   return (
-    <div className="wb">
+    <div className={'wb' + (big ? ' wb-fullscreen' : '')}>
       <div className="wb-bar">
         <Crumbs
           items={[
@@ -161,8 +198,8 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
             { label: asset?.label || name, title: `${group}/${name}` },
           ]}
         />
-        <div className="wb-bar-spacer" />
-        <div className="wb-acts">
+        <BtnBar>
+          <BtnBarSpacer />
           <select
             className="asset-style-select"
             value={sel.style}
@@ -179,72 +216,85 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
           </select>
           {style?.desc ? <span className="wb-desc" title={style.desc}>{style.desc}</span> : null}
           {style ? <span className="tag">历史 {style.historyCount}/5</span> : null}
-          <button className="btn ghost" onClick={ops.newStyle} data-testid="wb-new-style">新风格</button>
-          <button className="btn ghost" onClick={ops.setStyleDesc} disabled={!asset?.styles.length} data-testid="wb-style-desc">
+          {/* 次级按钮（频次从高到低：新建风格、描述、大屏模式）→ 次级下拉（更多）→ 主按钮（保存）。
+              顺序由 BtnBar 的 CSS 兜住（最后一个主按钮压到行右），本文件只管内容。 */}
+          <Btn onClick={ops.newStyle} testId="wb-new-style">新风格</Btn>
+          <Btn onClick={ops.setStyleDesc} disabled={!asset?.styles.length} testId="wb-style-desc">
             描述
-          </button>
-          <button
-            className={'btn primary' + (isDirty() ? '' : ' ghost')}
+          </Btn>
+          <Btn
+            onClick={() => setBig((b) => !b)}
+            testId="wb-big"
+            title={big ? '退出大屏模式(回到带侧边栏的常规视图)' : '进入大屏模式(隐藏侧边栏)'}
+          >
+            {big ? '退出大屏' : '大屏模式'}
+          </Btn>
+          <BtnMenu label="更多" testId="wb-more" panelTestId="wb-more-panel">
+            <BtnMenuItem
+              onClick={ops.removeStyle}
+              disabled={!asset?.styles.length}
+              testId="wb-remove-style"
+            >
+              删除当前风格
+            </BtnMenuItem>
+            <BtnMenuItem onClick={ops.renameAsset} testId="wb-rename">改展示名</BtnMenuItem>
+            <BtnMenuItem danger onClick={ops.removeAsset} testId="wb-remove">删除资源</BtnMenuItem>
+          </BtnMenu>
+          <Btn
+            variant="primary"
             onClick={ops.save}
             disabled={!asset?.styles.length}
-            data-testid="wb-save"
+            testId="wb-save"
           >
             {isDirty() ? '保存 *' : '保存'}
-          </button>
-          <details className="wb-more">
-            <summary className="btn ghost" data-testid="wb-more">更多</summary>
-            <div className="wb-more-menu">
-              <button className="btn ghost" onClick={ops.removeStyle} disabled={!asset?.styles.length} data-testid="wb-remove-style">
-                删除当前风格
-              </button>
-              <button className="btn ghost" onClick={ops.renameAsset} data-testid="wb-rename">改展示名</button>
-              <button className="btn ghost danger" onClick={ops.removeAsset} data-testid="wb-remove">删除资源</button>
-            </div>
-          </details>
-        </div>
+          </Btn>
+        </BtnBar>
       </div>
 
       <div className="wb-sub">
         {(asset?.tags || []).map((t) => (
           <span key={t} className="tag-chip">
             {t}
+            {/* tag-chip-x 是 14px 的小 ×，不是按钮族语义——tag-chip 视觉内嵌的关闭点 */}
             <button className="tag-chip-x" title="移除标签" onClick={() => ops.removeTag(t)}>×</button>
           </span>
         ))}
-        <button className="tag-chip ghost" onClick={ops.addTags}>+ 标签</button>
+        <Btn size="sm" variant="secondary" onClick={ops.addTags}>+ 标签</Btn>
         <div className="wb-bar-spacer" />
         <span className="muted mono wb-path">{group}/{name}</span>
       </div>
 
       <div className="wb-body" ref={mainRef}>
         <SplitPane
-          direction="vertical"
-          initialPct={55}
+          direction="horizontal"
+          initialPct={50}
           minPct={20}
           maxPct={80}
-          persistKey={`nx-ft-wb-split-${kind}-${group}-${name}`}
+          // 键名带 -h- 后缀:旧 vertical 比例不能套用到 horizontal,新键让旧值自然失效
+          persistKey={`nx-ft-wb-split-h-${kind}-${group}-${name}`}
           testId="wb-split"
           left={
-            <div className="wb-editors-row">
-              {KIND_SLOTS[kind].map((slot) => (
-                <CodeEditor
-                  key={`${sel.name}:${sel.style}:${slot}`}
-                  label={KIND_LABEL[kind][slot]}
-                  initial={ready ? (asset?.code?.[sel.style] || {})[slot] : ''}
-                  readOnly={!ready}
-                  onSave={ops.save}
-                  onChange={() => setTick((n) => n + 1)}
-                />
-              ))}
-            </div>
+            <WorkbenchEditor
+              kind={kind}
+              slots={KIND_SLOTS[kind]}
+              labels={KIND_LABEL[kind]}
+              ready={ready}
+              asset={asset}
+              styleKey={sel.style}
+              onSave={ops.save}
+              onChange={() => setTick((n) => n + 1)}
+            />
           }
           right={
-            <div className="wb-preview-row">
+            <div className="wb-preview-pane">
               <PreviewPane
                 doc={ready ? buildPreviewDoc(kind, readCode()) : ''}
+                kind={kind}
                 full={full}
                 tick={tick}
                 onToggleFull={() => setFull((f) => !f)}
+                viewport={viewport}
+                onViewportChange={setViewport}
               />
             </div>
           }

@@ -8,6 +8,7 @@
 // 与「编辑模式」的筛选口径完全一致——两个视图看的是同一批图标。
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.js';
+import { Btn } from '../btn/index.jsx';
 import { Icon, IconGhost } from './svg-inline.jsx';
 import { SpecBadge, Empty } from './parts.jsx';
 import { SubdirCard } from '../asset/parts.jsx';
@@ -143,14 +144,15 @@ export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }
         <span className="gal-label">尺寸</span>
         <div className="gal-sizes">
           {SIZES.map((s) => (
-            <button
+            <Btn
               key={s}
-              className={'btn small' + (size === s ? ' primary' : '')}
+              size="sm"
+              className={size === s ? 'on' : ''}
               onClick={() => setSize(s)}
-              data-testid={`gal-size-${s}`}
+              testId={`gal-size-${s}`}
             >
               {s}
-            </button>
+            </Btn>
           ))}
         </div>
 
@@ -161,14 +163,15 @@ export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }
             { id: 'duotone', label: `双色 ${duotoneCount}` },
             { id: 'line', label: '单色' },
           ].map((v) => (
-            <button
+            <Btn
               key={v.id}
-              className={'btn small' + (kind === v.id ? ' primary' : '')}
+              size="sm"
+              className={kind === v.id ? 'on' : ''}
               onClick={() => setKind(v.id)}
-              data-testid={`gal-kind-${v.id}`}
+              testId={`gal-kind-${v.id}`}
             >
               {v.label}
-            </button>
+            </Btn>
           ))}
         </div>
 
@@ -185,15 +188,16 @@ export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }
         <span className="gal-label">每行</span>
         <div className="gal-sizes">
           {COLS.map((n) => (
-            <button
+            <Btn
               key={n}
-              className={'btn small' + (cols === n ? ' primary' : '')}
+              size="sm"
+              className={cols === n ? 'on' : ''}
               onClick={() => setCols(n)}
               title={n === 0 ? '按容器宽度自适应' : `一行 ${n} 个`}
-              data-testid={`gal-cols-${n === 0 ? 'auto' : n}`}
+              testId={`gal-cols-${n === 0 ? 'auto' : n}`}
             >
               {n === 0 ? '自动' : n}
-            </button>
+            </Btn>
           ))}
         </div>
 

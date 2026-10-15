@@ -136,6 +136,18 @@ export function assetExists(kind, groupPath, name) {
   return existsSync(assetBaseDir(kind, groupPath, name));
 }
 
+// 资源目录跨分组整搬（风格与历史随目录）。源不存在返回 false（与 renameAssetDir
+// 同口径：还没写过代码的资源只动清单键）；目标已有目录是真冲突，必须拒绝。
+export function moveAssetDir(kind, fromGroup, toGroup, name) {
+  const src = assetBaseDir(kind, fromGroup, name);
+  const dst = assetBaseDir(kind, toGroup, name);
+  if (existsSync(dst)) throw specError(`目标资源已存在: ${toGroup}/${name}`);
+  if (!existsSync(src)) return false;
+  mkdirSync(dirname(dst), { recursive: true });
+  renameSync(src, dst);
+  return true;
+}
+
 export function listStyleDirs(kind, groupPath, name) {
   return listSubdirs(join(assetBaseDir(kind, groupPath, name), STYLES_SUBDIR));
 }

@@ -1,8 +1,34 @@
-/* 第 4 层乙 / 资产域第二层：全屏工作台（面包屑 + 风格/描述 + 三编辑框 + 实时预览）。
- * 第一层（管理页）在同目录 asset-manage.css。
- * ---- 工作台（全屏独立页） ---- */
+/* 第 4 层乙 / 资产域第二层：全屏工作台壳（面包屑 + 风格/描述 + 左编辑|右预览）。
+ * 多栏编辑器本体样式在 code-workbench.css；管理页在 asset-manage.css。
+ * ---- 工作台壳 ---- */
 
+/* 工作台挂进 shell-content 时：内容区改成「定位容器」，panel/wb 绝对铺满。
+   DOM：.shell-content > section.panel.active > .wb
+   为什么不用纯 flex 百分比：.panel.active 默认 display:block，再叠一层
+   flex:1 1 auto（basis=内容高）时，编辑区经常塌成「页签 + 120px」。
+   绝对铺满不依赖百分比高度解析。 */
+.shell-content:has(.wb) {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.shell-content:has(.wb) > .panel.active {
+  /* !important：压过 layout.css 的 .panel.active { display:block } */
+  display: flex !important;
+  flex-direction: column;
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+}
 .wb {
+  flex: 1 1 0%;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+}
+.wb-fullscreen {
   position: fixed; inset: 0; z-index: 50;
   background: var(--paper); display: flex; flex-direction: column;
 }
@@ -22,57 +48,49 @@
   padding: 6px 14px; border-bottom: var(--border); flex-shrink: 0;
 }
 .wb-body {
-  flex: 1; min-height: 0;
+  flex: 1 1 0%;
+  min-height: 0;
   padding: 0;
-  display: flex; flex-direction: column;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background: var(--soft);
 }
-.wb-body .asset-preview { flex: 1 1 auto; min-height: 0; }
-
-/* 3 编辑器横向并排（HTML/CSS/JS），撑满上半面板。
-   用 flex 而非 grid：折叠某个编辑器时它自动收缩，不留空列。 */
-.wb-editors-row {
-  display: flex;
-  gap: 10px;
-  padding: 10px 14px;
-  height: 100%;
+.wb-body .pv { flex: 1 1 0%; min-height: 0; }
+/* 编辑|预览 SplitPane：pane 自己不滚；行向分栏用 stretch 吃满 wrap 高度。 */
+.wb-body > .sp-wrap {
+  flex: 1 1 0%;
   min-height: 0;
+  height: auto;
+  width: 100%;
 }
-.wb-editors-row .code-pane {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 100%;
+.wb-body > .sp-wrap > .sp-pane {
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border: var(--border);
-  border-radius: 8px;
+}
+.wb-body > .sp-wrap > .sp-pane-h {
+  height: auto;
+  align-self: stretch;
+}
+
+/* 右侧预览面板：与左侧编辑栏同高（由 SplitPane 分配）。 */
+.wb-preview-pane {
+  flex: 1 1 0%;
+  align-self: stretch;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   background: var(--paper);
   overflow: hidden;
 }
-.wb-editors-row .code-pane.collapsed {
-  flex: 0 0 auto;
-  height: auto;
-  align-self: flex-start;
-}
-.wb-editors-row .code-pane-body {
+.wb-preview-pane .pv {
   flex: 1;
   min-height: 0;
-}
-.wb-editors-row .code-area { resize: none; height: 100%; }
-
-/* 预览：下半部分，居中撑满 */
-.wb-preview-row {
-  height: 100%;
-  min-height: 0;
-  padding: 0 14px 14px;
-  display: flex;
-}
-.wb-preview-row .asset-preview {
-  flex: 1;
-  width: 100%;
-  border-radius: 8px;
 }
 
 /* 面包屑：左上角导航（工作台/管理页共用样式） */
@@ -97,7 +115,7 @@
 }
 .wb-more-menu .btn { justify-content: flex-start; text-align: left; }
 
-/* ---- 编辑框与预览（工作台主体） ---- */
+/* ---- 编辑框（CodeEditor；多栏壳在 code-workbench.css） ---- */
 
 .asset-editors { display: grid; gap: 10px; }
 .code-pane { border: var(--border); border-radius: 10px; background: var(--paper); overflow: hidden; }
@@ -120,34 +138,71 @@
   color: var(--mid); font-family: ui-monospace, Consolas, monospace; font-size: 11px; line-height: 18px;
   user-select: none; flex-shrink: 0;
 }
-.code-area {
-  flex: 1; min-width: 0; border: 0; outline: none; resize: vertical;
-  padding: 8px 10px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; line-height: 18px;
-  background: var(--paper); color: var(--ink); tab-size: 2;
+
+/* 编辑区两层：<pre> 画着色好的同一份文本，<textarea> 透明地叠在上面收输入。
+   **排版属性必须用同一个选择器一起下发**——字体、字号、行高、padding、tab 宽度、
+   不换行，差任何一样都会让两层逐字符错开，而错位是累积的：第 1 行还看不出来，
+   第 80 行已经偏出半屏。分成两条规则各写一遍，早晚会漂移。 */
+.code-area,
+.code-hl {
+  padding: 8px 10px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  line-height: 18px;
+  tab-size: 2;
+  white-space: pre; /* 与 textarea 的 wrap="off" 一致：不折行 */
+  /* 滚动条槽两边都留：内容盒一样宽，横向滚动同步时才不会在右端错开 */
+  scrollbar-gutter: stable;
 }
+.code-edit {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  overflow: hidden;
+}
+.code-hl {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  border: 0;
+  /* 与输入框同样按 auto 预留滚动条：长行横向溢出时，textarea 会多占一条横向滚动条
+     （clientHeight 少 16px），着色层若 overflow:hidden 就没有，滚到最底会错开一行。
+     两层都 auto，内容盒两个方向都一样大。着色层的滚动条被上层输入框的盖住，
+     位置逐像素相同，看到的就是输入框那一条。 */
+  overflow: auto;
+  pointer-events: none;
+  color: var(--ink);
+}
+.code-area {
+  position: relative;
+  z-index: 1;
+  flex: 1; min-width: 0; margin: 0; border: 0; outline: none; resize: vertical;
+  background: transparent;
+  /* 文字交给下层的 .code-hl 画，这里只保留光标与选区 */
+  color: transparent;
+  caret-color: var(--ink);
+}
+.code-area::selection { background: rgba(64, 120, 255, 0.2); }
+.code-area::placeholder { color: var(--mid); }
 .code-area:focus { box-shadow: var(--shadow-relief-inset); }
 
+/* ---- 语法着色（取值见 tokens.css 的 --syn-*） ---- */
+.tok-com { color: var(--syn-com); font-style: italic; }
+.tok-tag { color: var(--syn-tag); }
+.tok-sel { color: var(--syn-tag); }
+.tok-attr { color: var(--syn-attr); }
+.tok-prop { color: var(--syn-attr); }
+.tok-str { color: var(--syn-str); }
+.tok-num { color: var(--syn-num); }
+.tok-key { color: var(--syn-key); }
+.tok-fn { color: var(--syn-fn); }
+.tok-punct { color: var(--mid); }
+/* 属性值不抢戏：保持墨色，让「属性名有颜色 / 值没有」形成对比 */
+.tok-val { color: var(--ink); }
+
 .asset-style-select { min-width: 120px; height: var(--row-h); font-size: var(--fs-core); }
-
-.asset-preview {
-  border: var(--border); border-radius: 10px; background: var(--paper); overflow: hidden;
-  display: flex; flex-direction: column;
-}
-.asset-preview-head {
-  display: flex; align-items: center; justify-content: space-between;
-  height: var(--row-h); padding: 0 10px; border-bottom: var(--border); background: var(--soft);
-  font-size: 11px;
-}
-.asset-frame-wrap { flex: 1; min-height: 260px; display: flex; }
-.asset-frame { flex: 1; width: 100%; border: 0; background: var(--paper); }
-
-.asset-full { position: fixed; inset: 0; z-index: 60; background: var(--paper); display: flex; flex-direction: column; }
-.asset-full-head {
-  display: flex; align-items: center; justify-content: space-between;
-  height: 44px; padding: 0 14px; border-bottom: var(--border); background: var(--soft);
-  font-size: 14px; font-weight: 600; flex-shrink: 0;
-}
-.asset-full .asset-frame-wrap { min-height: 0; }
 
 @media (max-width: 900px) {
   .am-search { width: 100%; }
@@ -155,4 +210,3 @@
   .am-body { grid-template-columns: 1fr; }
   .am-tree { position: static; max-height: 240px; }
 }
-

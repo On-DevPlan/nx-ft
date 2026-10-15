@@ -67,7 +67,8 @@ async function readBody(req) {
 // 跨站防护。服务虽然只绑 127.0.0.1，但用户浏览器里的任意页面都能向它发起请求——
 // 少了这道校验，一个恶意网页就能 POST /api/repos/scan 或 DELETE /api/repos/:id。
 // 浏览器发跨域请求必带 Origin，非浏览器客户端（curl / agent / 测试）不带，故放行。
-function originAllowed(req) {
+// 导出：zip-upload 等二进制分流路径不在 JSON 路由表里，得自己做同一道校验。
+export function originAllowed(req) {
   const origin = req.headers.origin;
   if (!origin) return true;
   try {

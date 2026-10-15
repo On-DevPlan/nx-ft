@@ -1,54 +1,53 @@
 // 资源页的呈现件：风格条 / 描述面板 / 规范问题 / 标签条 / CLI 命令块。
 import { useEffect, useState } from 'react';
+import { Btn } from '../btn/index.jsx';
 import { Copyable } from '../ui.jsx';
 import { assetCommands, heredocSnippet } from './cli.js';
 import { Icon, IconGhost } from './svg-inline.jsx';
 
-// 多风格并排：一眼看出「同一个图标的不同做法」，点一下即切换编辑目标。
-export function StyleStrip({ styles = [], activeStyle, current, onPick, onSetActive }) {
+// 风格条：多风格横排成一条「胶囊 + 描述」，点胶囊即切换编辑目标。
+//
+// 原来是一格一卡的「卡片墙」——每张卡 130px 高，把整页顶到折叠线以下（用户实测）。
+// 第一版改 26px 胶囊 + 描述塞 title，但用户反馈「不同风格的特征没地方看」：
+// 描述是「alt vs bold 差在哪」的关键信息，hover 才看见等于没看。
+// 这次再改：胶囊下方常驻一行描述（2 行截断 + hover 看完整），
+// 整套 53px 高，还是只占描述条一小段，但描述**常驻可见**。
+// 描述之外的信息（待规范数、历史条数）继续在胶囊的 title 里，按需 hover。
+export function StyleStrip({ styles = [], activeStyle, current, onPick }) {
   if (!styles.length) {
-    return (
-      <div className="empty">
-        这个图标还没有任何风格。先「新建风格」，再往 SVG 槽位里写路径；也可以让 AI 写：
-        <code className="mono"> svg put … --code -</code>。
-      </div>
-    );
+    return <span className="muted f11">还没有风格</span>;
   }
   return (
-    <div className="style-strip">
+    <div className="style-pills">
       {styles.map((s) => {
         const issues = s.audit?.issues || [];
         const isActive = s.name === activeStyle;
         const isCur = s.name === current;
+        const tip = [
+          issues.length ? `${issues.length} 项待规范` : '合规',
+          s.historyCount ? `历史 ${s.historyCount} 条` : null,
+          isActive ? '当前风格' : null,
+        ]
+          .filter(Boolean)
+          .join(' · ');
         return (
-          <div key={s.name} className={'style-card' + (isCur ? ' cur' : '')}>
-            <button className="style-card-main" onClick={() => onPick(s.name)} title={`编辑 ${s.name}`}>
-              <span className="style-card-art">
-                {s.svg ? <Icon svg={s.svg} size={30} /> : <IconGhost size={30} />}
+          <div key={s.name} className={'style-pill-cell' + (isCur ? ' cur' : '')}>
+            <button
+              type="button"
+              className="style-pill"
+              title={`编辑 ${s.name}\n${tip}`}
+              onClick={() => onPick(s.name)}
+              data-testid={`style-pill-${s.name}`}
+            >
+              <span className="style-pill-art">
+                {s.svg ? <Icon svg={s.svg} size={13} /> : <IconGhost size={13} />}
               </span>
-              <span className="style-card-name mono nowrap">{s.name}</span>
-              {/* 风格描述（svg style desc 写）：多风格并排时，光看名字看不出
-                  alt 与 bold 差在哪，这行是唯一说清「这套实现的特征」的地方。 */}
-              <span className="style-card-desc nowrap" title={s.desc || ''}>
-                {s.desc || '—'}
-              </span>
-              <span className="style-card-badges">
-                {isActive ? <span className="tag strong">当前</span> : null}
-                {issues.length ? (
-                  <span className="tag" title={issues.map((i) => '· ' + i.message).join('\n')}>
-                    {issues.length} 待规范
-                  </span>
-                ) : (
-                  <span className="tag">合规</span>
-                )}
-                <span className="tag" title="该风格的编辑历史条数">历史 {s.historyCount}</span>
-              </span>
+              <span className="mono nowrap">{s.name}</span>
+              {isActive ? <span className="tag strong">当前</span> : null}
             </button>
-            {!isActive ? (
-              <button className="style-card-act" onClick={() => onSetActive(s.name)}>
-                设为当前
-              </button>
-            ) : null}
+            <div className="style-pill-desc" title={s.desc || '（未写描述）'}>
+              {s.desc || '—'}
+            </div>
           </div>
         );
       })}
@@ -56,39 +55,29 @@ export function StyleStrip({ styles = [], activeStyle, current, onPick, onSetAct
   );
 }
 
-// 描述面板：**主描述（资源级）+ 风格列表**，两个模式——
-//   显示模式：只读，一段主描述 + 每个风格一行「名字 · 描述」，便于快速核对 / 复制
-//   编辑模式：主描述一个输入框，每个风格一个输入框，各自保存
+// 描述编辑器：主描述 + 当前选中**那一**风格的特征，两个输入框。
+//
+// 原来显示所有风格的输入框，但用户反馈「未选中的不应混进来」：
+// 编辑描述的目标是修当前胶囊对应的特征，其他风格的描述入口在常驻栏已经常驻可看，
+// 没必要每开一次编辑都把所有都展开。切换胶囊（即换当前风格）后再 useEffect 重置表单。
 // 为什么要有「主描述」：资源多了以后靠名字找不回来，靠描述才召回得准
 // （配合 tree --search —— 搜索会命中主描述与风格描述）。
-export function DescPanel({ desc, styles = [], editing, onToggleEdit, onSaveDesc, busy }) {
+export function DescEditor({ desc, styles = [], current, onCancel, onSave, busy }) {
   const [mainText, setMainText] = useState(desc || '');
   const [styleText, setStyleText] = useState({});
+
   useEffect(() => {
     setMainText(desc || '');
   }, [desc]);
-  useEffect(() => {
-    const init = {};
-    for (const s of styles) init[s.name] = s.desc || '';
-    setStyleText(init);
-  }, [styles]);
 
-  if (!editing) {
-    return (
-      <div className="desc-view" data-testid="desc-view">
-        <p className="desc-main">{desc || <span className="muted">（还没有主描述）</span>}</p>
-        <ul className="desc-styles">
-          {styles.map((s) => (
-            <li key={s.name}>
-              <span className="mono desc-style-name">{s.name}</span>
-              <span className="desc-style-text">{s.desc || <span className="muted">—</span>}</span>
-            </li>
-          ))}
-          {!styles.length ? <li className="muted">还没有风格</li> : null}
-        </ul>
-      </div>
-    );
-  }
+  // 只追踪当前风格的初始描述：表单里只显示当前那一个，其他的不参与编辑
+  useEffect(() => {
+    if (!current) return;
+    const s = styles.find((x) => x.name === current);
+    setStyleText((prev) => ({ ...prev, [current]: s?.desc || '' }));
+  }, [current, styles]);
+
+  const cur = current ? styles.find((s) => s.name === current) : null;
 
   return (
     <div className="desc-edit" data-testid="desc-edit">
@@ -104,34 +93,29 @@ export function DescPanel({ desc, styles = [], editing, onToggleEdit, onSaveDesc
           data-testid="desc-main-input"
         />
       </label>
-      {styles.map((s) => (
-        <label key={s.name} className="desc-field">
+      {cur ? (
+        <label className="desc-field">
           <span className="desc-label">
-            风格 <span className="mono">{s.name}</span>（这一套的特征）
+            风格 <span className="mono">{cur.name}</span>（这一套的特征）
           </span>
           <input
             className="desc-input"
             spellCheck="false"
             placeholder="如：整体更圆润，适合深色底"
-            value={styleText[s.name] || ''}
+            value={styleText[cur.name] || ''}
             disabled={busy}
-            onChange={(e) => setStyleText((prev) => ({ ...prev, [s.name]: e.target.value }))}
-            data-testid={`desc-style-input-${s.name}`}
+            onChange={(e) => setStyleText((prev) => ({ ...prev, [cur.name]: e.target.value }))}
+            data-testid={`desc-style-input-${cur.name}`}
           />
         </label>
-      ))}
+      ) : null}
       <div className="desc-actions">
-        <button
-          className="btn small primary"
-          disabled={busy}
-          onClick={() => onSaveDesc(mainText, styleText)}
-          data-testid="desc-save"
-        >
+        <Btn size="sm" variant="primary" busy={busy} onClick={() => onSave(mainText, styleText)} testId="desc-save">
           保存全部
-        </button>
-        <button className="btn small ghost" disabled={busy} onClick={onToggleEdit}>
+        </Btn>
+        <Btn size="sm" variant="secondary" disabled={busy} onClick={onCancel}>
           取消
-        </button>
+        </Btn>
       </div>
     </div>
   );
@@ -162,9 +146,9 @@ export function IssueList({ issues = [], style, onFix, profile = 'line' }) {
         </div>
       ))}
       <div className="issue-foot">
-        <button className="btn small ghost" onClick={onFix}>
+        <Btn size="sm" variant="secondary" onClick={onFix}>
           按规范修复 {style}
-        </button>
+        </Btn>
         <span className="muted">改动会写入该风格的编辑历史，可逐条回退。</span>
       </div>
     </div>

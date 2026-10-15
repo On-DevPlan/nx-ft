@@ -1,23 +1,22 @@
 // 管理页「浏览模式」：网盘式当前目录视图。
-// 地址栏（面包屑）+ 工具行（内联新建）+ 子目录卡片 + 资源卡片。
-// 与 manage-result.jsx 是同一页面的两个互斥分支（有筛选条件走结果视图）。
-import { useState } from 'react';
-import { AssetCard, InlineCreateRow, SubdirCard } from './parts.jsx';
+// 子目录卡片 + 资源卡片。与 manage-result.jsx 是同一页面的两个互斥分支（有筛选条件走结果视图）。
+//
+// 创建入口不在本视图：资源 = 工具区的「+ 新建资源」（manage-bar.jsx），
+// 文件夹 = 侧边栏的「+」（asset/side-tree.jsx，定稿：文件夹归侧边栏管）。
+import { Btn } from '../btn/index.jsx';
+import { AssetCard, SubdirCard } from './parts.jsx';
 
 export function ManageBrowse({
   count, dir, dirNode, dirGroup,
   activeTags, toggleTag, onOpen, pickDir, removeGroup,
-  createGroup, createAsset, guard,
   batchMode, selected, onToggle, selectedDirs, onToggleDir,
 }) {
-  const [creating, setCreating] = useState(null); // null | 'dir' | 'asset'
-
   if (dir && !dirNode) {
     return (
       <div className="empty">
         目录不存在或已删除
         <p className="muted">
-          <button className="btn small" onClick={() => pickDir('')}>回到全部</button>
+          <Btn size="sm" onClick={() => pickDir('')}>回到全部</Btn>
         </p>
       </div>
     );
@@ -27,57 +26,8 @@ export function ManageBrowse({
   const assets = dirGroup?.assets || [];
   const empty = !subdirs.length && !assets.length;
 
-  // 根目录不禁止建资源：自动落进保留文件夹「未分类」（不存在则顺手建）——
-  // 网盘的根目录也能放文件，只是这个存储模型要求资源必须住在某个文件夹里。
-  const HOME_DIR = '未分类';
-  const submitDir = (name) =>
-    guard(async () => {
-      await createGroup(dir, name);
-      setCreating(null);
-    });
-  const submitAsset = (name) =>
-    guard(async () => {
-      if (!dir) await createGroup('', HOME_DIR);
-      await createAsset(dir || HOME_DIR, name);
-      setCreating(null);
-    });
-
   return (
     <>
-      {/* 网盘式工具行：内联新建，只起名，不弹对话框。
-          资源必须住在文件夹里（存储模型决定），根目录下落进「未分类」。
-          （地址栏 / 改名 / 删文件夹在 ManagePage 的页面级——所有视图共用） */}
-      {!batchMode ? (
-        <div className="am-actions">
-          {creating === 'dir' ? (
-            <InlineCreateRow
-              placeholder="文件夹名称，可用 / 一次建多层，如 ui/buttons"
-              confirmText="创建文件夹"
-              onConfirm={submitDir}
-              onCancel={() => setCreating(null)}
-              testId="inline-create-dir"
-            />
-          ) : (
-            <button className="btn small" onClick={() => setCreating('dir')} data-testid="new-dir">
-              + 新建文件夹
-            </button>
-          )}
-          {creating === 'asset' ? (
-            <InlineCreateRow
-              placeholder={dir ? '资源名称，如 login-btn —— 创建后直接进入编辑' : `资源名称，如 login-btn（将创建在「未分类」文件夹）`}
-              confirmText="创建并打开"
-              onConfirm={submitAsset}
-              onCancel={() => setCreating(null)}
-              testId="inline-create-asset"
-            />
-          ) : (
-            <button className="btn small primary" onClick={() => setCreating('asset')} data-testid="new-asset">
-              + 新建资源
-            </button>
-          )}
-        </div>
-      ) : null}
-
       {subdirs.length ? (
         <>
           <div className="am-sec-title">文件夹</div>
@@ -121,7 +71,9 @@ export function ManageBrowse({
       {empty ? (
         <div className="empty">
           {count.groups === 0 ? (
-            <>还没有任何内容。点上方「+ 新建文件夹」或「+ 新建资源」开始。</>
+            <>
+              还没有任何内容。点顶部的「+ 新建资源」开始；文件夹在左侧目录树的「+」里新建。
+            </>
           ) : (
             <>此文件夹为空</>
           )}
