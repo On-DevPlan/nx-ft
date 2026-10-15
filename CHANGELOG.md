@@ -2,6 +2,14 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.5.1
+
+### 修复：点了和声规则但列表里不出现派生色
+
+- **根因**：两道闸门叠加——点规则时 `autoFill` 默认 `false`，而 `applyAutoFill` 内部见 `autoFill=false` 直接走「清理」分支；`useAutoFillEffect` 的指纹又只含 `(锚色, 类型)` 不含 `autoFill`，之后再勾选框也因指纹未变而早退。结果：色盘上有预览标记，颜色列表里永远不出现派生色。
+- **修法**：点规则立即强制派生一次（`applyAutoFill(..., { force: true })`，`autoFill` 复选框只管「锚色后续变化是否自动重派生」）；指纹加入 `autoFill` 位；选「无」现在真正清掉和声数据（此前只藏 overlay，`harmony` 字段残留）；关闭 `autoFill` 的语义从「删除派生色」改为「冻结当前派生集」。
+- 附带回归脚本 `scripts/test-harmony-click.mjs`（点规则 → 切规则 → 清除，三步断言槽位复用与清理）。
+
 ## 0.5.0
 
 ### 色彩模块（新）：调色板资源 + 全屏 ColorStudio

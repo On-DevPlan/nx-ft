@@ -22,7 +22,10 @@ function useAutoFillEffect() {
     () => doc.colorEntries.find((c) => c.id === anchorId)?.hex ?? null,
     [doc.colorEntries, anchorId]
   );
-  const fingerprint = `${anchorHex ?? ""}::${harmonyType ?? ""}`;
+  // 指纹 = (锚色 hex, 和声类型, autoFill)。三者任一变化都要重跑派生——
+  // 只看 (hex, type) 会漏掉「勾选 autoFill 复选框」这一步:勾上后指纹没变,
+  // effect 早退,派生色永远不出现(真实踩过:点规则→列表为空→勾选框也无效)。
+  const fingerprint = `${anchorHex ?? ""}::${harmonyType ?? ""}::${autoFill ? 1 : 0}`;
   const lastFingerprintRef = useRef(fingerprint);
   useEffect(() => {
     if (!autoFill || !anchorId || !anchorHex || !harmonyType) {

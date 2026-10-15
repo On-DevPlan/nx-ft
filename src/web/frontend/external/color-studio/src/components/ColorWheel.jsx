@@ -4,6 +4,7 @@ import { useColorStudio } from "../state/useColorStudio";
 import { useSelectedColor } from "../hooks/useSelectedColor";
 import { fromHex, toHex, parseUserInput } from "../engine/colorMath";
 import { pickWheelCommitMode, commitWheelColor } from "../engine/wheelCommit";
+import { applyAutoFill } from "../engine/autoFill";
 import { HarmonyOverlay } from "./HarmonyOverlay";
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -278,25 +279,36 @@ function ColorWheel() {
         {
           type: "button",
           className: `sl-cs-btn sl-cs-btn--sm sl-cs-btn--ghost ${doc.viewState.selectedHarmony === opt.value ? "is-active" : ""}`,
-          onClick: () => setDoc((d) => ({
-            ...d,
-            palettes: d.palettes.map((p) => p.id === d.activePaletteId && opt.value ? {
-              ...p,
-              harmony: {
-                type: opt.value,
-                // 和声锚点 = 当前选中的色卡(而非固定首色)
-                anchorColorId: commitMode.anchorColorId ?? p.colorIds[0] ?? "",
-                autoFill: p.harmony?.autoFill ?? false
+          onClick: () => setDoc((d) => {
+            const next = {
+              ...d,
+              palettes: d.palettes.map((p) => {
+                if (p.id !== d.activePaletteId) return p;
+                // 选「无」= 清掉和声数据(applyAutoFill 会随之清掉派生条目)
+                if (!opt.value) return { ...p, harmony: null, updatedAt: Date.now() };
+                return {
+                  ...p,
+                  harmony: {
+                    type: opt.value,
+                    // 和声锚点 = 当前选中的色卡(而非固定首色)
+                    anchorColorId: commitMode.anchorColorId ?? p.colorIds[0] ?? "",
+                    autoFill: p.harmony?.autoFill ?? false
+                  },
+                  updatedAt: Date.now()
+                };
+              }),
+              viewState: {
+                ...d.viewState,
+                selectedHarmony: opt.value,
+                showHarmony: opt.value != null
               },
-              updatedAt: Date.now()
-            } : p),
-            viewState: {
-              ...d.viewState,
-              selectedHarmony: opt.value,
-              showHarmony: opt.value != null
-            },
-            meta: { ...d.meta, updatedAt: Date.now() }
-          })),
+              meta: { ...d.meta, updatedAt: Date.now() }
+            };
+            // 点规则 → 立即派生一次(force 绕过 autoFill 开关;选「无」→ 清掉派生条目)。
+            // autoFill 复选框只控制「锚色后续变化时是否自动重派生」,
+            // 不能让「点了规则但列表里没有派生色」——那会让用户以为功能坏了。
+            return applyAutoFill(next, d.activePaletteId, { force: true });
+          }),
           children: opt.label
         },
         String(opt.value)

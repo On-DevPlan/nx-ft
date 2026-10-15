@@ -1,11 +1,19 @@
 import { deriveHarmony } from "./harmony";
 import { makeId } from "../utils/id";
-function applyAutoFill(doc, paletteId) {
+
+// force:绕过 autoFill 开关强制派生一次。色盘上点规则时用——
+// 「点了三角就该在列表里看到派生色」,autoFill 复选框只管后续锚色变化是否自动重派生。
+function applyAutoFill(doc, paletteId, { force = false } = {}) {
   const palette = doc.palettes.find((p) => p.id === paletteId);
   if (!palette) return doc;
   const now = Date.now();
-  if (!palette.harmony || !palette.harmony.autoFill) {
+  // 没选规则(「无」):清空该 palette 全部派生条目
+  if (!palette.harmony) {
     return removeAllDerived(doc, paletteId, now);
+  }
+  // autoFill 关且非 force:视为「冻结当前派生集」——不清不派,保持原样
+  if (!palette.harmony.autoFill && !force) {
+    return doc;
   }
   const { type, anchorColorId } = palette.harmony;
   const anchor = doc.colorEntries.find((c) => c.id === anchorColorId);
