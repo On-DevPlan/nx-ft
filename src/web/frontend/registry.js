@@ -23,5 +23,6 @@ export const VIEWS = [
     component: lazy(() => import('../../modules/svg/view.jsx')),
     sidebar: lazy(() => import('../../modules/svg/side.jsx')),
   },
+  { id: 'color', title: '色彩资源', component: lazy(() => import('../../modules/color/view.jsx')) },
   { id: 'logo', title: 'LOGO 生成', component: lazy(() => import('../../modules/logo/view.jsx')) },
 ];

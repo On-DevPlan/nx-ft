@@ -13,9 +13,9 @@ import { PreviewPane } from '../preview/index.jsx';
 import { WorkbenchEditor } from './workbench-editor.jsx';
 import { readSlotCode } from '../code-workbench/index.jsx';
 
-const KIND_SLOTS = { html: ['html', 'css', 'js'], svg: ['svg', 'css', 'js'] };
-const KIND_LABEL = { html: { html: 'HTML', css: 'CSS', js: 'JS' }, svg: { svg: 'SVG', css: 'CSS', js: 'JS' } };
-const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源' };
+const KIND_SLOTS = { html: ['html', 'css', 'js'], svg: ['svg', 'css', 'js'], color: ['data'] };
+const KIND_LABEL = { html: { html: 'HTML', css: 'CSS', js: 'JS' }, svg: { svg: 'SVG', css: 'CSS', js: 'JS' }, color: { data: 'DATA' } };
+const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源', color: '色彩资源' };
 
 // 视口偏好的 localStorage 键:跨资源全局记一份(手机 / PC 预览是用户偏好,不跟资源走)
 const VIEWPORT_KEY = 'nx-ft-wb-viewport';
@@ -79,31 +79,49 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
   const loadAsset = useCallback(
     async (target) => {
       setErr('');
-      const q = `?group=${encodeURIComponent(target.group)}&name=${encodeURIComponent(target.name)}`;
-      const a = await api(`/api/${kind}/asset${q}`);
-      const style = a.styles.some((s) => s.name === target.style)
-        ? target.style
-        : a.activeStyle || a.styles[0]?.name || '';
-      // 修：savedRef 必须包含 KIND_SLOTS 的全部 key，否则无风格资源首次打开会被误判 dirty。
-      const codeForStyle = a.code[style] || {};
-      const normalized = {};
-      KIND_SLOTS[kind].forEach((slot) => {
-        normalized[slot] = codeForStyle[slot] || '';
-      });
-      savedRef.current = normalized;
-      setAsset(a);
-      setSel({ group: a.group, name: a.name, style });
-      setReady(true);
-      setTick((n) => n + 1);
+      try {
+        const q = `?group=${encodeURIComponent(target.group)}&name=${encodeURIComponent(target.name)}`;
+        const a = await api(`/api/${kind}/asset${q}`);
+        const style = a.styles.some((s) => s.name === target.style)
+          ? target.style
+          : a.activeStyle || a.styles[0]?.name || '';
+        // 修：savedRef 必须包含 KIND_SLOTS 的全部 key，否则无风格资源首次打开会被误判 dirty。
+        const codeForStyle = a.code[style] || {};
+        const normalized = {};
+        KIND_SLOTS[kind].forEach((slot) => {
+          normalized[slot] = codeForStyle[slot] || '';
+        });
+        savedRef.current = normalized;
+        setAsset(a);
+        setSel({ group: a.group, name: a.name, style });
+        setReady(true);
+        setTick((n) => n + 1);
+      } catch (e) {
+        const kindLabel = kind === 'color' ? '色彩' : kind === 'svg' ? 'SVG' : 'HTML';
+        setErr(`打开${kindLabel}资源失败: ${target.group}/${target.name}  ${i18nErr(e?.message || String(e))}`);
+        // 不再 throw,让 UI 走到 err 分支显示「重试」按钮
+      }
     },
     [kind]
   );
 
   useEffect(() => {
-    guard(() => loadAsset({ group, name, style: '' })).catch(() => {});
+    guard(() => loadAsset({ group, name, style: '' }));
     // 路由参数变化 = 换资源（key 由父级保证），只在挂载时装载
     // eslint 无 react-hooks 插件，依赖故意只留 kind
   }, [kind]);
+
+// 英文错误 → 中文友好提示
+function i18nErr(msg) {
+  if (!msg) return '未知错误';
+  if (msg.startsWith('HTTP 404')) return '资源不存在（可能已被删除）';
+  if (msg.startsWith('HTTP 500')) return '后端服务报错';
+  if (msg.startsWith('HTTP 403')) return '无权限访问';
+  if (msg.startsWith('HTTP ')) return msg.replace(/^HTTP (\d+)/, '网络错误 (HTTP $1)');
+  if (msg.includes('Failed to fetch')) return '后端连接失败（7869 端口未启动？）';
+  if (msg.includes('NetworkError')) return '网络错误';
+  return msg;
+}
 
   // 编辑器在 commit 后才把 initial 写进 textarea，而预览与脏标记是渲染期读 DOM 的：
   // 装载后再渲染一次才能读到真实内容（否则首帧预览空白、按钮误显示“保存 *”）。
@@ -176,7 +194,10 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
           <Crumbs items={[{ label: KIND_TITLE[kind], onClick: () => onNavigate(group) }, { label: err }]} />
         </div>
         <div className="wb-body">
-          <div className="empty bad">资源打开失败：{err}</div>
+          <div className="empty bad">资源打开失败:{err}
+            <p><button className="btn small" onClick={() => loadAsset({ group, name, style: '' })}>重试</button>
+            <button className="btn small ghost" onClick={onNavigate ? () => onNavigate('') : undefined} style={{ marginLeft: 8 }}>返回网盘</button></p>
+          </div>
         </div>
       </div>
     );
@@ -229,6 +250,19 @@ export function WorkbenchPage({ kind, group, name, onNavigate }) {
           >
             {big ? '退出大屏' : '大屏模式'}
           </Btn>
+          {/* 色彩资源:加「全屏 Studio」入口(强制 fixed:inset:0 渲染 color-studio)。
+              走次级 Btn 而非 primary——按钮行规矩:主按钮有且只有一个(保存),排在最后。 */}
+          {kind === 'color' && (
+            <Btn
+              variant="secondary"
+              onClick={() => {
+                location.hash = `#/color/edit/${encodeURIComponent(group)}/${encodeURIComponent(name)}/full`;
+              }}
+              title="打开全屏 ColorStudio(色盘/比例/笔刷三视图,1:1 复刻 ve 项目)"
+            >
+              全屏 Studio →
+            </Btn>
+          )}
           <BtnMenu label="更多" testId="wb-more" panelTestId="wb-more-panel">
             <BtnMenuItem
               onClick={ops.removeStyle}

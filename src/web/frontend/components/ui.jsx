@@ -1,6 +1,6 @@
 // 通用 UI 件：对话框、弹窗、错误边界、diff 渲染；toast 见 ./toast（此处再导出，旧 import 不断）。
 // 约定延续自 vanilla 版：无 emoji、不用浏览器原生弹窗（alert/confirm/prompt 一律页内实现）。
-import { Component, createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Component, useCallback, useEffect, useRef, useState } from 'react';
 import { Btn } from './btn/index.jsx';
 import { useToast } from './toast/index.jsx';
 

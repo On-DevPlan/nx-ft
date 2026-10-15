@@ -72,7 +72,7 @@ export function TagCloud({ tags, active = [], onToggle, onClear }) {
 
 // 资源卡片：点卡片进工作台；标签片可点即筛（不发散冒泡）。
 // 可选勾选框：批量模式下显示。选中态与父级 selected 集合联动。
-export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagToggle, selectable, selected, onToggle }) {
+export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagToggle, selectable, selected, onToggle, quickAction, kind = 'html' }) {
   // 勾选框只在 onClick 里 toggle 一次：onChange 再绑同一段会造成
   // 「点击一次触发两次 toggle」——选中立刻被自己取消（真实点击验证踩过）。
   // onChange 仅用于受控组件的 React 契约，不做任何事。
@@ -80,11 +80,17 @@ export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagTogg
     e.stopPropagation();
     onToggle && onToggle(groupPath, asset.name);
   };
+  const handleQuick = (e) => {
+    e.stopPropagation();
+    quickAction && quickAction.onClick();
+  };
+  const noun = kind === 'color' ? '调色板' : kind === 'svg' ? 'SVG 资源' : 'HTML 资源';
+  const studioHint = kind === 'color' ? ' · 右上的 Studio 按钮直接进全屏模式' : '';
   return (
     <div
-      className={'am-card' + (selected ? ' selected' : '')}
+      className={'am-card' + (selected ? ' selected' : '') + (quickAction ? ' am-card--has-quick' : '')}
       onClick={() => !selectable && onOpen(groupPath, asset.name)}
-      title={`打开工作台: ${groupPath}/${asset.name}`}
+      title={`打开${noun}: ${groupPath}/${asset.name}${studioHint}`}
       data-testid={`asset-card-${asset.name}`}
     >
       {selectable ? (
@@ -97,6 +103,24 @@ export function AssetCard({ asset, groupPath, activeTags = [], onOpen, onTagTogg
           onChange={() => {}}
           data-testid={`asset-card-check-${asset.name}`}
         />
+      ) : null}
+      {quickAction && !selectable ? (
+        <button
+          type="button"
+          className="am-card-quick"
+          title={quickAction.title || quickAction.label}
+          onClick={handleQuick}
+          data-testid={`asset-card-quick-${asset.name}`}
+        >
+          {quickAction.label} →
+        </button>
+      ) : null}
+      {asset.swatches && asset.swatches.length ? (
+        <div className="am-card-swatches" title="色卡预览（前 5 色）">
+          {asset.swatches.map((hex, i) => (
+            <span key={i} className="am-card-swatch" style={{ background: hex }} title={hex} />
+          ))}
+        </div>
       ) : null}
       <div className="am-card-label">{asset.label}</div>
       <div className="am-card-name mono">{asset.name}</div>

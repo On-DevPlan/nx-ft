@@ -1,12 +1,16 @@
-// 资产类型的公共常量与共享工具：html / svg 两个渲染模块共用。
+// 资产类型的公共常量与共享工具：html / svg / color 三个渲染模块共用。
 import { badInput } from '../errors/index.js';
 import { assertSafeName } from '../paths.js';
 
 // slots 是每种类型当前的代码文件槽位——顺序即面板编辑框的展示顺序。
 // 换类型的差异只有这张表：存储 / 分组 / 风格 / 历史逻辑完全共用。
+//
+// color 与 html/svg 形态不同：它存的是结构化 JSON（一个 Palette），不是源码。
+// 槽位用单文件 'data'，复用 100% 的 saveCode / history / preview 管线。
 export const ASSET_KINDS = {
   html: { label: 'HTML 资源', slots: ['html', 'css', 'js'] },
   svg: { label: 'SVG 资源', slots: ['svg', 'css', 'js'] },
+  color: { label: '色彩资源', slots: ['data'] },
 };
 
 // 风格不限数量；每个风格只保留最近 5 条「保存历史」快照。

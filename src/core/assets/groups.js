@@ -9,6 +9,19 @@ import { badInput, notFound } from '../errors/index.js';
 import { assertKind, parseGroupPath, normalizeTags } from './constants.js';
 import * as st from './storage.js';
 
+// color 域的卡片缩略:读 default 风格 data 槽位,解析前 5 个色卡的 hex。
+// 静默失败(文件不存在 / JSON 坏)返回空数组——树是总览,不该因坏数据挂掉。
+function readSwatches(groupPath, name) {
+  try {
+    const raw = st.readCodeFiles('color', groupPath, name, 'default', ['data']).data || '';
+    if (!raw.trim()) return [];
+    const palette = JSON.parse(raw);
+    return (palette.colors || []).slice(0, 5).map((c) => String(c.hex || '').toUpperCase()).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 export function labelOf(label, fallback) {
   const v = String(label ?? '').trim();
   if (!v) return fallback;
@@ -65,6 +78,8 @@ export function listTree(kind, { search = '', tags = [] } = {}) {
             activeStyle: a.activeStyle || null,
             tags: a.tags || [],
             updatedAt: a.updatedAt || null,
+            // color 域附加:色卡 swatch 前 5 个 hex(卡片缩略图用)
+            ...(kind === 'color' ? { swatches: readSwatches(groupPath, a.name) } : {}),
           }))
           .sort((a, b) => a.name.localeCompare(b.name)),
       };

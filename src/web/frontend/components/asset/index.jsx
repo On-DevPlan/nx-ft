@@ -41,7 +41,7 @@ export function parseRoute(kind, hash) {
   return { mode: 'manage', dir: null };
 }
 
-export function AssetView({ kind }) {
+export function AssetView({ kind, toolbar, emptyState }) {
   const [route, setRoute] = useState(() => parseRoute(kind, typeof location !== 'undefined' ? location.hash : ''));
   const { boot } = useStore();
   const bin = boot?.app?.name || 'nx-ft';
@@ -74,16 +74,17 @@ export function AssetView({ kind }) {
   // 领域扩展插槽：html 域在这里挂 zip 导入 / 导出（goManage 之外的页面级动作）。
   // 导入的默认分组 / 导出的作用域 = 当前（= 侧边栏高亮）目录；根路由 = 全库。
   const ioGroup = route.mode === 'edit' ? route.group : route.dir || '';
-  const toolbar = ZIP_IO_KINDS.includes(kind)
+  const pageToolbar = ZIP_IO_KINDS.includes(kind)
     ? (reload) => <AssetZipIoBtns kind={kind} bin={bin} group={ioGroup} onDone={reload} />
-    : undefined;
+    : toolbar;
   return (
     <ManagePage
       kind={kind}
       initialDir={route.dir}
       onOpen={openAsset}
       onNavigate={goManage}
-      toolbar={toolbar}
+      toolbar={pageToolbar}
+      emptyState={emptyState}
     />
   );
 }

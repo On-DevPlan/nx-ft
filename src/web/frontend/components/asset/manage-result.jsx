@@ -5,7 +5,7 @@
 import { Btn, BtnBarSpacer } from '../btn/index.jsx';
 import { AssetCard } from './parts.jsx';
 
-export function ManageResult({ tree, count, activeTags, toggleTag, onOpen, onClear, batchMode, selected, onToggle }) {
+export function ManageResult({ tree, count, activeTags, toggleTag, onOpen, onClear, batchMode, selected, onToggle, kind = 'html' }) {
   return (
     <>
       <div className="am-crumbbar">
@@ -39,6 +39,14 @@ export function ManageResult({ tree, count, activeTags, toggleTag, onOpen, onCle
                   selectable={batchMode}
                   selected={selected && selected.has(`${g.path}/${a.name}`)}
                   onToggle={onToggle}
+                  kind={kind}
+                  quickAction={kind === 'color' ? {
+                    label: 'Studio',
+                    title: '打开全屏 ColorStudio(色盘 / 比例 / 笔刷)',
+                    onClick: () => {
+                      location.hash = `#/color/edit/${encodeURIComponent(g.path)}/${encodeURIComponent(a.name)}/full`;
+                    },
+                  } : null}
                 />
               ))}
             </div>

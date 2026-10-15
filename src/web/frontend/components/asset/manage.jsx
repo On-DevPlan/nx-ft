@@ -15,7 +15,8 @@ import { ManageBar } from './manage-bar.jsx';
 import { ShellBar } from '../layout/index.jsx';
 import { notifyTreeChanged, onTreeChanged } from './tree-signal.js';
 
-const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源' };
+const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源', color: '色彩资源' };
+const KIND_NOUN = { html: '资源', svg: '资源', color: '调色板' };
 const STATE_KEY = (kind) => `nx-ft-manage-${kind}`;
 
 function loadState(kind) {
@@ -36,9 +37,10 @@ export function ManagePage({
   onOpen,
   onNavigate,
   toolbar,
-  noun = '资源',
+  noun,
   views = [],
   defaultViewLabel = '列表',
+  emptyState = null,
 }) {
   const toast = useToast();
   const guard = useGuard();
@@ -144,7 +146,7 @@ export function ManagePage({
     guard,
     toast,
     onOpen,
-    noun,
+    noun: noun || KIND_NOUN[kind] || '资源',
   });
 
   // 目录跳转 = 本地立即切换 + 通知调用方写 URL（不变则无 hashchange，无回环）
@@ -312,7 +314,8 @@ export function ManagePage({
     setActiveTags([]);
     setViewId('default');
     setBatchMode(false);
-    go(path);
+    // 「建完跳进去」：跳的是新子目录的完整路径（根目录下建的就是它自己）
+    go(dir ? `${dir}/${name}` : name);
   };
 
   // 工具区的「新建资源」：根目录下的资源要落进保留文件夹「未分类」
@@ -344,6 +347,7 @@ export function ManagePage({
           onCreateDir={createDirIn}
           search={searchInput}
           onSearch={setSearchInput}
+          searchPlaceholder={kind === 'color' ? '搜索调色板 / 分组 / 标签' : undefined}
           viewId={viewId}
           onView={setViewId}
           defaultViewLabel={defaultViewLabel}
@@ -356,7 +360,7 @@ export function ManagePage({
       <div className="am-head">
         <span className="am-title">{KIND_TITLE[kind]}</span>
         <span className="muted am-count">
-          {tree ? `${count.groups} 个分组 · ${count.assets} 个资源` : '加载中…'}
+          {tree ? `${count.groups} 个分组 · ${count.assets} 个${noun || KIND_NOUN[kind] || '资源'}` : '加载中…'}
           {tree && filtered && tree.total.assets !== count.assets ? `（筛选自 ${tree.total.assets} 个）` : ''}
         </span>
       </div>
@@ -416,6 +420,7 @@ export function ManagePage({
             })
         ) : filtered ? (
           <ManageResult
+            kind={kind}
             tree={tree}
             count={count}
             activeTags={activeTags}
@@ -442,6 +447,8 @@ export function ManagePage({
             onToggle={toggleSelect}
             selectedDirs={selectedDirs}
             onToggleDir={toggleSelectDir}
+            emptyState={emptyState}
+            kind={kind}
           />
         )
       ) : null}

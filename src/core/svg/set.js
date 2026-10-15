@@ -105,8 +105,6 @@ function finishImport({ kind, group, sources, style, tags, labelFrom, dryRun, fr
 
   let groupCreated = false;
   if (!st.loadGroup(kind, groupPath)) {
-    // kind 必须带上：addGroup 会 assertKind，漏了就是「未知资源类型: undefined」
-    // （原 importDir 漏过这一项，只有导进已存在的分组才看不出问题）
     addGroup({ kind, group: groupPath });
     groupCreated = true;
   }

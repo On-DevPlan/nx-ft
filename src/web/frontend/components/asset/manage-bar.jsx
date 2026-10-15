@@ -24,6 +24,7 @@ export function ManageBar({
   onCreateDir,
   search,
   onSearch,
+  searchPlaceholder = '搜索名称 / 分组 / 标签 / 风格',
   viewId,
   onView,
   defaultViewLabel,
@@ -53,7 +54,7 @@ export function ManageBar({
       <input
         className="am-search"
         spellCheck="false"
-        placeholder="搜索名称 / 分组 / 标签 / 风格"
+        placeholder={searchPlaceholder}
         value={search}
         onChange={(e) => onSearch(e.target.value)}
         data-testid="manage-search"
