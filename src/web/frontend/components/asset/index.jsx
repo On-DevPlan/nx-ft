@@ -25,10 +25,13 @@ const dec = (s) => {
 
 const encPath = (path) => path.split('/').map(enc).join('/');
 
-// 资源名恒为最后一段（名字不含 /），其余段拼回分组路径（1~8 段）。
+// 资源名恒为最后一段（名字不含 /，也不含 ?），其余段拼回分组路径（1~8 段）。
+// 每段先剥 ?query 后缀再解码——全屏 ColorStudio 返回工作台时 hash 形如
+// /color/edit/<g>/<n>?group=<g>（保留 group 供 store 读），不剥会把
+// 「主色板?group=未分类」整个当资源名（与 modules/color/view.jsx 同一约定）。
 export function parseRoute(kind, hash) {
   const h = String(hash ?? '').replace(/^#\/?/, '');
-  const segs = h.split('/').filter(Boolean).map(dec);
+  const segs = h.split('/').filter(Boolean).map((s) => dec(s.split('?')[0]));
   if (segs[0] !== kind) return { mode: 'manage', dir: null };
   if (segs[1] === 'edit' && segs.length >= 4) {
     const name = segs[segs.length - 1];

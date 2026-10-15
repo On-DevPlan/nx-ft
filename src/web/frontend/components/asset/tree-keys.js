@@ -29,12 +29,14 @@ export function dirOfKey(key) {
 }
 
 // hash → 选中 key。根路由（#/html、#/svg）= 「整棵树被选中」，不是「什么都没选」。
+// 每段先剥 ?query 再解码（全屏 Studio 返回时 hash 带 ?group=<g>，与
+// components/asset/index.jsx 的 parseRoute、modules/color/view.jsx 同一约定）。
 export function keyFromHash(hash) {
   const segs = String(hash ?? '')
     .replace(/^#\/?/, '')
     .split('/')
     .filter(Boolean)
-    .map(dec);
+    .map((s) => dec(s.split('?')[0]));
   const kind = segs[0];
   if (segs[1] === 'dir' && segs.length >= 3) return `dir:${kind}:${segs.slice(2).join('/')}`;
   if (segs[1] === 'edit' && segs.length >= 4) {

@@ -14,8 +14,16 @@ import { useToast } from '../../web/frontend/components/ui.jsx';
 
 function parseRoute(hash) {
   const h = String(hash ?? '').replace(/^#\/?/, '');
-  // 每段要去掉可能的 ?query 后缀(URL 把 ?view=... 拼在 # 后面)
-  const segs = h.split('/').filter(Boolean).map((s) => s.split('?')[0]);
+  // 每段先剥 ?query 再解码（URL 把 ?view=... 拼在 # 后面；不解码会把编码形式
+  // 原样传给全屏包装器，?group= 被二次编码，store 按它找分组必然落空）
+  const dec = (s) => {
+    try {
+      return decodeURIComponent(s);
+    } catch {
+      return s;
+    }
+  };
+  const segs = h.split('/').filter(Boolean).map((s) => dec(s.split('?')[0]));
   if (segs[0] !== 'color') return { mode: 'manage' };
   if (segs[1] === 'edit' && segs.length >= 4) {
     const name = segs[segs.length - 1];

@@ -10,8 +10,10 @@ const CHAPTERS = [
 ];
 function CookbookPage({ open, onClose }) {
   const [chapter, setChapter] = useState("basics");
-  if (!open) return null;
+  // useEscClose 必须在早退之前调用（同 ExportModal：Shell 无条件挂载，hook 在
+  // return 之后会在开→关切换时报 React #310）。
   useEscClose(open, onClose);
+  if (!open) return null;
   return /* @__PURE__ */ jsxs("div", { className: "sl-cs-cookbook", role: "dialog", "aria-modal": "true", "aria-label": "色彩工坊 · 案例手册", children: [
     /* @__PURE__ */ jsxs("header", { className: "sl-cs-cookbook__head", children: [
       /* @__PURE__ */ jsxs("h2", { children: [

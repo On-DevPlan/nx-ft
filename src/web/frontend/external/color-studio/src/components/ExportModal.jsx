@@ -12,8 +12,10 @@ function ExportModal({ open, onClose }) {
   const [copied, setCopied] = useState(false);
   const content = useMemo(() => exportDoc(doc, format), [doc, format]);
   const meta = EXPORT_FORMATS.find((f) => f.value === format);
-  if (!open) return null;
+  // useEscClose 必须在早退之前调用：本组件被 Shell 无条件挂载（open=false 也渲染），
+  // hook 放在 return 之后会在开→关切换时报 React #310（hooks 数量前后不一致）。
   useEscClose(open, onClose);
+  if (!open) return null;
   const copy = async () => {
     await writeClipboard(content).catch(() => void 0);
     setCopied(true);

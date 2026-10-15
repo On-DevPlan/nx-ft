@@ -13,7 +13,14 @@ function queryParam(name) {
 function groupFromHash() {
   if (typeof location === "undefined") return null;
   const path = location.hash.split("?")[0];
-  const segs = path.replace(/^#\/?/, "").split("/").filter(Boolean).map((s) => s.split("?")[0]);
+  const segs = path.replace(/^#\/?/, "").split("/").filter(Boolean).map((s) => {
+    const raw = s.split("?")[0];
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
+  });
   // /color/edit/<g>/<p>[/...]
   if (segs[0] === "color" && segs[1] === "edit" && segs.length >= 4) {
     return segs[2];
@@ -21,7 +28,17 @@ function groupFromHash() {
   return null;
 }
 
-const GROUP = queryParam("group") || groupFromHash() || "demo";
+// GROUP 不能在模块求值时冻结：本 chunk 首次加载通常发生在 #/color 列表页
+// （还没有 ?group=），冻住就是 "demo"——load 找不到分组永远空 doc，save 还会把
+// 调色板写进错误分组。改成调用时读 URL：包装器挂载时已把 ?group=（单次编码）
+// 写进 hash，load/save 都发生在那之后。
+function currentGroup() {
+  return queryParam("group") || groupFromHash() || "demo";
+}
+// nx-ft 约定「资源名 = 调色板 id」（load 里 id: a.name）。导入进来的新调色板 id 是
+// 解析器生成的 ULID——save 前先查它能不能映射回资源名，映射不上就按展示名建资源。
+let knownAssetNames = new Set(); // load 时刷新：当前组里已有的资源名
+const importNames = new Map(); // 导入调色板 id → 已建好的资源名（会话内）
 function createColorStudioStore() {
   return {
     load,
@@ -29,11 +46,13 @@ function createColorStudioStore() {
   };
 }
 async function load() {
+  const GROUP = currentGroup();
   const res = await fetch(`/api/color/tree?search=&tags=`);
   if (!res.ok) throw new Error(`tree ${res.status}`);
   const env = await res.json();
   const tree = env.data ?? env; // nx-ft \u7EDF\u4E00\u4FE1\u5C01 {ok,data}
   const group = tree.groups?.find((g) => g.path === GROUP);
+  knownAssetNames = new Set((group?.assets || []).map((a) => a.name));
   if (!group) return emptyDoc();
   const palettes = [];
   const colorEntries = [];
@@ -84,6 +103,7 @@ async function load() {
   };
 }
 async function save(doc) {
+  const GROUP = currentGroup();
   for (const p of doc.palettes) {
     const data = JSON.stringify({
       name: p.name,
@@ -93,14 +113,34 @@ async function save(doc) {
       createdAt: p.createdAt ?? Date.now(),
       updatedAt: Date.now()
     }, null, 2);
+    // id → 资源名：load 来的调色板 id 本来就是资源名；导入的是 ULID，
+    // 首次保存按展示名建资源（assets 端点一步创建并写入 data），之后走更新。
+    let name;
+    if (knownAssetNames.has(p.id)) {
+      name = p.id;
+    } else if (importNames.has(p.id)) {
+      name = importNames.get(p.id);
+    } else {
+      name = p.name;
+      const created = await fetch("/api/color/assets", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ group: GROUP, name, style: "default", "code-data": data })
+      });
+      if (!created.ok) throw new Error(`save ${p.name}: ${created.status} ${await created.text()}`);
+      const envCreated = await created.json();
+      if (envCreated && envCreated.ok === false) throw new Error(`save ${p.name}: ${envCreated.error}`);
+      importNames.set(p.id, name);
+      continue;
+    }
     const res = await fetch("/api/color/asset-code", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ group: GROUP, name: p.id, style: "default", slot: "data", "code-data": data })
+      body: JSON.stringify({ group: GROUP, name, style: "default", slot: "data", "code-data": data })
     });
-    if (!res.ok) throw new Error(`save ${p.id}: ${res.status} ${await res.text()}`);
+    if (!res.ok) throw new Error(`save ${name}: ${res.status} ${await res.text()}`);
     const env3 = await res.json();
-    if (env3 && env3.ok === false) throw new Error(`save ${p.id}: ${env3.error}`);
+    if (env3 && env3.ok === false) throw new Error(`save ${name}: ${env3.error}`);
   }
   return { ok: true };
 }

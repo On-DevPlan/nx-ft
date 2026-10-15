@@ -19,8 +19,10 @@ function ImportModal({ open, onImport, onClose, activePalette }) {
   const [copied, setCopied] = useState(false);
   const [incrementalCopied, setIncrementalCopied] = useState(false);
   const copyTimerRef = useRef(null);
-  if (!open) return null;
+  // useEscClose 必须在早退之前调用（同 ExportModal：Shell 无条件挂载，hook 在
+  // return 之后会在开→关切换时报 React #310）。
   useEscClose(open, onClose);
+  if (!open) return null;
   async function handleCopyFormat() {
     await copyText(COLOR_IMPORT_FORMAT_PROMPT, setCopied);
   }
