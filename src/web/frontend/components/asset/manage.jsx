@@ -15,6 +15,8 @@ import { useBatchOps } from './useBatchOps.js';
 import { ManageBar } from './manage-bar.jsx';
 import { ShellBar } from '../layout/index.jsx';
 import { notifyTreeChanged, onTreeChanged } from './tree-signal.js';
+import { useToolbarLayout } from './useToolbarLayout.js';
+import { exportPickZip } from './zip-io.jsx';
 
 const KIND_TITLE = { html: 'HTML 资源', svg: 'SVG 资源', color: '色彩资源' };
 const KIND_NOUN = { html: '资源', svg: '资源', color: '调色板' };
@@ -42,12 +44,17 @@ export function ManagePage({
   views = [],
   defaultViewLabel = '列表',
   emptyState = null,
+  // 1.1 工具栏可编排：父级（AssetView）预渲染的 zip-io 单边按钮；html 域会有，svg/color 没有。
+  exportBtn = null,
+  importBtn = null,
 }) {
   const toast = useToast();
   const guard = useGuard();
   const { dialog, node } = useDialog();
 
   const [tree, setTree] = useState(null);
+  // 1.1 工具栏可编排：模块表 + 持久化到 localStorage（与侧边栏 storageKey 同模式）
+  const { layout, setLayout } = useToolbarLayout(kind);
   // dir 只认 URL（initialDir 来自 hash）：侧边栏高亮与这里必须同源——
   // 「新建落在哪」看的就是它。从 localStorage 恢复上次目录会让两边错位
   // （实测过：侧边栏高亮着根，新建却落进了上次打开的子目录）。
@@ -172,6 +179,21 @@ export function ManagePage({
 
   const count = tree?.count || { groups: 0, assets: 0 };
 
+  // 1.2 选区构建：selectedDirs 整选（递归），selected 子文件（key = `groupPath/name`）。
+  // 整选与同 key 的子文件会被服务端去重（collectExports 的 seen Set），前端不去重
+  // 也行——重复就是再次校验而已。为了 dialog 概要更短，前端去重。
+  const buildPick = () => {
+    const pick = [];
+    for (const d of selectedDirs) pick.push({ type: 'dir', path: d });
+    for (const k of selected) pick.push({ type: 'asset', key: k });
+    return pick;
+  };
+  const onExportPick = () => {
+    const pick = buildPick();
+    if (!pick.length) return;
+    exportPickZip({ kind, pick, toast, guard, dialog });
+  };
+
   // 面包屑：全部 / ui / buttons（每段可点回该层）——这就是网盘的地址栏
   const crumbItems = [
     { label: '全部', onClick: dir ? () => pickDir('') : undefined },
@@ -219,7 +241,8 @@ export function ManagePage({
   return (
     <div className="asset-manage">
       {/* V3 工具区：面包屑 + 新建资源 + 搜索 + 更多菜单，经 ShellBar 传送进
-          Layout 的工具条；视图切换 / 领域批量（svg）/ 目录动作收进菜单。 */}
+          Layout 的工具条；视图切换 / 领域批量（svg）/ 目录动作收进菜单。
+          1.1 起按 layout 模块表渲染；export/import 由父级 AssetView 预渲染后传入。 */}
       <ShellBar>
         <ManageBar
           crumbs={crumbItems}
@@ -230,21 +253,35 @@ export function ManagePage({
           onCreateDir={createDirIn}
           search={searchInput}
           onSearch={setSearchInput}
-          searchPlaceholder={kind === 'color' ? '搜索调色板 / 分组 / 标签' : undefined}
+          searchPlaceholder={kind === 'color' ? '全库搜索 调色板 / 分组 / 标签' : undefined}
           viewId={viewId}
           onView={setViewId}
           defaultViewLabel={defaultViewLabel}
           views={views}
           onBatch={enterBatch}
           extra={typeof toolbar === 'function' ? toolbar(reloadTree) : toolbar}
+          layout={layout}
+          setLayout={setLayout}
+          exportBtn={exportBtn}
+          importBtn={importBtn}
         />
       </ShellBar>
 
       <div className="am-head">
         <span className="am-title">{KIND_TITLE[kind]}</span>
         <span className="muted am-count">
-          {tree ? `${count.groups} 个分组 · ${count.assets} 个${noun || KIND_NOUN[kind] || '资源'}` : '加载中…'}
-          {tree && filtered && tree.total.assets !== count.assets ? `（筛选自 ${tree.total.assets} 个）` : ''}
+          {tree ? (
+            dir && dirGroup ? (
+              // 目录内报「本目录直接子项」统计——全库数字在子目录里只会误导
+              //（03 主页面任务的差距 #3）；全库统计只在根（=「全部」）给。
+              `本目录 ${dirNode?.children.length ?? 0} 个文件夹 · ${dirGroup.assets.length} 个${noun || KIND_NOUN[kind] || '资源'}`
+            ) : (
+              <>
+                {`${count.groups} 个分组 · ${count.assets} 个${noun || KIND_NOUN[kind] || '资源'}`}
+                {filtered && tree.total.assets !== count.assets ? `（筛选自 ${tree.total.assets} 个）` : ''}
+              </>
+            )
+          ) : '加载中…'}
         </span>
       </div>
 
@@ -264,6 +301,12 @@ export function ManagePage({
           onInvert={invertVisible}
           onCancel={cancelBatch}
           actions={[
+            {
+              label: `导出选中${selected.size + selectedDirs.size ? ` (${selected.size + selectedDirs.size})` : ''}`,
+              testId: 'batch-export-pick',
+              onClick: onExportPick,
+              disabled: selected.size === 0 && selectedDirs.size === 0,
+            },
             {
               label: `批量删除资源${selected.size ? ` (${selected.size})` : ''}`,
               testId: 'batch-delete',
@@ -294,11 +337,16 @@ export function ManagePage({
               dir,
               dirGroup,
               dirNode,
+              tree,
               search,
               activeTags,
               onOpen,
               pickDir,
               batchMode,
+              selected,
+              selectedDirs,
+              onToggle: toggleSelect,
+              onToggleDir: toggleSelectDir,
               reload: reloadTree,
             })
         ) : filtered ? (
@@ -320,6 +368,7 @@ export function ManagePage({
             dir={dir}
             dirNode={dirNode}
             dirGroup={dirGroup}
+            tree={tree}
             activeTags={activeTags}
             toggleTag={toggleTag}
             onOpen={onOpen}

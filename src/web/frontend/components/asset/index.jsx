@@ -8,6 +8,7 @@ import { ManagePage } from './manage.jsx';
 import { WorkbenchPage } from './workbench.jsx';
 import { AssetZipIoBtns } from './zip-io.jsx';
 import { useStore } from '../../store.jsx';
+import { notifyTreeChanged } from './tree-signal.js';
 
 // 用「一资源一目录三件套」zip 约定（core/assets/set.js）的 kind——目前只有 html。
 // svg 的平铺单文件约定由 SvgDrive 自己接（components/svg/zip-io.jsx），两条约定
@@ -76,17 +77,26 @@ export function AssetView({ kind, toolbar, emptyState }) {
   }
   // 领域扩展插槽：html 域在这里挂 zip 导入 / 导出（goManage 之外的页面级动作）。
   // 导入的默认分组 / 导出的作用域 = 当前（= 侧边栏高亮）目录；根路由 = 全库。
+  // 1.1 起：导出 / 导入各拆成单边按钮节点（exportBtn / importBtn），传给 ManageBar 按 layout
+  // 决定放在工具栏还是被隐藏（恢复路径 = 「更多」→「自定义工具栏…」）。
+  // 导入完成后通过 tree 通知 → ManagePage 订阅 onTreeChanged 触发 reload，无需自己再 fetch。
   const ioGroup = route.mode === 'edit' ? route.group : route.dir || '';
-  const pageToolbar = ZIP_IO_KINDS.includes(kind)
-    ? (reload) => <AssetZipIoBtns kind={kind} bin={bin} group={ioGroup} onDone={reload} />
-    : toolbar;
+  const onDoneReload = () => notifyTreeChanged();
+  const exportBtn = ZIP_IO_KINDS.includes(kind)
+    ? <AssetZipIoBtns kind={kind} bin={bin} group={ioGroup} onDone={onDoneReload} side="export" />
+    : null;
+  const importBtn = ZIP_IO_KINDS.includes(kind)
+    ? <AssetZipIoBtns kind={kind} bin={bin} group={ioGroup} onDone={onDoneReload} side="import" />
+    : null;
   return (
     <ManagePage
       kind={kind}
       initialDir={route.dir}
       onOpen={openAsset}
       onNavigate={goManage}
-      toolbar={pageToolbar}
+      toolbar={toolbar}
+      exportBtn={exportBtn}
+      importBtn={importBtn}
       emptyState={emptyState}
     />
   );

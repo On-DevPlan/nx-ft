@@ -1,6 +1,9 @@
-// 资产域共享的呈现件：面包屑、标签云、相对时间、资源卡片、子目录卡片。
+// 资产域共享的呈现件：面包屑、标签云、相对时间、资源卡片、批量条、inline-create。
+// 1.2 起 SubdirCard 拆到独立文件 subdir-card.jsx（带展开勾选子文件，行数过多）。
 import { Fragment, useState } from 'react';
 import { Btn } from '../btn/index.jsx';
+
+export { SubdirCard } from './subdir-card.jsx';
 
 export function relTime(iso) {
   if (!iso) return '';
@@ -249,54 +252,6 @@ export function InlineCreateRow({ placeholder, confirmText = '创建', hint, onC
         </Btn>
       </div>
       {err ? <div className="inline-create-err bad" data-testid={testId ? `${testId}-err` : undefined}>{err}</div> : null}
-    </div>
-  );
-}
-
-// 子目录卡片：目录树之外的第二种钻取入口（大目标、带总数）。
-// 批量模式下显示勾选框；点勾选不触发钻取。
-// 删除按钮常驻可见（ui-ux-pro-max Priority 2 反模式「hover only」——
-// hover 才出现的破坏性操作等于不存在）。
-export function SubdirCard({ node, onSelect, onRemove, selectable, selected, onToggle }) {
-  // 同 AssetCard：只在 onClick 里 toggle 一次，onChange 置空（防 double-toggle）。
-  const handleCheck = (e) => {
-    e.stopPropagation();
-    onToggle && onToggle(node.path);
-  };
-  return (
-    <div
-      className={'am-subdir' + (selected ? ' selected' : '')}
-      onClick={() => !selectable && onSelect(node.path)}
-      title={node.path}
-      data-testid={`subdir-card-${node.path}`}
-    >
-      {selectable ? (
-        <input
-          type="checkbox"
-          className="am-subdir-check"
-          aria-label={`选择目录 ${node.path}`}
-          checked={!!selected}
-          onClick={handleCheck}
-          onChange={() => {}}
-          data-testid={`subdir-check-${node.path}`}
-        />
-      ) : null}
-      <span className="am-subdir-name">{node.label || node.name}</span>
-      <span className="am-subdir-count">{node.total} 资源</span>
-      {!selectable && onRemove ? (
-        <button
-          className="am-subdir-x"
-          title={`删除目录 ${node.path}`}
-          aria-label={`删除目录 ${node.label || node.name}`}
-          data-testid={`subdir-remove-${node.path}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove(node.path);
-          }}
-        >
-          ×
-        </button>
-      ) : null}
     </div>
   );
 }

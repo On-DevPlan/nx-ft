@@ -28,23 +28,42 @@ export function canDropInto(a, b) {
 // 只读 state 的话，dragstart → dragover 落在同一帧时 handler 闭包里还是旧值
 // （React 尚未重渲染），逻辑会整段失效——真实拖拽有帧间隔碰不到，
 // 但让「能不能放下」依赖中间恰好重渲染一次，是把正确性押在时序上。
-// 是否同一父级：同级才能用「前后插入」的排序落点
-const sameParent = (p1, p2) => p1.slice(0, p1.lastIndexOf('/')) === p2.slice(0, p2.lastIndexOf('/'));
+// 是否同一父级：同级才能用「前后插入」的排序落点。
+// 切父级要看最后一个分隔符——侧边栏 row 的 key 形如「dir:svg:fr」「asset:svg:fr/01-clock」，
+// kind 段与路径段之间用「:」，嵌套段与资源名之间用「/」。取两种分隔符中靠后的那一个做切点，
+// 才能正确识别「同在 fr 下的资源」「同为最外层的目录」等。
+const sameParent = (p1, p2) => {
+  const cut = (p) => {
+    const i = Math.max(p.lastIndexOf('/'), p.lastIndexOf(':'));
+    return i < 0 ? '' : p.slice(0, i);
+  };
+  return cut(p1) === cut(p2);
+};
 
 export function makeDragApi({ dragRef, dropKey, setDropKey, onMove }) {
   if (!onMove) return null;
   const current = () => dragRef.current;
   // 落点判定：返回 { dropKey, payload } 或 null（不接受的落点）。
-  //   整树行 / 空白         → 回到最外层（root）
+  //   树的空白处            → 目录：排到**自己当前同层**的末尾（不换父级）；
+  //                          资源：移到「未分类」（资源的空白落点沿用原语义）
+  //   整树行                → 回到最外层
   //   目录行的中间 40%      → 放进该目录（into）
-  //   目录行的上/下边缘     → 排到它前/后（仅限同级拖拽；跨层一律 into——
-  //     让指示线永远等于真实结果，不做落地后才修正的假提示）
+  //   目录行的上/下边缘     → 排到它前/后（仅限同级目录拖拽）
+  //   资源行的上/下边缘     → 同组资源的排到它前/后（资源行的中间不作落点——
+  //                          没有「放进一个资源里」这回事）
+  //   跨层一律 into——让指示线永远等于真实结果，不做落地后才修正的假提示
   const resolve = (node, e) => {
     const from = current();
     if (!from) return null;
-    if (!node) return { dropKey: 'root', payload: { root: true } };
+    if (!node) {
+      // 空白处：目录 = 同层末位（挪到列表最后，父级不变）；资源 = 未分类
+      if (from.kind === 'asset') return { dropKey: 'root', payload: { root: true } };
+      return { dropKey: 'tail', payload: { tail: true } };
+    }
     if (!canDropInto(from, node)) return null;
-    if (sameParent(from.path, node.path) && node.kind === 'dir') {
+    // 行高比例（0=顶 1=底）。三个落点共用这一个判定，免得两处各写一遍、
+    // 时序/取整上出分叉。
+    const ratioOf = () => {
       const rect = e.currentTarget.getBoundingClientRect();
       const ratio = rect.height ? (e.clientY - rect.top) / rect.height : 0.5;
       if (e.currentTarget.dataset) {
@@ -52,6 +71,22 @@ export function makeDragApi({ dragRef, dropKey, setDropKey, onMove }) {
         e.currentTarget.dataset.cy = String(e.clientY);
         e.currentTarget.dataset.rt = rect.top.toFixed(1);
       }
+      return ratio;
+    };
+
+    // 资源行：只接受「同组资源的前后插」。目录拖到资源上、跨组资源——都不是合法落点
+    // （跨组 = 换分组，走目录行/空白那条路；中段 = 无意义，返回 null 不给假提示）。
+    if (node.kind === 'asset') {
+      if (from.kind !== 'asset' || !sameParent(from.path, node.path)) return null;
+      const ratio = ratioOf();
+      if (ratio < 0.3) return { dropKey: node.key + '|before', payload: { node, mode: 'before' } };
+      if (ratio > 0.7) return { dropKey: node.key + '|after', payload: { node, mode: 'after' } };
+      return null;
+    }
+
+    // 目录行 / 整树行：同级目录拖拽才有前后插，其余一律 into
+    if (from.kind === 'dir' && node.kind === 'dir' && sameParent(from.path, node.path)) {
+      const ratio = ratioOf();
       if (ratio < 0.3) return { dropKey: node.key + '|before', payload: { node, mode: 'before' } };
       if (ratio > 0.7) return { dropKey: node.key + '|after', payload: { node, mode: 'after' } };
     }

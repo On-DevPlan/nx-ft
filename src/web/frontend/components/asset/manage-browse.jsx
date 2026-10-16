@@ -7,7 +7,7 @@ import { Btn } from '../btn/index.jsx';
 import { AssetCard, SubdirCard } from './parts.jsx';
 
 export function ManageBrowse({
-  count, dir, dirNode, dirGroup, kind = 'html',
+  count, dir, dirNode, dirGroup, tree, kind = 'html',
   activeTags, toggleTag, onOpen, pickDir, removeGroup,
   batchMode, selected, onToggle, selectedDirs, onToggleDir,
   emptyState = null,
@@ -24,7 +24,10 @@ export function ManageBrowse({
   }
 
   const subdirs = dirNode?.children || [];
-  const assets = dirGroup?.assets || [];
+  // 资源取树节点的 direct（buildTree 已按 byOrder 排过），不直接吃 API 的
+  // raw group.assets——那份是 manifest 迭代序，没跟随手动排序。
+  // dirGroup 仍用于取 path（卡片路由）与空态判断。
+  const assets = dirNode?.direct || [];
   const empty = !subdirs.length && !assets.length;
 
   return (
@@ -40,8 +43,11 @@ export function ManageBrowse({
                 onSelect={pickDir}
                 onRemove={(p) => removeGroup(p)}
                 selectable={batchMode}
-                selected={selectedDirs && selectedDirs.has(c.path)}
-                onToggle={onToggleDir}
+                selectedDirs={selectedDirs || new Set()}
+                selected={selected || new Set()}
+                onToggleDir={onToggleDir}
+                onToggle={onToggle}
+                tree={tree}
               />
             ))}
           </div>

@@ -9,6 +9,7 @@ import { chainByKey, flattenVisible } from './model.js';
 import { DragCtx, makeDragApi } from './drag.jsx';
 import { SidebarHead } from './head.jsx';
 import { NodeRow } from './node-row.jsx';
+import { RowMenu } from './row-menu.jsx';
 
 function loadExpanded(key) {
   try {
@@ -22,6 +23,27 @@ function loadExpanded(key) {
 function loadFolded(key) {
   try {
     return localStorage.getItem(`${key}--fold`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+// 「文件夹默认收起」（2.3 第一条）：开启后初始展开态 = 空集（选中链 effect 兜底，
+// 仍然显示深链所在的目录），手动展开照常记忆，但下次进入回到空集再由 effect 展开链。
+function loadDefaultFolders(key) {
+  try {
+    return localStorage.getItem(`${key}--default-folders`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+// 「侧边栏默认收起」（2.3 第二条）：开启后初始 folded = true（整条侧边栏滑出），
+// 手动展开照常记忆，但下次进入回到 folded=true——和文件夹是同一思路（每次进入
+// 重置初值，本次会话内手动状态可改）。
+function loadDefaultSidebar(key) {
+  try {
+    return localStorage.getItem(`${key}--default-sidebar`) === '1';
   } catch {
     return false;
   }
@@ -51,35 +73,50 @@ export function Sidebar({
   onSelect,
   storageKey,
   placeholder = '搜索目录与组件',
-  // 目录管理（都是可选的）：给了 onCreateAtSelected 才出头部「+」，
-  // 给了 renderRowActions 才在目录行显示行内操作——组件本身不认识「新建/改名/删除」，
-  // 语义与落到哪个上级目录，全由调用方决定（见 asset/side-tree.jsx）。
+  // 目录管理（都是可选的）：给了 onCreateAtSelected 才出头部「+」。
+  // 行操作走 rowMenu 协议：rowMenu(node) 返回菜单项数组 [{ label, icon?, danger?, run }]
+  // （或 null = 该行无操作）——组件本身不认识「重命名/删除」的语义，
+  // 弹层与开关时机在这里，条目与行为全由调用方决定（见 asset/side-tree.jsx）。
   onCreateAtSelected,
-  renderRowActions,
+  rowMenu,
   // 拖拽换层级：给了 onMove 才启用。回调只有一个形状——onMove({ node, target })，
   // target = { node } 表示拖进了某个目录，{ root: true } 表示拖到了根。
   onMove,
 }) {
-  const [expanded, setExpanded] = useState(() => loadExpanded(storageKey));
+  // 「文件夹默认收起」开着 → 初值从空集开始（当前链由下面的选中链 effect 展开），
+  // 不读上次的展开存档；关着 → 保持旧行为（读存档，首次见到根行时播种全展开）。
+  const [expanded, setExpanded] = useState(() =>
+    loadDefaultFolders(storageKey) ? new Set() : loadExpanded(storageKey)
+  );
   // 收起/展开整条侧边栏：也是侧边栏自己的 UI 状态，随 storageKey 落盘。
   // 收起时整列用负 margin 滑出去（见 sidebar.css），把手（.gside-collapse）
   // 搭着车走，永远停在侧边栏右缘——收起后就是 main 左缘的「›」。
-  const [folded, setFolded] = useState(() => loadFolded(storageKey));
+  // 「侧边栏默认收起」开着 → 每次进入都从 folded=true 出发（忽略上次落盘值），
+  // 本次会话内手动展开仍可改，但下次进入回到默认。
+  const [folded, setFolded] = useState(() =>
+    loadDefaultSidebar(storageKey) ? true : loadFolded(storageKey)
+  );
   const [kwRaw, setKwRaw] = useState('');
   // 就地创建：null = 没在创建；否则 = 父级 key（在该行 .gkids 里插入编辑行）。
   // 落点由 selected 决定（侧边栏高亮 = 父级），让侧边栏和「+」同源。
   const [creatingFor, setCreatingFor] = useState(null);
   const dragRef = useRef(null); // 拖拽源。只存 ref：dragstart 期间渲染会取消拖拽（见 drag.jsx）
   const [dropKey, setDropKey] = useState(null); // 命中的落点 key；'root' = 根
+  // 行操作菜单：{ node, items, at } | null。at 是 ⋯ 按钮（{anchor}）或光标（{x,y}）。
+  const [menu, setMenu] = useState(null);
+  // 两条默认收起：每条各管各的——文件夹管展开态初值，侧边栏管 folded 初值。
+  const [defaultFolders, setDefaultFolders] = useState(() => loadDefaultFolders(storageKey));
+  const [defaultSidebar, setDefaultSidebar] = useState(() => loadDefaultSidebar(storageKey));
   const kw = kwRaw.trim().toLowerCase();
 
   const dragApi = makeDragApi({ dragRef, dropKey, setDropKey, onMove });
 
   // 首次见到整树行时默认把它展开：否则第一眼只有一个收起的大行，什么都看不到。
   // 只在本 storageKey 从没有过存档时播一次——用户后来手动收起，重开也不该被掰回来。
+  // 「文件夹默认收起」开着则不播：初值就是空集，展开到当前链路由选中链 effect 负责。
   const seeded = useRef(false);
   useEffect(() => {
-    if (seeded.current) return;
+    if (seeded.current || defaultFolders) return;
     const roots = sections.filter((s2) => s2.rootNode).map((s2) => s2.rootNode.path);
     if (!roots.length) return;
     seeded.current = true;
@@ -90,7 +127,25 @@ export function Sidebar({
       /* 隐私模式：按「没有存档」处理，展开就好 */
     }
     if (had == null) setExpanded((prev) => new Set([...prev, ...roots]));
-  }, [sections, storageKey]);
+  }, [sections, storageKey, defaultFolders]);
+
+  // 开关落盘：只影响「下次进入」的初值策略，本次会话的展开/folded 态不动
+  const setDefaultFoldersPersisted = (on) => {
+    setDefaultFolders(on);
+    try {
+      localStorage.setItem(`${storageKey}--default-folders`, on ? '1' : '0');
+    } catch {
+      /* 隐私模式静默 */
+    }
+  };
+  const setDefaultSidebarPersisted = (on) => {
+    setDefaultSidebar(on);
+    try {
+      localStorage.setItem(`${storageKey}--default-sidebar`, on ? '1' : '0');
+    } catch {
+      /* 隐私模式静默 */
+    }
+  };
 
   // 展开状态落盘（与面板「UI 状态持久化是硬标准」同规矩）
   useEffect(() => {
@@ -194,15 +249,25 @@ export function Sidebar({
             });
           }}
           createKey={creatingFor}
+          defaultFolders={defaultFolders}
+          onDefaultFolders={setDefaultFoldersPersisted}
+          defaultSidebar={defaultSidebar}
+          onDefaultSidebar={setDefaultSidebarPersisted}
           onCollapseToggle={() => setFolded((f) => !f)}
           folded={folded}
         />
         <div
-          className="gside-tree"
+          className={
+            'gside-tree' +
+            (dropKey === 'tail' ? ' drop-tail' : '') +
+            (dropKey === 'root' ? ' drop-root' : '')
+          }
           role="tree"
           aria-label="全局目录"
           tabIndex={0}
           onKeyDown={onKeyDown}
+          // 树一滚动，钉在行上的菜单就指错了地方——直接收掉
+          onScroll={() => setMenu(null)}
           // 空白处也是「根」的落点（只在事件落在容器自己身上时算，行上的拖放由行处理）
           onDragOver={
             dragApi
@@ -235,7 +300,14 @@ export function Sidebar({
                   expanded={expanded}
                   onSelect={onSelect}
                   onToggle={toggle}
-                  renderRowActions={renderRowActions}
+                  rowMenu={
+                    rowMenu
+                      ? (node, at) => {
+                          const items = rowMenu(node);
+                          if (items?.length) setMenu({ node, items, at });
+                        }
+                      : undefined
+                  }
                   creatingFor={creatingFor}
                   onSubmitCreate={async (name) => {
                     await onCreateAtSelected(name);
@@ -249,6 +321,7 @@ export function Sidebar({
           ))}
           {kw && !rows.length ? <div className="gside-empty">没有包含「{kwRaw.trim()}」的目录</div> : null}
         </div>
+        {menu ? <RowMenu items={menu.items} at={menu.at} onClose={() => setMenu(null)} /> : null}
       </div>
     </DragCtx.Provider>
   );

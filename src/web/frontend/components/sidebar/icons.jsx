@@ -158,3 +158,65 @@ export function RootGlyph() {
     </svg>
   );
 }
+
+// 行内「更多操作」的省略号（目录行与资源行共用，菜单在 Sidebar 里渲染）
+export function MoreGlyph() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+      <circle cx="3" cy="7" r="1.2" />
+      <circle cx="7" cy="7" r="1.2" />
+      <circle cx="11" cy="7" r="1.2" />
+    </svg>
+  );
+}
+
+// 菜单里的「打开」：外指箭头 + 角标框，与 doc/code 族同线宽
+export function OpenGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M5.5 2.5H2.6c-.6 0-1.1.5-1.1 1.1v7.8c0 .6.5 1.1 1.1 1.1h7.8c.6 0 1.1-.5 1.1-1.1V8.5M8.5 2H12v3.5M11.7 2.3 6.8 7.2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// 菜单里的「在文件管理器中打开」：文件夹 + 右下角外指箭头（「交出去给系统打开」）
+export function RevealGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M1.4 4c0-.5.4-.9.9-.9h2.2c.24 0 .47.1.63.27l.46.46c.17.17.4.27.64.27h4.4c.5 0 .9.4.9.9v4.9c0 .5-.4.9-.9.9H2.3c-.5 0-.9-.4-.9-.9V4Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.5 9.7h2.7V7M11.2 9.7 8.8 7.3"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// 头部「侧边栏设置」的齿轮（默认收起开关的入口）
+export function GearGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M10 2.8v2.1M10 15.1v2.1M2.8 10h2.1M15.1 10h2.1M4.9 4.9l1.5 1.5M13.6 13.6l1.5 1.5M15.1 4.9l-1.5 1.5M6.4 13.6l-1.5 1.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

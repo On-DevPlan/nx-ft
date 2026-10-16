@@ -125,9 +125,6 @@ export function AssetZipIoBtns({
         variant={variant}
         exportTestId="export-zip"
       />
-      {/* 浮层 portal 到 body：本组件会被接进「更多」菜单（`<details>` 收起时
-          内容 display:none，内联的对话框/结果窗会跟着被藏住）。按钮留在原地，
-          浮层逃出去——接入位置的自由度与浮层可见性互不影响。 */}
       {createPortal(
         <>
           {dlgNode}
@@ -147,4 +144,28 @@ export function AssetZipIoBtns({
       )}
     </>
   );
+}
+
+// 1.2：选区导出（模块作用域）。pick 是 [{type:'dir',path} | {type:'asset',key}] 数组；
+// 取代 group，由 dialog 选区概要→guard→fetch→下载。调用方组件顶层取 hook 注入。
+export async function exportPickZip({ kind, pick, onDone, toast, guard, dialog, exportLabel = '导出 zip' }) {
+  if (!pick || !pick.length) return '';
+  const summary = pick.map((p) => p.type === 'dir' ? p.path + '（整选）' : p.key).join('\n');
+  const ok = await dialog({ title: `导出 ${pick.length} 项`, message: '即将导出以下选区：\n\n' + summary, okText: exportLabel });
+  if (!ok) return '';
+  return await guard(async () => {
+    const qs = new URLSearchParams();
+    qs.set('pick', encodeURIComponent(JSON.stringify(pick)));
+    const res = await fetch(`/api/${kind}/export.zip?${qs.toString()}`);
+    if (!res.ok) throw new Error((await res.text()) || `HTTP ${res.status}`);
+    const filename = filenameFromDisposition(res.headers.get('content-disposition'), `${kind}-pick.zip`);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 0);
+    toast?.(`已导出 ${pick.length} 项`);
+    onDone?.();
+    return filename;
+  });
 }

@@ -28,6 +28,29 @@
 }
 .tm-row:hover { background: var(--soft); }
 .tm-row.active { background: var(--soft); font-weight: 600; box-shadow: var(--shadow-relief-inset); }
+/* 拖拽反馈：into 用实线深色描边（强提示「能放这」），before/after 用虚线（轻提示「将插在何处」） */
+.tm-row.dragging { opacity: 0.45; }
+.tm-row.drop-on { outline: 1px solid var(--ink); outline-offset: -1px; }
+.tm-row.drop-line-top {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--ink) 0 3px,
+    transparent 3px 5px
+  );
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+.tm-row.drop-line-bottom {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--ink) 0 3px,
+    transparent 3px 5px
+  );
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  background-position: bottom left;
+}
 .tm-root { padding-left: 6px; }
 .tm-arrow {
   width: 16px; height: 16px; flex-shrink: 0; padding: 0; border: 0; background: none;
@@ -42,7 +65,7 @@
 .am-crumbbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-height: var(--row-h); }
 .am-sec-title { font-size: 11px; color: var(--mid); letter-spacing: 0.04em; }
 
-.am-subdirs { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.am-subdirs { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
 .am-subdir {
   position: relative; display: flex; align-items: center; gap: 8px;
   border: var(--border); border-radius: 10px; padding: 10px 12px;
@@ -53,7 +76,9 @@
 .am-subdir-check {
   width: 16px; height: 16px; margin: 0; flex-shrink: 0; cursor: pointer;
 }
-.am-subdir-name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* flex:1 + min-width:0：计数变长（「n 资源 · m 文件夹」）后，名字必须有让位弹性，
+   否则 overflow:hidden 会把它挤成单字符省略（实测踩过） */
+.am-subdir-name { flex: 1 1 auto; min-width: 0; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .am-subdir-count { margin-left: auto; color: var(--mid); font-size: 11px; flex-shrink: 0; }
 .am-subdir-x {
   width: 22px; height: 22px; flex-shrink: 0;
@@ -152,3 +177,81 @@
 }
 .tag-chip-x:hover { color: var(--bad); }
 
+
+/* ---- 自定义工具栏面板（toolbar-layout-panel.jsx） ---- */
+.tlp-body { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px 16px; align-items: start; }
+.tlp-span { grid-column: 1 / -1; }
+.tlp-cols { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.tlp-section-label { font-size: 11px; color: var(--mid); margin-bottom: 6px; letter-spacing: .04em; }
+.tlp-preview {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  border: var(--border); border-radius: 6px; background: var(--soft);
+  padding: 8px 10px; min-height: 36px;
+}
+.tlp-chip {
+  display: inline-block; font-size: 11px; padding: 1px 8px;
+  border: 1px solid var(--soft-2); border-radius: 4px;
+  background: var(--paper); color: var(--ink);
+}
+.tlp-chip.primary { background: var(--ok); border-color: var(--ok); color: #fff; font-weight: 600; }
+.tlp-list { border: var(--border); border-radius: 6px; padding: 4px; background: var(--paper); }
+.tlp-row {
+  display: flex; align-items: center; gap: 8px; padding: 5px 8px; margin: 3px 0;
+  border: var(--border); border-radius: 6px; background: var(--paper);
+  font-size: 12px;
+}
+.tlp-row.off .tlp-nm { color: var(--mid); }
+.tlp-row.lock { border-style: dashed; background: var(--soft); }
+.tlp-hnd { color: var(--mid); cursor: grab; user-select: none; font-size: 11px; width: 14px; text-align: center; }
+.tlp-row.lock .tlp-hnd { cursor: default; }
+.tlp-nm { flex: 1; min-width: 0; }
+.tlp-sub { display: block; font-size: 11px; color: var(--mid); margin-top: 1px; }
+.tlp-updown { display: inline-flex; gap: 2px; }
+.tlp-foot {
+  display: flex; gap: 8px; justify-content: flex-end; align-items: center;
+  padding: 10px 0 0; margin-top: 10px; border-top: var(--border);
+}
+.tlp-foot .tlp-equiv { margin-right: auto; }
+.tlp-empty { font-size: 11px; color: var(--mid); padding: 6px 8px; }
+.tlp-chip.muted-chip { border: 0; background: none; color: var(--soft-2); padding: 0 1px; }
+/* 「更多」卡片行的快捷显示开关 + 预览里的快捷块 chip */
+.tlp-quick {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--mid); cursor: pointer; white-space: nowrap;
+  border: var(--border); border-radius: 4px; padding: 2px 6px; background: var(--paper);
+}
+.tlp-quick:hover { color: var(--ink); }
+.tlp-quick.on { color: var(--ok); border-color: var(--ok-line); background: var(--ok-soft); }
+.tlp-chip.quick { border-style: dashed; color: var(--mid); }
+/* 1.2 子目录卡片展开 + 子文件行 */
+.am-subdir-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.am-subdir-expand {
+  border: 0; background: none; color: var(--mid); cursor: pointer;
+  font: inherit; font-size: 11px; padding: 1px 4px; border-radius: 4px; line-height: 1;
+}
+.am-subdir-expand:hover { background: var(--soft); color: var(--ink); }
+.am-subdir-children {
+  margin-top: 6px; padding: 6px 4px 6px 22px; border-top: var(--border);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.am-subdir-child {
+  display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 2px 4px;
+  border-radius: 4px; cursor: pointer; min-width: 0;
+}
+.am-subdir-child:hover { background: var(--soft); }
+.am-subdir-child.pick { background: var(--ok-soft); }
+.am-subdir-child-cb {
+  position: relative;
+  width: 12px; height: 12px; border: 1px solid var(--soft-2); border-radius: 3px;
+  background: var(--paper); flex-shrink: 0; transition: background .08s, border-color .08s;
+}
+.am-subdir-child.pick .am-subdir-child-cb { background: var(--ok); border-color: var(--ok); }
+/* 对勾：纯 CSS 边框折角（与 .gal-check 同一手法，无字符） */
+.am-subdir-child.pick .am-subdir-child-cb::after {
+  content: ""; position: absolute; left: 3px; top: 0;
+  width: 3px; height: 6px;
+  border: solid var(--paper); border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
+}
+.am-subdir-child-nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.am-subdir-child-lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; }

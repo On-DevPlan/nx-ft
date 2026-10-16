@@ -94,16 +94,26 @@ export function useBatchOps({ kind, tree, root, dirNode, dir, filtered, dialog, 
     });
     if (!ok) return;
     let done = 0;
+    const failed = [];
     for (const key of selected) {
-      const [groupPath, name] = key.split('/');
+      // key = `${groupPath}/${name}`；groupPath 可含 /（多级分组），
+      // 按**最后一个** / 切分——`split('/')` 会把多级分组切碎（如 ui/buttons/x → ['ui','buttons','x']）。
+      const at = key.lastIndexOf('/');
+      const groupPath = at < 0 ? '' : key.slice(0, at);
+      const name = at < 0 ? key : key.slice(at + 1);
       try {
-        await api(`/api/${kind}/rm`, { method: 'POST', body: { group: groupPath, name, force: true } });
+        // HTTP 路由是 asset-remove（CLI 才是 `<kind> rm`；两者名字不同，别混用）
+        await api(`/api/${kind}/asset-remove`, { method: 'POST', body: { group: groupPath, name, force: true } });
         done++;
-      } catch {
-        /* 单条失败不阻断其它 */
+      } catch (e) {
+        failed.push({ key, reason: String((e && e.message) || e) });
       }
     }
-    toast(`批量删除资源完成（${done}/${selected.size}）`);
+    if (failed.length) {
+      toast.bad(`批量删除资源完成（${done}/${selected.size}）· 失败 ${failed.length}：${failed[0].reason}`);
+    } else {
+      toast(`批量删除资源完成（${done}/${selected.size}）`);
+    }
     cancelBatch();
     reloadTree();
   };
@@ -130,15 +140,20 @@ export function useBatchOps({ kind, tree, root, dirNode, dir, filtered, dialog, 
     // 深路径先删：先删父目录会让子目录路径失效
     const ordered = [...selectedDirs].sort((a, b) => b.split('/').length - a.split('/').length);
     let done = 0;
+    const failed = [];
     for (const p of ordered) {
       try {
         await api(`/api/${kind}/groups-remove`, { method: 'POST', body: { group: p, force: true } });
         done++;
-      } catch {
-        /* 单条失败不阻断其它 */
+      } catch (e) {
+        failed.push({ path: p, reason: String((e && e.message) || e) });
       }
     }
-    toast(`批量删除目录完成（${done}/${selectedDirs.size}）`);
+    if (failed.length) {
+      toast.bad(`批量删除目录完成（${done}/${selectedDirs.size}）· 失败 ${failed.length}：${failed[0].reason}`);
+    } else {
+      toast(`批量删除目录完成（${done}/${selectedDirs.size}）`);
+    }
     cancelBatch();
     reloadTree();
   };

@@ -199,9 +199,66 @@ export function importZipBuffer({
 // ---- 导出：同一套「取哪批、取哪个风格」的判定，只是落点不同 ----
 
 // 需要导出的资产清单（目录与 zip 两个出口共用，保证两边内容一致）
-function collectExports({ kind, group, style }) {
+// pick 模式：选区 = 目录整选（递归）+ 任意深度子文件单列；传 {pick: [...]} 时走此分支。
+function collectExports({ kind, group, style, pick }) {
   assertKind(kind);
   const slots = slotsOf(kind);
+
+  if (pick) {
+    if (!Array.isArray(pick) || !pick.length) throw badInput('pick 不能为空');
+    const items = [];
+    const skipped = [];
+    const seen = new Set(); // 去重：整选目录与子文件混选时同一资源只取一次
+    const pushItem = (gp, a) => {
+      const useStyle = style || a.activeStyle || Object.keys(a.styles)[0];
+      if (!useStyle || !a.styles[useStyle]) {
+        skipped.push({ group: gp, name: a.name, reason: '没有可导出的风格' });
+        return;
+      }
+      const code = st.readCodeFiles(kind, gp, a.name, useStyle, slots);
+      const nonEmpty = slots.filter((s) => String(code[s] || '').trim());
+      if (!nonEmpty.length) {
+        skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的三个槽位都是空的` });
+        return;
+      }
+      const key = `${gp}/${a.name}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      items.push({ group: gp, name: a.name, style: useStyle, code, slots: nonEmpty });
+    };
+    for (const p of pick) {
+      if (!p || typeof p !== 'object') throw badInput('pick 项必须是对象');
+      if (p.type === 'dir') {
+        const dirPath = String(p.path || '');
+        if (!dirPath) { skipped.push({ group: dirPath, name: '', reason: 'dir 项缺 path' }); continue; }
+        const all = st.scanGroups(kind);
+        for (const { groupPath, manifest } of all) {
+          if (groupPath === dirPath || groupPath.startsWith(dirPath + '/')) {
+            for (const a of Object.values(manifest.assets).filter((x) => x.kind === kind)) {
+              pushItem(groupPath, a);
+            }
+          }
+        }
+      } else if (p.type === 'asset') {
+        // p.key = 'group/name'（group 段本身可含 /，按最后一段切资源名）
+        const key = String(p.key || '');
+        const lastSlash = key.lastIndexOf('/');
+        if (lastSlash <= 0) { skipped.push({ group: '', name: key, reason: 'asset key 非法' }); continue; }
+        const gp = key.slice(0, lastSlash);
+        const nm = key.slice(lastSlash + 1);
+        const manifest = st.loadGroup(kind, parseGroupPath(gp));
+        if (!manifest) { skipped.push({ group: gp, name: nm, reason: '分组不存在' }); continue; }
+        const a = manifest.assets[nm];
+        if (!a || a.kind !== kind) { skipped.push({ group: gp, name: nm, reason: '资源不存在' }); continue; }
+        pushItem(gp, a);
+      } else {
+        throw badInput('pick 项 type 必须是 dir 或 asset');
+      }
+    }
+    if (!items.length) throw notFound('没有可导出的资源（选区都缺风格或内容为空）');
+    return { items, skipped };
+  }
+
   const groupPaths = group ? [parseGroupPath(group)] : st.scanGroups(kind).map((g) => g.groupPath);
   if (!groupPaths.length) throw notFound('库里还没有任何分组');
 
@@ -269,8 +326,8 @@ export function exportDir({ kind, group, to, style, force = false } = {}) {
 }
 
 // 导出成内存里的 zip（面板「导出 zip」直接下载；CLI 也可用）
-export function exportZip({ kind, group, style } = {}) {
-  const { items, skipped } = collectExports({ kind, group, style });
+export function exportZip({ kind, group, style, pick } = {}) {
+  const { items, skipped } = collectExports({ kind, group, style, pick });
   const entries = [];
   for (const it of items) {
     for (const slot of it.slots) {
@@ -279,7 +336,10 @@ export function exportZip({ kind, group, style } = {}) {
   }
 
   const stamp = new Date().toISOString().slice(0, 10);
-  const scope = group ? group.replace(/\//g, '-') : `${kind}-all`;
+  let scope;
+  if (pick) scope = `${kind}-pick-${items.length}`;
+  else if (group) scope = group.replace(/\//g, '-');
+  else scope = `${kind}-all`;
   return {
     status: 'ok',
     filename: `${scope}-${stamp}.zip`,

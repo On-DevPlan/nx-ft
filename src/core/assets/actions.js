@@ -51,6 +51,18 @@ export function makeActions(kind) {
       render: (r) => `已调整同级顺序: ${r.parent} → ${r.order.join(' · ')}`,
     },
     {
+      // 在系统文件管理器里打开：路径由后端按 kind/group(/name) 解析（见 groups.revealDir），
+      // 前端不传绝对路径——面板与 CLI 同机，spawn 由 core/open.js 负责，失败静默降级。
+      id: kind + '.reveal',
+      cli: [kind, 'reveal'],
+      http: ['POST', A('reveal')],
+      summary: '在文件管理器中打开分组目录（给了 --name 则打开该资源的目录）',
+      args: ['group'],
+      flags: { name: { type: 'string', hint: '资源名；给了就打开该资源的目录' } },
+      run: (ctx) => groups.revealDir({ kind, group: ctx.group, name: ctx.name }),
+      render: (r) => `已在文件管理器中打开: ${r.path}`,
+    },
+    {
       id: kind + '.group.rename',
       cli: [kind, 'group', 'rename'],
       http: ['POST', A('groups-rename')],
@@ -169,6 +181,19 @@ export function makeActions(kind) {
           : r.renamed
             ? `已改名: ${r.group}/${r.name}（目录名已改，展示名 ${r.label}）`
             : `已改展示名: ${r.group}/${r.name} → ${r.label}`,
+    },
+    {
+      id: kind + '.asset.reorder',
+      cli: [kind, 'asset', 'reorder'],
+      http: ['POST', A('asset-reorder')],
+      summary: '调整同组资源顺序（--order 给出该组全部资源名的新顺序；根层资源在「未分类」）',
+      flags: {
+        group: { type: 'string', hint: '分组路径；缺省 = 未分类（根层资源）' },
+        order: { type: 'array', required: true, hint: '完整新顺序，如 a,b,c' },
+      },
+      run: (ctx) =>
+        assets.reorderAssets({ kind, group: ctx.group || '未分类', order: ctx.order }),
+      render: (r) => `已调整资源顺序: ${r.group} → ${r.order.join(' · ')}`,
     },
     {
       id: kind + '.desc',

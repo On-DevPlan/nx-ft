@@ -15,8 +15,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.js';
 import { Sidebar } from '../sidebar/index.jsx';
-import { DeleteGlyph, RenameGlyph } from '../sidebar/icons.jsx';
-import { buildTree } from './tree.jsx';
+import { DeleteGlyph, OpenGlyph, RenameGlyph, RevealGlyph } from '../sidebar/icons.jsx';
+import { buildTree, byOrder } from './tree.jsx';
 import { VIEWS } from '../../registry.js';
 import { onTreeChanged } from './tree-signal.js';
 import { dirOfKey, keyFromHash } from './tree-keys.js';
@@ -26,8 +26,6 @@ const encPath = (p) => p.split('/').map(encodeURIComponent).join('/');
 
 // 领域标题取自 registry（视图表是它的真相来源，别在这里再抄一份）
 const KIND_TITLE = Object.fromEntries(VIEWS.map((v) => [v.id, v.title]));
-
-const byName = (a, b) => String(a.name).localeCompare(String(b.name));
 
 // 资源叶子：点开 = 进编辑页（html 的 workbench / svg 的资源页）。
 // kind 固定 'asset'——它是**语义**（可拖换分组），不是图标；叶子图标统一用 doc。
@@ -54,7 +52,7 @@ function toNode(kind) {
     nav: n.path ? `#/${kind}/dir/${encPath(n.path)}` : `#/${kind}`,
     children: [
       ...n.children.map(walk),
-      ...(n.direct || []).slice().sort(byName).map(assetNode(kind, n.path)),
+      ...(n.direct || []).slice().sort(byOrder).map(assetNode(kind, n.path)),
     ],
     total: n.total,
   });
@@ -118,7 +116,16 @@ export function AssetSidebar({ kind }) {
   const selectedKey = keyFromHash(typeof location !== 'undefined' ? location.hash : '');
   const currentDir = dirOfKey(selectedKey);
 
-  const { createAtSelected, renameDir, removeDir, onMoveRow, dlgNode } = useTreeOps({
+  const {
+    createAtSelected,
+    renameDir,
+    removeDir,
+    renameAssetRow,
+    removeAssetRow,
+    revealRow,
+    onMoveRow,
+    dlgNode,
+  } = useTreeOps({
     kind,
     groups,
     currentDir,
@@ -138,16 +145,41 @@ export function AssetSidebar({ kind }) {
     return [{ id: 'tree', title, rootNode: root, nodes: [root] }];
   }, [groups, kind]);
 
-  const rowActions = (node) => (
-    <>
-      <button title="重命名 / 移动" aria-label="重命名目录" onClick={() => renameDir(node)}>
-        <RenameGlyph />
-      </button>
-      <button title="删除目录" aria-label="删除目录" onClick={() => removeDir(node)}>
-        <DeleteGlyph />
-      </button>
-    </>
-  );
+  // 行操作菜单：「⋯」按钮与右键共用的同一份（参见 sidebar/row-menu.jsx 与 node-row.jsx）。
+  // 目录与资源行形态对称——打开 / 重命名 / 删除；「打开」与点行同路，菜单里给一份
+  // 入口是任务要求的冗余（不打开不可能执行操作，给一短路径省去找键盘习惯）。整树行
+  // 不带操作：它是「回到最外层」的落点，不该有删除之类的语义。
+  const rowMenu = (node) => {
+    if (node.kind === 'dir') {
+      return [
+        {
+          label: '打开目录',
+          icon: <OpenGlyph />,
+          run: () => {
+            if (node.nav && location.hash !== node.nav) location.hash = node.nav;
+          },
+        },
+        { label: '在文件管理器中打开', icon: <RevealGlyph />, run: () => revealRow(node) },
+        { label: '重命名 / 移动', icon: <RenameGlyph />, run: () => renameDir(node) },
+        { label: '删除目录', icon: <DeleteGlyph />, danger: true, run: () => removeDir(node) },
+      ];
+    }
+    if (node.kind === 'asset') {
+      return [
+        {
+          label: '打开资源',
+          icon: <OpenGlyph />,
+          run: () => {
+            if (node.nav && location.hash !== node.nav) location.hash = node.nav;
+          },
+        },
+        { label: '在文件管理器中打开', icon: <RevealGlyph />, run: () => revealRow(node) },
+        { label: '重命名', icon: <RenameGlyph />, run: () => renameAssetRow(node) },
+        { label: '删除资源', icon: <DeleteGlyph />, danger: true, run: () => removeAssetRow(node) },
+      ];
+    }
+    return null;
+  };
 
   return (
     <>
@@ -160,7 +192,7 @@ export function AssetSidebar({ kind }) {
         storageKey={`nx-ft-side-${kind}`}
         placeholder="搜索资源与目录"
         onCreateAtSelected={createAtSelected}
-        renderRowActions={rowActions}
+        rowMenu={rowMenu}
         onMove={onMoveRow}
       />
       {dlgNode}

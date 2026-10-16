@@ -28,7 +28,17 @@ export async function handleZipDownload(req, res, url, kind) {
   try {
     const group = url.searchParams.get('group') || '';
     const style = url.searchParams.get('style') || '';
-    const out = exportZip({ kind, group, style });
+    // pick 模式：选区导出（目录递归 + 任意深度子文件），URL 编码的 JSON
+    const pickRaw = url.searchParams.get('pick');
+    let pick;
+    if (pickRaw) {
+      try { pick = JSON.parse(decodeURIComponent(pickRaw)); }
+      catch { res.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' }); res.end('pick 参数 JSON 解析失败'); return; }
+      if (!Array.isArray(pick)) {
+        res.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' }); res.end('pick 必须是数组'); return;
+      }
+    }
+    const out = exportZip({ kind, group, style, pick });
     // 文件名里的中文要按 RFC 5987 编码，否则部分浏览器会得到乱码文件名
     const ascii = out.filename.replace(/[^\x20-\x7e]/g, '_');
     res.writeHead(200, {

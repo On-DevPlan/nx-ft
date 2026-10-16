@@ -10,7 +10,7 @@
 import { api } from '../../api/client.js';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
 import { notifyTreeChanged } from './tree-signal.js';
-import { buildTree, findNode } from './tree.jsx';
+import { buildTree, byOrder, findNode } from './tree.jsx';
 import { relOfKey } from './tree-keys.js';
 
 // 根层资源的保留分组（与 ManagePage 建资源同一约定：根层资源住「未分类」）
@@ -90,17 +90,36 @@ export function useTreeOps({ kind, groups, currentDir, selectedKey, goDir, refre
     // 同级排序（前后插）：before/after 只在「与拖拽源同一父级」时出现
     // （判定在 sidebar/drag.jsx 的 resolve），交给 groups-reorder 重排该层级；
     // 拖拽源路径不变（key 稳定 → 高亮不跳），变化的只有位次。
+    // 注意先把拖拽源从数组里拿掉、再在**新数组**里找目标位次——直接用旧索引
+    // 会把「向后拖」插到队尾（from 之后的索引因 splice 左移了一格）。
     if (target.mode === 'before' || target.mode === 'after') {
       const targetRel = relOfKey(target.node.path);
       const parentRel = rel.split('/').slice(0, -1).join('');
       const parentNode = parentRel ? findNode(buildTree(groups), parentRel) : buildTree(groups);
       if (!parentNode) return;
-      const order = parentNode.children.map((c) => c.path);
-      const from = order.indexOf(rel);
+      const order = parentNode.children.map((c) => c.path).filter((p) => p !== rel);
       const at = order.indexOf(targetRel);
-      if (from < 0 || at < 0 || from === at) return;
-      order.splice(from, 1);
-      order.splice(Math.max(0, at + (target.mode === 'after' ? 1 : 0)), 0, rel);
+      if (at < 0) return;
+      order.splice(at + (target.mode === 'after' ? 1 : 0), 0, rel);
+      guard(async () => {
+        await api(`/api/${kind}/groups-reorder`, { method: 'POST', body: { parent: parentRel, order } });
+        refresh();
+      });
+      return;
+    }
+
+    // 空白处 = 拖到自己当前同层末尾（不换父级；与 before/after 共用 groups-reorder，
+    // order 末尾追加即可——视觉上像「拖到最后一格下方」）
+    if (target.tail) {
+      const parentRel = rel.split('/').slice(0, -1).join('');
+      const parentNode = parentRel ? findNode(buildTree(groups), parentRel) : buildTree(groups);
+      if (!parentNode) return;
+      const siblings = parentNode.children.map((c) => c.path);
+      // 已在末位就不发请求（避免无谓刷新）——判在移除 rel 之前，
+      // 否则 rel 已被 filter 掉，这条永远不成立
+      if (siblings[siblings.length - 1] === rel) return;
+      const order = siblings.filter((p) => p !== rel);
+      order.push(rel);
       guard(async () => {
         await api(`/api/${kind}/groups-reorder`, { method: 'POST', body: { parent: parentRel, order } });
         refresh();
@@ -143,6 +162,32 @@ export function useTreeOps({ kind, groups, currentDir, selectedKey, goDir, refre
     const rel = relOfKey(node.path);
     const name = rel.split('/').pop();
     const fromGroup = rel.split('/').slice(0, -1).join('/');
+
+    // 同组排序（前后插）：与目录同级排序同构——按当前可见序组成全量新顺序，
+    // 整组提交给 asset-reorder（根层资源住在「未分类」）。资源路径不变
+    // （key 稳定 → 高亮不跳），变化的只有位次。
+    if (target.mode === 'before' || target.mode === 'after') {
+      const group = (groups || []).find((g) => g.path === fromGroup);
+      if (!group) return;
+      const targetName = relOfKey(target.node.path).split('/').pop();
+      const order = (group.assets || [])
+        .slice()
+        .sort(byOrder)
+        .map((a) => a.name)
+        .filter((n) => n !== name);
+      const at = order.indexOf(targetName);
+      if (at < 0) return;
+      order.splice(at + (target.mode === 'after' ? 1 : 0), 0, name);
+      guard(async () => {
+        await api(`/api/${kind}/asset-reorder`, {
+          method: 'POST',
+          body: { group: fromGroup || HOME_DIR, order },
+        });
+        refresh();
+      });
+      return;
+    }
+
     const intoRoot = target.root || target.node.kind === 'root';
     const toGroup = intoRoot ? HOME_DIR : relOfKey(target.node.path);
     if (fromGroup === toGroup) return;
@@ -163,11 +208,89 @@ export function useTreeOps({ kind, groups, currentDir, selectedKey, goDir, refre
     });
   };
 
+  // 资源改名（侧边栏菜单）：asset-rename 只改展示名——树里显示的就是 label || name
+  // （assetNode 已把 label 合进 node.name），与编辑页的「修改展示名」同一端点同一口径。
+  const renameAssetRow = (node) => {
+    const rel = relOfKey(node.path);
+    const name = rel.split('/').pop();
+    const group = rel.split('/').slice(0, -1).join('/');
+    dialog({
+      title: `重命名 ${node.name}`,
+      message: '改展示名；目录名 ' + name + ' 不变。',
+      input: true,
+      value: node.name,
+      okText: '确定',
+    }).then((label) => {
+      if (!label || label === node.name) return;
+      guard(async () => {
+        await api(`/api/${kind}/asset-rename`, {
+          method: 'POST',
+          body: { group: group || HOME_DIR, name, label },
+        });
+        toast(`已改展示名: ${name} → ${label}`);
+        refresh();
+      });
+    });
+  };
+
+  // 资源删除（侧边栏菜单）：与编辑页 removeAsset 同端点（force 连风格与历史一起删）。
+  // 删的是当前打开的资源 → 退回所在分组，别让开着的编辑器指向不存在的资源。
+  const removeAssetRow = (node) => {
+    const rel = relOfKey(node.path);
+    const name = rel.split('/').pop();
+    const group = rel.split('/').slice(0, -1).join('/');
+    dialog({
+      title: `删除资源 ${name}？`,
+      message: '该资源的全部风格、代码与历史将删除，不可恢复。',
+      okText: '删除',
+      danger: true,
+    }).then((ok) => {
+      if (!ok) return;
+      guard(async () => {
+        await api(`/api/${kind}/asset-remove`, {
+          method: 'POST',
+          body: { group: group || HOME_DIR, name, force: true },
+        });
+        toast('已删除资源: ' + name);
+        if (selectedKey === node.key) goDir(group);
+        refresh();
+      });
+    });
+  };
+
+  // 在系统文件管理器里打开（侧边栏菜单）：目录 = 该目录本身；资源 = 它的资源目录。
+  // 由后端按 kind/group/name 解析绝对路径并 spawn（见 core/assets/groups.js revealDir）——
+  // 前端不传路径，避免面板能打开机器上任意目录。
+  const revealRow = (node) => {
+    const rel = relOfKey(node.path);
+    const isAsset = node.kind === 'asset';
+    const group = isAsset ? rel.split('/').slice(0, -1).join('/') : rel;
+    const name = isAsset ? rel.split('/').pop() : undefined;
+    guard(async () => {
+      const r = await api(`/api/${kind}/reveal`, {
+        method: 'POST',
+        body: { group: group || HOME_DIR, name },
+      });
+      toast(`已在文件管理器中打开: ${r.path}`);
+    });
+  };
+
   // 统一的拖拽上报：目录走层级/排序，资源走换分组
   const onMoveRow = ({ node, target }) => {
     if (node.kind === 'asset') return moveAssetRow({ node, target });
     return moveDir({ node, target });
   };
 
-  return { createAtSelected, renameDir, removeDir, moveDir, moveAssetRow, onMoveRow, dlgNode };
+  return {
+    createAtSelected,
+    renameDir,
+    removeDir,
+    moveDir,
+    moveAssetRow,
+    renameAssetRow,
+    removeAssetRow,
+    revealRow,
+    onMoveRow,
+    dlgNode,
+  };
 }

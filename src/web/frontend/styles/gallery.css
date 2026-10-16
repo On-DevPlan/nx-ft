@@ -42,6 +42,7 @@
 .gal-grid-dark { background: #14161a; }
 
 .gal-cell {
+  position: relative; /* .gal-check 绝对定位锚点（批量模式勾选框） */
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 12px 6px 8px; cursor: pointer; font: inherit; text-align: center;
   border: 1px solid transparent; border-radius: 8px; background: none;
@@ -79,8 +80,18 @@
 }
 .gal-grid-dark .gal-mark-chip { border-color: color-mix(in srgb, var(--paper) 14%, var(--ink)); color: var(--mid); }
 
-/* 颜色系统说明 */
-.gal-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 11px; }
-.gal-legend span {
-  padding: 2px 6px; border-radius: 999px; border: 1px dashed var(--soft-2);
+/* 批量模式：画廊格子可勾选（1.2 / 批量操作在画廊视图的落地） */
+.gal-cell.picked { border-color: var(--ok); background: var(--ok-soft); }
+.gal-check {
+  position: absolute; top: 6px; left: 6px; width: 14px; height: 14px;
+  border: 1px solid var(--soft-2); border-radius: 4px; background: var(--paper);
+  transition: background .1s, border-color .1s;
+}
+.gal-check.on { background: var(--ok); border-color: var(--ok); }
+/* 对勾：纯 CSS 边框折角画出来（不用任何字符——文本符号会触发 A08 无 emoji 闸门） */
+.gal-check.on::after {
+  content: ""; position: absolute; left: 3.5px; top: 0.5px;
+  width: 3px; height: 6px;
+  border: solid var(--paper); border-width: 0 2px 2px 0;
+  transform: rotate(42deg);
 }

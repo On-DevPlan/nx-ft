@@ -5,6 +5,7 @@
 import { boardCommands } from './cli.js';
 import { Btn } from '../btn/index.jsx';
 import { Empty, IconTile } from './parts.jsx';
+import { byOrder } from '../asset/tree.jsx';
 
 export function DirCard({ node, onOpen, onRename, onRemove }) {
   return (
@@ -24,10 +25,15 @@ export function DirCard({ node, onOpen, onRename, onRemove }) {
 }
 
 export function ResultView({ data, tags, onOpen, onClear }) {
-  const groups = (data?.groups || []).map((g) => ({
-    ...g,
-    flagged: g.assets.filter((a) => (a.audit?.issues || []).length).length,
-  }));
+  // 按树序（byOrder）排——搜索态也跟随手动排序，不回到 manifest 迭代序
+  const groups = (data?.groups || [])
+    .slice()
+    .sort(byOrder)
+    .map((g) => ({
+      ...g,
+      assets: g.assets.slice().sort(byOrder),
+      flagged: g.assets.filter((a) => (a.audit?.issues || []).length).length,
+    }));
 
   if (!groups.length) {
     return (

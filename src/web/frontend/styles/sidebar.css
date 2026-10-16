@@ -175,8 +175,26 @@
 }
 .gsearch-clr:hover { color: var(--ink); }
 
-/* ---- 树 ---- */
+/* 树自身的滚动 + 列表区。拖到列表末尾下方空白处 = 排到同层末位：虚线贴在 padding 底沿 */
 .gside-tree { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 8px 12px; }
+.gside-tree.drop-tail {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--sb-drop) 0 3px,
+    transparent 3px 5px
+  );
+  background-size: calc(100% - 16px) 2px; /* 减去左右 padding 8px */
+  background-repeat: no-repeat;
+  background-position: bottom 12px left 8px;
+}
+/* 资源拖到空白 = 移到「未分类」：整圈蓝边高亮——这条是「全局接收」的强提示，
+ * 与「排到末位」/「into 当前目录」/「before/after 同行」三类行级指示拉开层次：
+ * 颜色是 --accent（蓝，2px 细），inset 1px 让边线不压行高、不撑出滚动条。 */
+.gside-tree.drop-root {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+  border-radius: 6px;
+}
 .gside-tree:focus { outline: none; }
 .gside-tree:focus-visible { outline: 2px solid var(--sb-focus); outline-offset: -2px; border-radius: 8px; }
 
@@ -287,9 +305,29 @@
 .grow.dragging { opacity: 0.45; }
 .grow.drop-on,
 .gsec-title.drop-on { outline: 1px solid var(--sb-drop); outline-offset: -1px; }
-/* 同级排序的插入线：压在行的上/下边缘，不动布局 */
-.grow.drop-line-top { box-shadow: inset 0 1px 0 var(--sb-drop); }
-.grow.drop-line-bottom { box-shadow: inset 0 -1px 0 var(--sb-drop); }
+/* 同级排序的插入线：虚线（3px 实 + 2px 虚）压在目标行的上/下边沿——VS Code 风格。
+ * 不用 box-shadow 实线：虚线视觉重量轻，与 into 描边（深色实线）拉开层次。
+ * 不用 border：border 会顶动行高，破坏同位置插入的视觉对齐。 */
+.grow.drop-line-top {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--sb-drop) 0 3px,
+    transparent 3px 5px
+  );
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+.grow.drop-line-bottom {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--sb-drop) 0 3px,
+    transparent 3px 5px
+  );
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  background-position: bottom left;
+}
 .gsec-title { display: flex; align-items: center; gap: 8px; }
 .gsec-title .drop-hint { margin-left: auto; font-weight: 400; color: var(--mid); }
 
@@ -305,6 +343,100 @@
 .gkids { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
 .gnode.open > .gkids { grid-template-rows: 1fr; }
 .gkids-in { min-height: 0; overflow: hidden; }
+
+/* ---- 行操作菜单（2.2 通用：目录行 + 资源行）----
+ * 钉在行上方的浮层（fixed 定位，sidebar/index.jsx 在树外统一渲染一份，
+ * 不跟着行重渲染飘）。行内 18px 的「⋯」是入口，菜单本体可以更宽。 */
+.gmenu {
+  position: fixed;
+  z-index: 30;
+  min-width: 148px;
+  padding: 4px;
+  background: var(--paper);
+  border: var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-relief);
+}
+.gmenu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.gmenu-item:hover { background: var(--soft); }
+.gmenu-item.danger { color: var(--bad); }
+.gmenu-item.danger:hover { background: var(--bad-soft); }
+.gmenu-ico { flex: none; width: 13px; height: 13px; color: var(--mid); display: inline-flex; }
+.gmenu-item.danger .gmenu-ico { color: var(--bad); }
+
+/* ---- 设置气泡（2.3 双开关的入口）----
+ * 齿轮与气泡同在 .gcfg 里：点齿轮自己负责开/关，点外面关（看 head.jsx）。
+ * 设计是「小圆角方块」：宽 160、两条勾选项、无说明文字——视觉上跟其他浮层
+ * 一个量级（菜单 148 行高也是 26px），不抢注意力。 */
+.gcfg { position: relative; }
+.gcfg-pop {
+  position: absolute;
+  top: 28px;
+  right: -4px;
+  width: 160px;
+  padding: 6px 8px;
+  background: var(--paper);
+  border: var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-relief);
+  z-index: 25;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.gcfg-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.gcfg-row:hover { background: var(--soft); }
+/* 勾选框：自己画的 span——12×12 严格正方（native input 即便 appearance:none
+ * 也常在小尺寸塞进 font metrics 变非正方）。勾用 border + rotate 画，零依赖。 */
+.gcfg-cb {
+  flex: none;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--soft-2);
+  background: var(--paper);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.12s, border-color 0.12s;
+}
+.gcfg-cb:hover { border-color: var(--mid); }
+.gcfg-cb.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 6L5 8L9 4' fill='none' stroke='%23fff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 12px 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .gside,

@@ -6,7 +6,6 @@
 import { createPortal } from 'react-dom';
 import { Btn } from '../btn/index.jsx';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
-import { useStore } from '../../store.jsx';
 import { useBatch } from './batch.jsx';
 import { SvgGallery } from './gallery.jsx';
 import { SvgZipIoBtns } from './zip-io.jsx';
@@ -15,26 +14,18 @@ import { ManagePage } from '../asset/manage.jsx';
 const enc = encodeURIComponent;
 const encPath = (p) => p.split('/').map(enc).join('/');
 
-function SvgBoardActions({ reload, group }) {
+function SvgBoardActions({ reload }) {
   const toast = useToast();
   const guard = useGuard();
   const { dialog, node: dlgNode } = useDialog();
-  const { boot } = useStore();
-  const bin = boot?.app?.name || 'nx-ft';
-  // 批量动作的作用域 = 当前目录（SvgDrive 把路由里的 path 传进来；根 = 全库）
-  const batch = useBatch({ bin, dialog, guard, toast, reload, group });
+  // 规范自检 / 一键归一化走本域 useBatch；导入 / 导出走 exportBtn / importBtn 通道
+  // （避免与本组件 SvgZipIoBtns side='both' 重复渲染——面板已把导入/导出独立配显隐/快捷）
+  const batch = useBatch({ dialog, guard, toast, reload });
 
   return (
     <>
-      {/* 导入 / 导出走 btn/zip-io.jsx 的通用外壳 + 本域 strategy（components/svg/zip-io.jsx）——
-          选文件 / 下载 / busy / toast / 浮层逃出菜单（详见 zip-io.jsx 注释）全在那边收口。
-          group="" 保持与旧「批量导出」同口径（作用于全库；进入分组后按需再收窄）。
-          onDone 让导入完成后 ManagePage 跟着 reload 树。 */}
-      <SvgZipIoBtns bin={bin} group={group} onDone={reload} />
       <Btn size="sm" variant="secondary" onClick={() => batch.check()}>规范自检</Btn>
       <Btn size="sm" variant="secondary" onClick={() => batch.fix()}>一键归一化</Btn>
-      {/* 规范自检 / 一键归一化的对话框同样会被收起的菜单藏住，一起 portal 出去
-          （io 的浮层在 zip-io.jsx 里各自逃，不在这里） */}
       {createPortal(dlgNode, document.body)}
     </>
   );
@@ -60,11 +51,23 @@ export function SvgDrive({ path = '' }) {
               activeTags={ctx.activeTags}
               onOpen={ctx.onOpen}
               pickDir={ctx.pickDir}
+              // 批量勾选 ctx（manage.jsx 提供了，之前漏转发 → 画廊里批量模式勾不了）
+              batchMode={ctx.batchMode}
+              selected={ctx.selected}
+              selectedDirs={ctx.selectedDirs}
+              onToggle={ctx.onToggle}
+              onToggleDir={ctx.onToggleDir}
+              tree={ctx.tree}
             />
           ),
         },
       ]}
-      toolbar={(reload) => <SvgBoardActions reload={reload} group={path} />}
+      // 1.1 起：导出 / 导入拆成单边按钮节点（与 html 域 AssetView 同样姿势），
+      // 让面板的「快捷显示」开关能落到 svg 工具栏上；svg strategy 不同（SvgZipIoBtns），
+      // 由 SvgDrive 负责按 side 拆。
+      exportBtn={<SvgZipIoBtns group={path} side="export" />}
+      importBtn={<SvgZipIoBtns group={path} side="import" />}
+      toolbar={(reload) => <SvgBoardActions reload={reload} />}
       onNavigate={(dir) => {
         location.hash = dir ? `#/svg/dir/${encPath(dir)}` : '#/svg';
       }}

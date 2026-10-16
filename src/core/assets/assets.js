@@ -158,6 +158,28 @@ export function moveAsset({ kind, from, name, to }) {
   return { status: 'ok', from: fromPath, to: toPath, name: src.entryName };
 }
 
+// 同组资源排序：order 是「该分组全部资源名的新顺序」——与 groups.reorderSiblings
+// 同一套约定：同集合重排校验（不多不少、不重复），然后写每个资源条目的 order = 0..n-1。
+// 排序语义与目录一致：有 order 的按序在前，没有的按名字垫底（树两侧同规则）。
+export function reorderAssets({ kind, group, order }) {
+  assertKind(kind);
+  const groupPath = parseGroupPath(group);
+  if (!Array.isArray(order) || !order.length) throw badInput('需要 --order <资源名的完整新顺序>');
+  const names = order.map(String);
+  if (new Set(names).size !== names.length) throw badInput('order 里有重复的资源名');
+  const manifest = st.loadGroup(kind, groupPath);
+  if (!manifest) throw notFound(`分组不存在: ${groupPath}`);
+  const missing = Object.keys(manifest.assets).filter((n) => !names.includes(n));
+  if (missing.length) throw badInput(`order 缺少这些资源: ${missing.join(', ')}`);
+  const unknown = names.filter((n) => !manifest.assets[n]);
+  if (unknown.length) throw badInput(`order 里有不存在的资源: ${unknown.join(', ')}`);
+  names.forEach((n, i) => {
+    manifest.assets[n].order = i;
+  });
+  st.saveGroup(kind, groupPath, manifest);
+  return { status: 'ok', group: groupPath, order: names };
+}
+
 export function removeAsset({ kind, group, name, force }) {
   assertKind(kind);
   const { groupPath, entryName, entry, manifest } = resolveAsset(kind, group, name);

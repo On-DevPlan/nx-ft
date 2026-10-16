@@ -135,5 +135,17 @@ export function makeManageOps({
       onOpen(r.group, r.name);
     });
 
-  return { addGroup, renameGroup, removeGroup, addAsset, createGroup, createAsset };
+  // 同级分组排序：与 manage.jsx 用的是同一组 API（POST groups-reorder，整层全量新顺序），
+  // 把它做对的关键是先 filter 再找位次（向后拖才不会因索引左移被甩到队尾——见 use-tree-ops.js
+  // 的同款注释）。入参 = 同级目录全量的 path 数组 + 父级（空 = 最外层）。
+  const reorderGroups = async (parent, order) =>
+    guard(async () => {
+      await api(`/api/${kind}/groups-reorder`, {
+        method: 'POST',
+        body: { parent: parent || '', order },
+      });
+      await reload();
+    });
+
+  return { addGroup, renameGroup, removeGroup, addAsset, createGroup, createAsset, reorderGroups };
 }

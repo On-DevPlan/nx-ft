@@ -16,6 +16,7 @@ import { makeManageOps } from '../asset/useManageOps.js';
 import { useBatch } from './batch.jsx';
 import { Empty, IconTile, StatBar, TagCloud } from './parts.jsx';
 import { useBoard, useDebounced, useNav } from './useSvg.js';
+import { useSvgMove } from './use-svg-move.js';
 import { BatchHints, DirCard, ResultView } from './workspace-views.jsx';
 import {
   loadSavedFilter,
@@ -64,6 +65,7 @@ export default function Workspace({ path = '' }) {
     onOpen: (g, n) => nav.asset(g, n),
     noun: '图标',
   });
+  const move = useSvgMove(root, ops);
 
   const toggleTag = (t) =>
     setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
@@ -92,6 +94,7 @@ export default function Workspace({ path = '' }) {
             expanded={expanded}
             onSelect={(p) => (p ? nav.group(p) : nav.board())}
             onToggle={toggle}
+            onMove={move}
           />
         </div>
       </aside>

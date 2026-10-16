@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { badInput, notFound } from '../errors/index.js';
 import { assertKind, parseGroupPath, normalizeTags } from './constants.js';
 import * as st from './storage.js';
+import { openPath } from '../open.js';
 
 // color 域的卡片缩略:读 default 风格 data 槽位,解析前 5 个色卡的 hex。
 // 静默失败(文件不存在 / JSON 坏)返回空数组——树是总览,不该因坏数据挂掉。
@@ -78,6 +79,7 @@ export function listTree(kind, { search = '', tags = [] } = {}) {
             activeStyle: a.activeStyle || null,
             tags: a.tags || [],
             updatedAt: a.updatedAt || null,
+            order: a.order ?? null, // 手动排序（asset-reorder 写入）；null = 按名字垫底
             // color 域附加:色卡 swatch 前 5 个 hex(卡片缩略图用)
             ...(kind === 'color' ? { swatches: readSwatches(groupPath, a.name) } : {}),
           }))
@@ -237,4 +239,24 @@ function listDirs(dir) {
       return false;
     }
   });
+}
+
+// 在系统文件管理器里打开某分组（给了 name 就打开该资源的目录）——
+// 与 logo.reveal 同一个模式：路径由后端解析（前端只给 kind/group/name，
+// 拿到的是存储树内的绝对路径，不接受前端传任意路径），spawn 由 core/open.js 负责，
+// 平台不支持时静默降级（不抛，调用方只关心「试过了」）。
+//
+// 资源还没落盘成目录（只写了清单、没写过代码）时退到它所属的分组目录：
+// 否则「打开」会指向一个不存在的路径，用户看到的是文件管理器报错。
+export function revealDir({ kind, group, name }) {
+  assertKind(kind);
+  const groupPath = parseGroupPath(group);
+  let dir = name ? st.assetBaseDir(kind, groupPath, name) : st.groupDir(kind, groupPath);
+  if (!existsSync(dir)) {
+    const fallback = st.groupDir(kind, groupPath);
+    if (!existsSync(fallback)) throw notFound(`目录不存在: ${fallback}`);
+    dir = name ? fallback : dir;
+  }
+  openPath(dir);
+  return { status: 'ok', path: dir, group: groupPath, name: name || null };
 }

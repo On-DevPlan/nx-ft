@@ -12,6 +12,7 @@ import { Btn } from '../btn/index.jsx';
 import { Icon, IconGhost } from './svg-inline.jsx';
 import { SpecBadge, Empty } from './parts.jsx';
 import { SubdirCard } from '../asset/parts.jsx';
+import { byOrder } from '../asset/tree.jsx';
 
 // 规范颜色范围：图标必须在这些色下都立得住。
 // 前七色对齐面板 tokens（正文 / 次要 / 主色 / 链接 / 警示 / 危险 / 紫），
@@ -41,7 +42,11 @@ function loadPrefs() {
   }
 }
 
-export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }) {
+export function SvgGallery({
+  dir, dirNode, search, activeTags, onOpen, pickDir,
+  // 批量勾选（管理页 views.render ctx 注入；缺省 undefined → SubdirCard 走兼容默认）
+  batchMode, selected, selectedDirs, onToggle, onToggleDir, tree,
+}) {
   const prefs = loadPrefs();
   const [color, setColor] = useState(prefs.color || THEME_COLORS[0].value);
   const [size, setSize] = useState(prefs.size || 32);
@@ -86,10 +91,16 @@ export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }
   const subdirs = dirNode?.children || [];
   const all = useMemo(() => {
     const out = [];
-    for (const g of data?.groups || []) {
-      const inScope = !dir || g.path === dir || (deep && g.path.startsWith(dir + '/'));
+    // 分组与组内资源都按树序（byOrder），图标墙的先后跟随侧边栏的手动排序
+    for (const g of (data?.groups || []).slice().sort(byOrder)) {
+      // 根节点默认只看直系（根无直系资源 → 空墙 + 文件夹卡片），与主页面「仅显示当前目录」
+      // 口径一致；「含子文件夹」是显式选择才放行全库（或后代）。
+      // 旧实现 `!dir || ...` 在根时恒真，把所有子文件夹的文件平铺到根页，违反 03 主页面任务。
+      const inScope =
+        g.path === dir ||
+        (deep && (dir ? g.path.startsWith(dir + '/') : true));
       if (!inScope) continue;
-      for (const a of g.assets) out.push({ ...a, groupPath: g.path });
+      for (const a of g.assets.slice().sort(byOrder)) out.push({ ...a, groupPath: g.path });
     }
     return out;
   }, [data, dir, deep]);
@@ -213,22 +224,15 @@ export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }
         <span className="muted gal-count" data-testid="gal-count">{cells.length} 枚</span>
       </div>
 
-      {/* 颜色系统一句话解释：只在真有两类资源（跟随 / 不跟随）时才值得出现 */}
-      {hasFollowers && cells.some((c) => c.profile === 'color') ? (
-        <div className="gal-legend muted">
-          主题色只作用于跟随主题的部分：
-          <span>单色全跟</span>
-          <span>双色只跟主题色那一半</span>
-          <span>原色不跟（配色即内容）</span>
-        </div>
-      ) : null}
-
       {err ? <div className="empty bad">{err}</div> : null}
 
-      {data && !cells.length ? (
+      {/* 空态只在「既无直系资源、也无子文件夹」时出；有子文件夹时让上面的文件夹区块
+          顶替说话，避开「这个文件夹还没有资源。也可能在子文件夹里……」的语义打架。
+          「勾上含子文件夹」提示仅在根且 deep 关时给——其它情形与当前目录规则无冲突。 */}
+      {data && !cells.length && !subdirs.length ? (
         <Empty>
           {dir ? '这个文件夹还没有资源' : '还没有任何资源'}
-          {!deep && dir ? '。也可能在子文件夹里——勾上「含子文件夹」看看' : ''}
+          {!deep && !dir ? '。勾上「含子文件夹」可平铺全部子文件夹的图标' : ''}
         </Empty>
       ) : null}
 
@@ -239,12 +243,25 @@ export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }
           <div className="am-sec-title">文件夹 · {subdirs.length}</div>
           <div className="am-subdirs">
             {subdirs.map((c) => (
-              <SubdirCard key={c.path} node={c} onSelect={pickDir} />
+              <SubdirCard
+                key={c.path}
+                node={c}
+                onSelect={pickDir}
+                selectable={!!batchMode}
+                selected={selected || new Set()}
+                selectedDirs={selectedDirs || new Set()}
+                onToggle={onToggle}
+                onToggleDir={onToggleDir}
+                tree={tree}
+              />
             ))}
           </div>
         </>
       ) : null}
 
+      {/* 网格只在有图可铺时渲染；cells=0 的空 div（grid-template-columns 已设但无子项）
+          会留个零高度容器在 DOM 里——既无视觉价值，也容易在后续样式里吃掉版面。 */}
+      {cells.length ? (
       <div
         className={'gal-grid' + (darkBg ? ' gal-grid-dark' : '') + (cols ? ' gal-grid-fixed' : '')}
         style={{
@@ -254,14 +271,20 @@ export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }
         }}
         data-testid="gal-grid"
       >
-        {cells.map((c) => (
+        {cells.map((c) => {
+          const key = `${c.groupPath}/${c.name}`;
+          const picked = batchMode && (selected || new Set()).has(key);
+          return (
           <button
-            key={`${c.groupPath}/${c.name}`}
-            className={'gal-cell' + (c.profile === 'color' ? ' gal-cell-art' : '')}
-            onClick={() => onOpen(c.groupPath, c.name)}
-            title={`${c.label}（${c.name}）\n${c.groupPath}${c.profile === 'color' ? '\n原色图形：按自身长宽比撑满格子' : ''}`}
+            key={key}
+            className={'gal-cell' + (c.profile === 'color' ? ' gal-cell-art' : '') + (picked ? ' picked' : '')}
+            onClick={() => (batchMode ? onToggle?.(c.groupPath, c.name) : onOpen(c.groupPath, c.name))}
+            title={`${c.label}（${c.name}）\n${c.groupPath}${c.profile === 'color' ? '\n原色图形：按自身长宽比撑满格子' : ''}${batchMode ? '\n（批量模式：点选加入批量）' : ''}`}
             data-testid={`gal-cell-${c.name}`}
           >
+            {batchMode ? (
+              <span className={'gal-check' + (picked ? ' on' : '')} aria-hidden="true" />
+            ) : null}
             <span className="gal-art">
               {c.svg ? <Icon svg={c.svg} size={size} /> : <IconGhost size={size} />}
               {c.audit?.issues?.length ? (
@@ -280,8 +303,10 @@ export function SvgGallery({ dir, dirNode, search, activeTags, onOpen, pickDir }
               ) : null}
             </span>
           </button>
-        ))}
+          );
+        })}
       </div>
+      ) : null}
     </>
   );
 }

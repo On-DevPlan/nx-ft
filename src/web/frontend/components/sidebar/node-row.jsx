@@ -2,7 +2,7 @@
 // 「在被选中的行里就地新建目录」编辑行。只管「一行怎么长」，状态与语义
 // （选中、展开、创建落点）全部由 index.jsx 的 Sidebar 下发。
 import { useEffect, useRef, useState } from 'react';
-import { Chevron, FolderGlyph, KindGlyph, RootGlyph } from './icons.jsx';
+import { Chevron, FolderGlyph, KindGlyph, MoreGlyph, RootGlyph } from './icons.jsx';
 import { forceOpen } from './model.js';
 import { useDrag } from './drag.jsx';
 
@@ -63,7 +63,10 @@ export function NodeRow({
   expanded,
   onSelect,
   onToggle,
-  renderRowActions,
+  // 「更多操作」：给了 rowMenu 才在目录行/资源行显示「⋯」并响应右键；
+  // 菜单里有什么、点了干什么，由调用方的 rowMenu(node) 给出（见 asset/side-tree.jsx）。
+  // anchor 传唤起元素（⋯ 按钮）或光标坐标，菜单贴着它定位（弹层由 Sidebar 统一渲染）。
+  rowMenu,
   // 就地创建：creatingFor === node.key 时，在这行的 .gkids 里插入一行编辑器
   creatingFor,
   onSubmitCreate,
@@ -82,7 +85,10 @@ export function NodeRow({
   const isRoot = node.kind === 'root';
   const drag = useDrag();
   const draggable = !!(drag && (node.kind === 'dir' || node.kind === 'asset'));
-  const acceptDrop = !!(drag && (node.kind === 'dir' || isRoot));
+  // 落点：目录行（放进目录 / 同级前后插）、整树行（移到最外层）、
+  // 资源行（只作同组资源的前后插落点——资源不是容器，接收不代表「能放进去」，
+  // 具体合法性在 drag.jsx 的 resolve 里判，这里只负责把事件接上）。
+  const acceptDrop = !!(drag && (node.kind === 'dir' || isRoot || node.kind === 'asset'));
   const myDrop = drag ? drag.dropKey : null;
   const dropping = myDrop === node.key + '|into';
   const lineTop = myDrop === node.key + '|before';
@@ -104,6 +110,14 @@ export function NodeRow({
         data-drop={dropping ? 'into' : lineTop ? 'before' : lineBottom ? 'after' : undefined}
         title={node.label || node.name}
         onClick={() => onSelect(node)}
+        onContextMenu={
+          rowMenu && !isRoot
+            ? (e) => {
+                e.preventDefault();
+                rowMenu(node, { x: e.clientX, y: e.clientY });
+              }
+            : undefined
+        }
         onDoubleClick={() => hasKids && onToggle(node.path)}
         draggable={draggable || undefined}
         onDragStart={draggable ? (e) => drag.start(node, e) : undefined}
@@ -128,9 +142,21 @@ export function NodeRow({
         </span>
         <span className="gname">{node.label || node.name}</span>
         {folder && node.total > 0 ? <span className="gcount">{node.total}</span> : null}
-        {renderRowActions && node.kind === 'dir' ? (
+        {rowMenu && !isRoot ? (
           <span className="gacts" onClick={(e) => e.stopPropagation()}>
-            {renderRowActions(node)}
+            <button
+              title="更多操作"
+              aria-label={`更多操作：${node.label || node.name}`}
+              onClick={(e) => {
+                // 锚点用整行的 rect，不用 ⋯ 按钮自己的：.gacts 平时 display:none
+                // （hover / 选中才出），键盘唤起时按钮 rect 全 0，菜单会飘到左上角。
+                // 行永远有真实 rect，菜单落在行下方，位置永远说得通。
+                const r = (e.currentTarget.closest('.grow') || e.currentTarget).getBoundingClientRect();
+                rowMenu(node, { x: r.left, y: r.bottom + 4 });
+              }}
+            >
+              <MoreGlyph />
+            </button>
           </span>
         ) : null}
       </div>
@@ -147,7 +173,7 @@ export function NodeRow({
                 expanded={expanded}
                 onSelect={onSelect}
                 onToggle={onToggle}
-                renderRowActions={renderRowActions}
+                rowMenu={rowMenu}
                 creatingFor={creatingFor}
                 onSubmitCreate={onSubmitCreate}
                 onCancelCreate={onCancelCreate}

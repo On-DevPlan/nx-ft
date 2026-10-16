@@ -10,7 +10,14 @@ export { Toast, ToastProvider, useToast, normalizeTone } from './toast/index.jsx
 export function useGuard() {
   const toast = useToast();
   return useCallback(async (fn) => {
-    try { return await fn(); } catch (e) { toast.bad(String((e && e.message) || e)); }
+    try { return await fn(); }
+    catch (e) {
+      // 提示 + 重新抛出：调用方需要 return 值（如 strategy.exportZip 解构 {filename, blob}）
+      // 不会被 swallow 后的 undefined 坑到；不依赖返回值的调用方只多一条 unhandled rejection
+      // （浏览器控制台可见，业务上 toast 已先一步告知用户）。
+      toast.bad(String((e && e.message) || e));
+      throw e;
+    }
   }, [toast]);
 }
 
