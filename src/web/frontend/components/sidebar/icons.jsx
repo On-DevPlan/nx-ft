@@ -206,6 +206,79 @@ export function RevealGlyph() {
   );
 }
 
+// 菜单里的「导入到该目录」：下方托盘 + 向下箭头（资源从外面进来）
+export function ImportGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M2.8 9.4h8.4l-.7 3.05c-.07.3-.34.5-.65.5H4.15c-.31 0-.58-.2-.65-.5L2.8 9.4Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 2.4v5.1M4.7 5.5 7 7.8l2.3-2.3"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// 菜单里的「导出该目录」：下方托盘 + 向上箭头（资源交出去）
+export function ExportGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M2.8 9.4h8.4l-.7 3.05c-.07.3-.34.5-.65.5H4.15c-.31 0-.58-.2-.65-.5L2.8 9.4Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 7.9V2.8M4.7 4.8 7 2.5l2.3 2.3"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// 菜单里的「新建文件夹」：文件夹（缩小让位）+ 右下角加号角标
+export function NewFolderGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M1.3 3.9c0-.45.36-.8.8-.8h2.0c.2 0 .4.08.54.22l.46.46c.14.14.34.22.54.22h3.06c.44 0 .8.35.8.8v4.4c0 .44-.36.8-.8.8H2.1c-.44 0-.8-.36-.8-.8V3.9Z"
+        stroke="currentColor"
+        strokeWidth="1.05"
+        strokeLinejoin="round"
+      />
+      <path d="M10.6 9.6v2.8M9.2 11h2.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// 菜单里的「新建资源」：文档（缩小让位）+ 右下角加号角标
+export function NewFileGlyph() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M3.1 1.8c-.44 0-.8.36-.8.8v8.8c0 .44.36.8.8.8h4.6c.44 0 .8-.36.8-.8V5.2L6.1 1.8H3.1Z"
+        stroke="currentColor"
+        strokeWidth="1.05"
+        strokeLinejoin="round"
+      />
+      <path d="M6.1 1.8v3.4h2.4" stroke="currentColor" strokeWidth="1.05" strokeLinejoin="round" />
+      <path d="M10.6 9.6v2.8M9.2 11h2.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // 头部「侧边栏设置」的齿轮（默认收起开关的入口）
 export function GearGlyph() {
   return (

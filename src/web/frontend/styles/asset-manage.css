@@ -161,6 +161,8 @@
 /* ---- 共享：标签云 / 标签片 ---- */
 
 .tag-cloud { display: flex; flex-wrap: wrap; gap: 4px; max-height: 88px; overflow: auto; }
+/* 并入 am-head 后靠右对齐：标题与统计在左，筛选 chips 在右（见 manage.jsx） */
+.am-head .tag-cloud { margin-left: auto; }
 .tag-chip {
   display: inline-flex; align-items: center; gap: 4px;
   height: 22px; padding: 0 8px; border-radius: 999px;
@@ -223,6 +225,36 @@
 .tlp-quick:hover { color: var(--ink); }
 .tlp-quick.on { color: var(--ok); border-color: var(--ok-line); background: var(--ok-soft); }
 .tlp-chip.quick { border-style: dashed; color: var(--mid); }
+
+/* ---- 拖拽编排（11 工具栏拖拽）：位置控制以拖为准，点击只留显隐/快捷两个开关 ----
+ * 视觉沿用侧边栏拖拽那一套：被拖项降透明度、落点用 1px + 45% 墨色——
+ * 用对比度表达，不用颜色喊。插入线用 repeating-linear-gradient 虚线（3px 实 + 2px 虚），
+ * 是结构线不是装饰；压在行的上/下边沿（absolute + ::before/::after，不顶动行高）。 */
+.tlp-body { --tlp-drop: color-mix(in srgb, var(--ink) 45%, transparent); }
+.tlp-row { position: relative; }
+.tlp-row.dragging, .tlp-chip.dragging { opacity: 0.45; }
+.tlp-row.drop-before::before, .tlp-row.drop-after::after {
+  content: ''; position: absolute; left: 4px; right: 4px; height: 2px;
+  background-image: repeating-linear-gradient(to right, var(--tlp-drop) 0 3px, transparent 3px 5px);
+}
+.tlp-row.drop-before::before { top: -2px; }
+.tlp-row.drop-after::after { bottom: -2px; }
+.tlp-list.drop-on, .tlp-menu.dropping, .tlp-chip.drop-on {
+  outline: 1px dashed var(--tlp-drop); outline-offset: -1px;
+}
+.tlp-chip[draggable='true'] { cursor: grab; }
+.tlp-chip.drop-before, .tlp-chip.drop-after {
+  background-image: repeating-linear-gradient(to right, var(--tlp-drop) 0 3px, transparent 3px 5px);
+  background-size: 2px 100%; background-repeat: no-repeat;
+}
+.tlp-chip.drop-before { background-position: left; }
+.tlp-chip.drop-after { background-position: right; }
+/* 行内兜底按钮（↑↓ / 换区）：悬停或键盘聚焦才出现——拖拽才是正路，点只是退路 */
+.tlp-acts { display: inline-flex; gap: 2px; opacity: 0; transition: opacity 0.12s; }
+.tlp-row:hover .tlp-acts, .tlp-row:focus-within .tlp-acts { opacity: 1; }
+.tlp-row:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+/* 菜单卡片底部的常驻提示：拖拽能做什么一句话说清；拖回菜单时换成「松手即摘下」 */
+.tlp-drop-hint { font-size: 11px; color: var(--mid); padding: 4px 8px 2px; }
 /* 1.2 子目录卡片展开 + 子文件行 */
 .am-subdir-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .am-subdir-expand {

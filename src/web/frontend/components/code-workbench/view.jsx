@@ -10,6 +10,7 @@ export function MultiPaneView({
   axis,
   multi,
   labels,
+  extras,
   ready,
   codeKey,
   hint,
@@ -80,10 +81,10 @@ export function MultiPaneView({
                       setHint(null);
                     }}
                     onClick={() => setLayout((s) => setActive(s, panel.id, slot))}
-                    title={`${labels[slot]}（拖到页签条合并，拖到面板边缘分栏）`}
+                    title={`${labels[slot] || extras?.[slot]?.label || slot}（拖到页签条合并，拖到面板边缘分栏）`}
                     data-testid={`wb-tab-${slot}`}
                   >
-                    {labels[slot]}
+                    {labels[slot] || extras?.[slot]?.label || slot}
                   </button>
                 ))}
                 {hint?.kind === 'tab' && hint.panelId === panel.id && hint.beforeSlot == null ? (
@@ -111,15 +112,19 @@ export function MultiPaneView({
                     className={'wb-slot' + (slot === panel.active ? '' : ' wb-slot-hidden')}
                     data-slot={slot}
                   >
-                    <CodeEditor
-                      key={`${codeKey}:${slot}`}
-                      label={labels[slot]}
-                      headless
-                      initial={initialOf(slot)}
-                      readOnly={!ready}
-                      onSave={onSave}
-                      onChange={onChange}
-                    />
+                    {extras?.[slot] ? (
+                      extras[slot].render()
+                    ) : (
+                      <CodeEditor
+                        key={`${codeKey}:${slot}`}
+                        label={labels[slot]}
+                        headless
+                        initial={initialOf(slot)}
+                        readOnly={!ready}
+                        onSave={onSave}
+                        onChange={onChange}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

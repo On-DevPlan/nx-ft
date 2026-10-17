@@ -10,6 +10,7 @@ import { DragCtx, makeDragApi } from './drag.jsx';
 import { SidebarHead } from './head.jsx';
 import { NodeRow } from './node-row.jsx';
 import { RowMenu } from './row-menu.jsx';
+import { loadDefault, saveDefault } from './settings.js';
 
 function loadExpanded(key) {
   try {
@@ -30,24 +31,11 @@ function loadFolded(key) {
 
 // 「文件夹默认收起」（2.3 第一条）：开启后初始展开态 = 空集（选中链 effect 兜底，
 // 仍然显示深链所在的目录），手动展开照常记忆，但下次进入回到空集再由 effect 展开链。
-function loadDefaultFolders(key) {
-  try {
-    return localStorage.getItem(`${key}--default-folders`) === '1';
-  } catch {
-    return false;
-  }
-}
-
 // 「侧边栏默认收起」（2.3 第二条）：开启后初始 folded = true（整条侧边栏滑出），
 // 手动展开照常记忆，但下次进入回到 folded=true——和文件夹是同一思路（每次进入
 // 重置初值，本次会话内手动状态可改）。
-function loadDefaultSidebar(key) {
-  try {
-    return localStorage.getItem(`${key}--default-sidebar`) === '1';
-  } catch {
-    return false;
-  }
-}
+// 两条的存取在 settings.js：**三域共享一份**（它们是使用习惯，不是领域数据，
+// html / svg / color 不该各配各的；含老 key 的一次性迁移）。
 
 // 从当前选中的 key 推出「新建目录要去的父级 key」。
 // - 选中整树行：parent = 整树（根的子级）
@@ -86,7 +74,7 @@ export function Sidebar({
   // 「文件夹默认收起」开着 → 初值从空集开始（当前链由下面的选中链 effect 展开），
   // 不读上次的展开存档；关着 → 保持旧行为（读存档，首次见到根行时播种全展开）。
   const [expanded, setExpanded] = useState(() =>
-    loadDefaultFolders(storageKey) ? new Set() : loadExpanded(storageKey)
+    loadDefault('folders') ? new Set() : loadExpanded(storageKey)
   );
   // 收起/展开整条侧边栏：也是侧边栏自己的 UI 状态，随 storageKey 落盘。
   // 收起时整列用负 margin 滑出去（见 sidebar.css），把手（.gside-collapse）
@@ -94,7 +82,7 @@ export function Sidebar({
   // 「侧边栏默认收起」开着 → 每次进入都从 folded=true 出发（忽略上次落盘值），
   // 本次会话内手动展开仍可改，但下次进入回到默认。
   const [folded, setFolded] = useState(() =>
-    loadDefaultSidebar(storageKey) ? true : loadFolded(storageKey)
+    loadDefault('sidebar') ? true : loadFolded(storageKey)
   );
   const [kwRaw, setKwRaw] = useState('');
   // 就地创建：null = 没在创建；否则 = 父级 key（在该行 .gkids 里插入编辑行）。
@@ -104,9 +92,9 @@ export function Sidebar({
   const [dropKey, setDropKey] = useState(null); // 命中的落点 key；'root' = 根
   // 行操作菜单：{ node, items, at } | null。at 是 ⋯ 按钮（{anchor}）或光标（{x,y}）。
   const [menu, setMenu] = useState(null);
-  // 两条默认收起：每条各管各的——文件夹管展开态初值，侧边栏管 folded 初值。
-  const [defaultFolders, setDefaultFolders] = useState(() => loadDefaultFolders(storageKey));
-  const [defaultSidebar, setDefaultSidebar] = useState(() => loadDefaultSidebar(storageKey));
+  // 两条默认收起：三域共享一份——文件夹管展开态初值，侧边栏管 folded 初值。
+  const [defaultFolders, setDefaultFolders] = useState(() => loadDefault('folders'));
+  const [defaultSidebar, setDefaultSidebar] = useState(() => loadDefault('sidebar'));
   const kw = kwRaw.trim().toLowerCase();
 
   const dragApi = makeDragApi({ dragRef, dropKey, setDropKey, onMove });
@@ -129,22 +117,14 @@ export function Sidebar({
     if (had == null) setExpanded((prev) => new Set([...prev, ...roots]));
   }, [sections, storageKey, defaultFolders]);
 
-  // 开关落盘：只影响「下次进入」的初值策略，本次会话的展开/folded 态不动
+  // 开关落盘（共享 key）：只影响「下次进入」的初值策略，本次会话的展开/folded 态不动
   const setDefaultFoldersPersisted = (on) => {
     setDefaultFolders(on);
-    try {
-      localStorage.setItem(`${storageKey}--default-folders`, on ? '1' : '0');
-    } catch {
-      /* 隐私模式静默 */
-    }
+    saveDefault('folders', on);
   };
   const setDefaultSidebarPersisted = (on) => {
     setDefaultSidebar(on);
-    try {
-      localStorage.setItem(`${storageKey}--default-sidebar`, on ? '1' : '0');
-    } catch {
-      /* 隐私模式静默 */
-    }
+    saveDefault('sidebar', on);
   };
 
   // 展开状态落盘（与面板「UI 状态持久化是硬标准」同规矩）
@@ -280,6 +260,18 @@ export function Sidebar({
             dragApi
               ? (e) => {
                   if (e.target === e.currentTarget) dragApi.drop(null, e);
+                }
+              : undefined
+          }
+          // 空白处的右键 = 「最外层」的菜单（rowMenu(null)，调用方决定给什么）。
+          // 行上的右键由行自己处理，这里只接行之外的目标（区标题 / 提示 / 容器空隙）。
+          onContextMenu={
+            rowMenu
+              ? (e) => {
+                  if (e.target.closest('.grow')) return;
+                  e.preventDefault();
+                  const items = rowMenu(null);
+                  if (items?.length) setMenu({ node: null, items, at: { x: e.clientX, y: e.clientY } });
                 }
               : undefined
           }

@@ -160,3 +160,72 @@ body.sp-dragging .pv-veil { pointer-events: auto; cursor: inherit; }
 }
 /* 手机里的 iframe 铺满画框（.pv-frame 已是 absolute inset:0） */
 .pv-frame-mobile { border-radius: 24px; }
+
+/* ===== 颜色模块（components/svg/color-panel）：编辑区「颜色」页签的面板体 =====
+ * 挂在 MultiPaneEditor 的 extras 页签里（与 svg/css/js 同层），撑满整个页签面板：
+ * 一条说明 + 重置，颜色槽一行，色板网格吃掉剩余高度滚动。
+ * 只作用于预览、不写脏源码。 */
+.cp {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.cp__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.cp__hint { font-size: 11px; color: var(--mid); flex: 1; }
+
+/* 颜色槽：横向 wrap，每个槽 = 色块 + 标签，点选「当前要改哪个槽」 */
+.cp__slots { display: flex; flex-wrap: wrap; gap: 6px; flex: none; }
+.cp__slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 2px 8px 2px 3px;
+  border: var(--border);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  cursor: pointer;
+}
+.cp__slot:hover { background: var(--soft); }
+.cp__slot.on { border-color: var(--ink); background: var(--soft-2); font-weight: 600; }
+.cp__chip {
+  width: 18px;
+  height: 18px;
+  border: var(--border);
+  border-radius: 4px;
+  display: inline-block;
+  flex: none;
+}
+
+/* 色板：自动填充的小色块网格，点一下写入当前槽；吃掉面板剩余高度滚动 */
+.cp__swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(22px, 1fr));
+  gap: 4px;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: auto;
+  align-content: start;
+}
+.cp__sw {
+  height: 24px;
+  padding: 0;
+  border: var(--border);
+  border-radius: 4px;
+  background: var(--paper);
+  cursor: pointer;
+}
+.cp__sw span { display: block; width: 100%; height: 100%; border-radius: 3px; }
+.cp__sw:hover { border-color: var(--ink); }

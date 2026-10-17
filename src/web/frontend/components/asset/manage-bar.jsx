@@ -14,12 +14,7 @@ import { Fragment, useState } from 'react';
 import { Btn, BtnBar, BtnBarSpacer, BtnMenu, BtnMenuItem, BtnMenuLabel, BtnMenuSep } from '../btn/index.jsx';
 import { Crumbs, InlineCreateRow } from './parts.jsx';
 import { ToolbarLayoutPanel } from './toolbar-layout-panel.jsx';
-import { MODULES } from './useToolbarLayout.js';
-
-// 模块 id → 注册信息（layout 项可用 zone 字段覆盖区域）
-const MODULE_META = Object.fromEntries(MODULES.map((m) => [m.id, m]));
-const metaOf = (id) => MODULE_META[id] || {};
-const isMenuItemId = (id) => String(metaOf(id).section || '').startsWith('more-');
+import { effZoneOf, isMenuItemId } from './toolbar-modules.js';
 
 // 没有 layout（未启用编排）时按这个默认次序渲染（只含原生工具栏项）。
 // export/import 现在是「更多」菜单项（section more-batch），不再列在这里。
@@ -66,13 +61,13 @@ export function ManageBar({
     : DEFAULT_ORDER.map((id) => ({ id, visible: true })));
   const nonPrimary = ordered.filter((x) => x.id !== 'new');
 
-  // 区域：layout 项可带 zone 覆盖模块表默认；缺省按注册表。
-  const effZone = (item) => item.zone || MODULE_META[item.id]?.zone || 'right';
+  // 区域：layout 项可带 zone 覆盖模块表默认；缺省按注册表（判定在 toolbar-modules.js，
+  // 与面板共用同一份——面板怎么编，栏就怎么渲）。
   // 是否上工具栏：原生项看 visible；菜单项看 quick（两个开关相互独立）
   const onBar = (x) => (isMenuItemId(x.id) ? !!x.quick : isVisible(x.id));
   const barList = nonPrimary.filter(onBar);
-  const leftItems = barList.filter((x) => effZone(x) === 'left');
-  const rightItems = barList.filter((x) => effZone(x) === 'right');
+  const leftItems = barList.filter((x) => effZoneOf(x) === 'left');
+  const rightItems = barList.filter((x) => effZoneOf(x) === 'right');
 
   // 「更多」菜单成员判定：visible 开启 + 未快捷显示（quick 项已上工具栏，菜单里不重复）
   const inMenu = (id) => {

@@ -12,6 +12,8 @@ import { useDialog, useGuard, useToast } from '../ui.jsx';
 import { notifyTreeChanged } from './tree-signal.js';
 import { buildTree, byOrder, findNode } from './tree.jsx';
 import { relOfKey } from './tree-keys.js';
+import { useZipIo } from './use-zip-io.jsx';
+import { useTreeCreate } from './use-tree-create.js';
 
 // 根层资源的保留分组（与 ManagePage 建资源同一约定：根层资源住「未分类」）
 export const HOME_DIR = '未分类';
@@ -21,15 +23,21 @@ export function useTreeOps({ kind, groups, currentDir, selectedKey, goDir, refre
   const guard = useGuard();
   const { dialog, node: dlgNode } = useDialog();
 
-  // 新建：落在当前目录下（没选中 = 根），建完跳进去
-  const createAtSelected = (name) =>
-    guard(async () => {
-      const path = [currentDir, name].filter(Boolean).join('/');
-      await api(`/api/${kind}/groups`, { method: 'POST', body: { group: path } });
-      toast(`已创建目录 ${path}`);
-      refresh();
-      goDir(path);
-    });
+  // 局部导入导出：右键目录时，目标分组锁定为该目录（命令式，见 use-zip-io.js）
+  const { importToGroup, exportGroup, node: zipNode } = useZipIo(kind, { onChanged: refresh });
+  const importToDir = (node) => importToGroup(relOfKey(node.path));
+  const exportDirRow = (node) => exportGroup(relOfKey(node.path));
+
+  // 新建命令（当前目录 / 右键目录建文件夹、右键目录建资源）：自成一簇，见 use-tree-create.js
+  const { createAtSelected, createSubDir, createAssetInDir } = useTreeCreate({
+    kind,
+    currentDir,
+    goDir,
+    refresh,
+    dialog,
+    guard,
+    toast,
+  });
 
   const renameDir = (node) => {
     const rel = relOfKey(node.path);
@@ -262,6 +270,15 @@ export function useTreeOps({ kind, groups, currentDir, selectedKey, goDir, refre
   // 由后端按 kind/group/name 解析绝对路径并 spawn（见 core/assets/groups.js revealDir）——
   // 前端不传路径，避免面板能打开机器上任意目录。
   const revealRow = (node) => {
+    // 根行（或树空白处，node 为 null）：打开本域根目录——后端对「不带 group」
+    // 短路到 groupsRoot（见 groups.revealDir），不走 HOME_DIR 那条替代路。
+    if (!node || node.kind === 'root') {
+      guard(async () => {
+        const r = await api(`/api/${kind}/reveal`, { method: 'POST', body: { group: '' } });
+        toast(`已在文件管理器中打开: ${r.path}`);
+      });
+      return;
+    }
     const rel = relOfKey(node.path);
     const isAsset = node.kind === 'asset';
     const group = isAsset ? rel.split('/').slice(0, -1).join('/') : rel;
@@ -283,6 +300,8 @@ export function useTreeOps({ kind, groups, currentDir, selectedKey, goDir, refre
 
   return {
     createAtSelected,
+    createSubDir,
+    createAssetInDir,
     renameDir,
     removeDir,
     moveDir,
@@ -290,7 +309,10 @@ export function useTreeOps({ kind, groups, currentDir, selectedKey, goDir, refre
     renameAssetRow,
     removeAssetRow,
     revealRow,
+    importToDir,
+    exportDirRow,
     onMoveRow,
     dlgNode,
+    zipNode,
   };
 }

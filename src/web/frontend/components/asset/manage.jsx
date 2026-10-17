@@ -283,14 +283,15 @@ export function ManagePage({
             )
           ) : '加载中…'}
         </span>
+        {/* 标签筛选轴并入标题行右侧：独立成行时像一块游离内容（用户反馈「不好看」）。
+            它是筛选不是内容，挂在统计信息旁边一行读完；无标签时整块不渲染。 */}
+        <TagCloud
+          tags={tree?.availableTags || []}
+          active={activeTags}
+          onToggle={toggleTag}
+          onClear={() => setActiveTags([])}
+        />
       </div>
-
-      <TagCloud
-        tags={tree?.availableTags || []}
-        active={activeTags}
-        onToggle={toggleTag}
-        onClear={() => setActiveTags([])}
-      />
 
       {batchMode ? (
         <BatchBar

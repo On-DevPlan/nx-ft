@@ -5,12 +5,14 @@
 // 以及「这枚图标对应的 CLI 命令」三件图标集才需要的事。
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../../store.jsx';
-import { Btn, BtnBar, BtnBarSpacer } from '../btn/index.jsx';
+import { Btn, BtnBar, BtnBarSpacer, BtnMenu, BtnMenuItem, BtnMenuLabel, BtnMenuSep } from '../btn/index.jsx';
 import { SplitPane } from '../asset/SplitPane.jsx';
 import { MultiPaneEditor, readSlotCode } from '../code-workbench/index.jsx';
 import { buildSvgDoc } from '../preview/doc.js';
 import { PreviewPane } from '../preview/index.jsx';
 import { Modal, useDialog, useGuard, useToast } from '../ui.jsx';
+import { ColorPanel } from './color-panel.jsx';
+import { migrateToVars } from './color-vars.js';
 import { makeDetailOps } from './detail-ops.jsx';
 import { CliBlock, DescEditor, IssueList, StyleStrip, TagBar } from './detail-parts.jsx';
 import { Crumb, Empty } from './parts.jsx';
@@ -37,6 +39,10 @@ export default function Detail({ group, name }) {
   const [dirty, setDirty] = useState(false);
   const [descEditing, setDescEditing] = useState(false);
   const [descBusy, setDescBusy] = useState(false);
+  // 预览层的颜色替换（主题色 / 变量 / 局部色），不写脏源码；切风格重置。
+  const [theme, setTheme] = useState({});
+  // 编辑器里实时的 SVG 源码（tick 驱动）：颜色面板的槽位检测跟着编辑走，不只有已保存版
+  const [liveSvg, setLiveSvg] = useState('');
   const editRef = useRef(null);
 
   // 数据到位后落到「当前风格」；保存/新建风格导致清单变化时也做一次收敛。
@@ -71,10 +77,38 @@ export default function Detail({ group, name }) {
       return;
     }
     const code = readCode();
-    setDoc(buildSvgDoc(code));
+    setDoc(buildSvgDoc(code, theme));
     setDirty(SLOTS.some((s) => String(code[s] ?? '') !== String(cur[s] ?? '')));
-    // readCode 由 cur 派生、cur 由 data/style 派生，故依赖这三项即可
-  }, [data, style, tick]);
+    // readCode 由 cur 派生、cur 由 data/style 派生；theme 是预览层替换，改变即重渲染。
+  }, [data, style, tick, theme]);
+
+  // 切风格：颜色槽随风格变化，重置预览层替换。
+  useEffect(() => {
+    setTheme({});
+  }, [style]);
+
+  // 颜色面板的槽位检测吃**编辑器现值**（含未保存改动与迁移结果），tick 后 DOM 已落定
+  useEffect(() => {
+    setLiveSvg(readCode().svg || '');
+  }, [tick, data, style, readCode]);
+
+  // 「迁移为变量」：读编辑器现值 → 生成模板化源码 → 写回 SVG 编辑器（脏态，用户过目后保存）
+  const migrateColors = () => {
+    const ta = editRef.current?.querySelector('[data-slot="svg"] .code-area');
+    if (!ta) return;
+    const r = migrateToVars(String(ta.value || ''));
+    if (!r.count) {
+      toast.ok('没有可迁移的硬编码颜色');
+      return;
+    }
+    // 直写 ta.value 会被 React 的 value tracker 判成「没变」而吞掉 input 事件——
+    // 走原型 setter 绕开实例 tracker，React 的 onChange 才会收到（脏标记随之亮起）
+    const set = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ta), 'value')?.set;
+    if (set) set.call(ta, r.svg);
+    else ta.value = r.svg;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    toast.ok(`已迁移 ${r.count} 处颜色为变量（记得保存）`);
+  };
 
   // 给操作层用的是**实时**判断（按下保存那一刻 DOM 一定已落定），不是上面那份滞后一帧的状态。
   const isDirty = () => {
@@ -128,17 +162,21 @@ export default function Detail({ group, name }) {
         <Crumb segs={crumbSegs} />
         <BtnBar className="page-head-acts">
           <BtnBarSpacer />
-          {/* 次级按钮（整页预览 / 编辑历史 / 按规范修复）→ 主按钮（保存，始终实心绿）。
-              面板头那颗是状态芯片（.save-chip），不跟这里抢色块。 */}
-          <Btn variant="secondary" onClick={() => nav.full(group, name)}>
-            整页预览
-          </Btn>
-          <Btn variant="secondary" onClick={ops.history} disabled={!cur}>
-            编辑历史
-          </Btn>
-          <Btn variant="secondary" onClick={ops.fixStyle} disabled={!cur}>
-            按规范修复
-          </Btn>
+          {/* 次级动作（整页预览 / 编辑历史 / 按规范修复）收进「更多」，
+              页头只留主按钮（保存，始终实心绿）。面板头那颗是状态芯片（.save-chip）。 */}
+          <BtnMenu label="更多" testId="detail-head-more" panelTestId="detail-head-more-panel">
+            <BtnMenuLabel>视图</BtnMenuLabel>
+            <BtnMenuItem onClick={() => nav.full(group, name)} testId="menu-full-preview">
+              整页预览
+            </BtnMenuItem>
+            <BtnMenuItem onClick={ops.history} disabled={!cur} testId="menu-history">
+              编辑历史
+            </BtnMenuItem>
+            <BtnMenuSep />
+            <BtnMenuItem onClick={ops.fixStyle} disabled={!cur} testId="menu-fix">
+              按规范修复
+            </BtnMenuItem>
+          </BtnMenu>
           <Btn variant="primary" onClick={ops.save} disabled={!cur}>
             {dirty ? '保存 *' : '保存'}
           </Btn>
@@ -186,23 +224,29 @@ export default function Detail({ group, name }) {
               <Btn size="sm" variant="secondary" onClick={ops.newStyle}>
                 新风格
               </Btn>
-              <Btn
-                size="sm"
-                variant="secondary"
-                onClick={() => ops.setActive()}
-                disabled={!cur || cur.name === data.activeStyle}
-              >
-                设为当前
-              </Btn>
-              <Btn size="sm" variant="secondary" onClick={ops.rename}>
-                改名
-              </Btn>
-              <Btn size="sm" variant="secondary" onClick={ops.removeStyle} disabled={!cur}>
-                删风格
-              </Btn>
-              <Btn size="sm" variant="danger" onClick={ops.removeAsset}>
-                删图标
-              </Btn>
+              {/* 图标 / 风格的次要动作（设为当前 / 改名 / 删风格 / 删图标）收进这里。
+                  不叫「更多」：页头已有一颗页面级的「更多」（整页预览等），两颗同名
+                  同形上下相邻，作用域差异只有点开才看得见（用户反馈）。四项全部
+                  作用于当前图标或其风格，名字即作用域。 */}
+              <BtnMenu label="图标操作" size="sm" testId="detail-style-more" panelTestId="detail-style-more-panel">
+                <BtnMenuItem
+                  onClick={() => ops.setActive()}
+                  disabled={!cur || cur.name === data.activeStyle}
+                  testId="menu-set-active"
+                >
+                  设为当前
+                </BtnMenuItem>
+                <BtnMenuItem onClick={ops.rename} testId="menu-rename">
+                  改名
+                </BtnMenuItem>
+                <BtnMenuSep />
+                <BtnMenuItem onClick={ops.removeStyle} disabled={!cur} testId="menu-remove-style">
+                  删风格
+                </BtnMenuItem>
+                <BtnMenuItem danger onClick={ops.removeAsset} testId="menu-remove-asset">
+                  删图标
+                </BtnMenuItem>
+              </BtnMenu>
             </div>
           </div>
 
@@ -283,6 +327,22 @@ export default function Detail({ group, name }) {
                     rootRef={editRef}
                     onSave={ops.save}
                     onChange={() => setTick((n) => n + 1)}
+                    // 「颜色」是编辑平面里的一个模块页签（与 svg/css/js 同层，可拖动分栏），
+                    // 不再是预览下方的独立抽屉（用户反馈：没必要单独一个区块）。
+                    // 自动检测的硬编码色与色板 binding 原样保留。
+                    extras={{
+                      color: {
+                        label: '颜色',
+                        render: () => (
+                          <ColorPanel
+                            svg={liveSvg || cur?.svg}
+                            theme={theme}
+                            onChange={setTheme}
+                            onMigrate={migrateColors}
+                          />
+                        ),
+                      },
+                    }}
                   />
                 </div>
               </section>

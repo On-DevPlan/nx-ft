@@ -15,7 +15,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.js';
 import { Sidebar } from '../sidebar/index.jsx';
-import { DeleteGlyph, OpenGlyph, RenameGlyph, RevealGlyph } from '../sidebar/icons.jsx';
+import {
+  DeleteGlyph,
+  ExportGlyph,
+  ImportGlyph,
+  NewFileGlyph,
+  NewFolderGlyph,
+  OpenGlyph,
+  RenameGlyph,
+  RevealGlyph,
+} from '../sidebar/icons.jsx';
 import { buildTree, byOrder } from './tree.jsx';
 import { VIEWS } from '../../registry.js';
 import { onTreeChanged } from './tree-signal.js';
@@ -118,13 +127,18 @@ export function AssetSidebar({ kind }) {
 
   const {
     createAtSelected,
+    createSubDir,
+    createAssetInDir,
     renameDir,
     removeDir,
     renameAssetRow,
     removeAssetRow,
     revealRow,
+    importToDir,
+    exportDirRow,
     onMoveRow,
     dlgNode,
+    zipNode,
   } = useTreeOps({
     kind,
     groups,
@@ -147,10 +161,21 @@ export function AssetSidebar({ kind }) {
 
   // 行操作菜单：「⋯」按钮与右键共用的同一份（参见 sidebar/row-menu.jsx 与 node-row.jsx）。
   // 目录与资源行形态对称——打开 / 重命名 / 删除；「打开」与点行同路，菜单里给一份
-  // 入口是任务要求的冗余（不打开不可能执行操作，给一短路径省去找键盘习惯）。整树行
-  // 不带操作：它是「回到最外层」的落点，不该有删除之类的语义。
+  // 入口是任务要求的冗余（不打开不可能执行操作，给一短路径省去找键盘习惯）。
+  // 根行与树空白处（node 为 null）也有菜单：最外层的创建与定位——空白处的拖拽
+  // 落点本就是「最外层」，右键语义与它对齐；删除之类的语义依然不进这份菜单。
   const rowMenu = (node) => {
+    if (!node || node.kind === 'root') {
+      const root = node || { kind: 'root', path: `root:${kind}` };
+      return [
+        { label: '新建资源', icon: <NewFileGlyph />, run: () => createAssetInDir(root) },
+        { label: '新建文件夹', icon: <NewFolderGlyph />, run: () => createSubDir(root) },
+        { sep: true },
+        { label: '在文件管理器中打开', icon: <RevealGlyph />, run: () => revealRow(root) },
+      ];
+    }
     if (node.kind === 'dir') {
+      // 按功能簇分组：导航 / 创建 / 数据交换 / 位置·编辑 / 危险（见 plan/06）
       return [
         {
           label: '打开目录',
@@ -159,12 +184,21 @@ export function AssetSidebar({ kind }) {
             if (node.nav && location.hash !== node.nav) location.hash = node.nav;
           },
         },
+        { sep: true },
+        { label: '新建资源', icon: <NewFileGlyph />, run: () => createAssetInDir(node) },
+        { label: '新建文件夹', icon: <NewFolderGlyph />, run: () => createSubDir(node) },
+        { sep: true },
+        { label: '导入到该目录', icon: <ImportGlyph />, run: () => importToDir(node) },
+        { label: '导出该目录', icon: <ExportGlyph />, run: () => exportDirRow(node) },
+        { sep: true },
         { label: '在文件管理器中打开', icon: <RevealGlyph />, run: () => revealRow(node) },
         { label: '重命名 / 移动', icon: <RenameGlyph />, run: () => renameDir(node) },
+        { sep: true },
         { label: '删除目录', icon: <DeleteGlyph />, danger: true, run: () => removeDir(node) },
       ];
     }
     if (node.kind === 'asset') {
+      // 导航 / 位置·编辑 / 危险
       return [
         {
           label: '打开资源',
@@ -173,8 +207,10 @@ export function AssetSidebar({ kind }) {
             if (node.nav && location.hash !== node.nav) location.hash = node.nav;
           },
         },
+        { sep: true },
         { label: '在文件管理器中打开', icon: <RevealGlyph />, run: () => revealRow(node) },
         { label: '重命名', icon: <RenameGlyph />, run: () => renameAssetRow(node) },
+        { sep: true },
         { label: '删除资源', icon: <DeleteGlyph />, danger: true, run: () => removeAssetRow(node) },
       ];
     }
@@ -196,6 +232,7 @@ export function AssetSidebar({ kind }) {
         onMove={onMoveRow}
       />
       {dlgNode}
+      {zipNode}
     </>
   );
 }

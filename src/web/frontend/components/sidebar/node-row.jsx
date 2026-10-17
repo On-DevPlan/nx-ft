@@ -110,8 +110,10 @@ export function NodeRow({
         data-drop={dropping ? 'into' : lineTop ? 'before' : lineBottom ? 'after' : undefined}
         title={node.label || node.name}
         onClick={() => onSelect(node)}
+        // 根行也有右键菜单（新建 / 在文件管理器中打开，见调用方的 rowMenu）——
+        // 「整个侧边栏都该有右键」是明确要求，根行不该是例外。
         onContextMenu={
-          rowMenu && !isRoot
+          rowMenu
             ? (e) => {
                 e.preventDefault();
                 rowMenu(node, { x: e.clientX, y: e.clientY });
@@ -142,7 +144,7 @@ export function NodeRow({
         </span>
         <span className="gname">{node.label || node.name}</span>
         {folder && node.total > 0 ? <span className="gcount">{node.total}</span> : null}
-        {rowMenu && !isRoot ? (
+        {rowMenu ? (
           <span className="gacts" onClick={(e) => e.stopPropagation()}>
             <button
               title="更多操作"

@@ -3,7 +3,7 @@
 // 默认嵌在面板里（侧边栏保留）；「大屏模式」是用户主动选择的覆盖态（.wb-fullscreen）。
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../api/client.js';
-import { Btn, BtnBar, BtnBarSpacer, BtnMenu, BtnMenuItem } from '../btn/index.jsx';
+import { Btn, BtnBar, BtnBarSpacer, BtnMenu, BtnMenuItem, BtnMenuLabel, BtnMenuSep } from '../btn/index.jsx';
 import { useDialog, useGuard, useToast } from '../ui.jsx';
 import { Crumbs } from './parts.jsx';
 import { makeAssetOps } from './useAssetOps.js';
@@ -237,40 +237,39 @@ function i18nErr(msg) {
           </select>
           {style?.desc ? <span className="wb-desc" title={style.desc}>{style.desc}</span> : null}
           {style ? <span className="tag">历史 {style.historyCount}/5</span> : null}
-          {/* 次级按钮（频次从高到低：新建风格、描述、大屏模式）→ 次级下拉（更多）→ 主按钮（保存）。
-              顺序由 BtnBar 的 CSS 兜住（最后一个主按钮压到行右），本文件只管内容。 */}
+          {/* 右上角只留三个动作位（select / 新风格 / 更多 / 保存）：原先 6 颗按钮一字排开，
+              930px 视口挤到两行（用户反馈「右上角也太复杂了」）；其余按作用域收进
+              「更多」，频次最高的「新风格」留在明面（与 svg 资源页 ident 行一致）。 */}
           <Btn onClick={ops.newStyle} testId="wb-new-style">新风格</Btn>
-          <Btn onClick={ops.setStyleDesc} disabled={!asset?.styles.length} testId="wb-style-desc">
-            描述
-          </Btn>
-          <Btn
-            onClick={() => setBig((b) => !b)}
-            testId="wb-big"
-            title={big ? '退出大屏模式(回到带侧边栏的常规视图)' : '进入大屏模式(隐藏侧边栏)'}
-          >
-            {big ? '退出大屏' : '大屏模式'}
-          </Btn>
-          {/* 色彩资源:加「全屏 Studio」入口(强制 fixed:inset:0 渲染 color-studio)。
-              走次级 Btn 而非 primary——按钮行规矩:主按钮有且只有一个(保存),排在最后。 */}
-          {kind === 'color' && (
-            <Btn
-              variant="secondary"
-              onClick={() => {
-                location.hash = `#/color/edit/${encodeURIComponent(group)}/${encodeURIComponent(name)}/full`;
-              }}
-              title="打开全屏 ColorStudio(色盘/比例/笔刷三视图,1:1 复刻 ve 项目)"
-            >
-              全屏 Studio →
-            </Btn>
-          )}
           <BtnMenu label="更多" testId="wb-more" panelTestId="wb-more-panel">
-            <BtnMenuItem
-              onClick={ops.removeStyle}
-              disabled={!asset?.styles.length}
-              testId="wb-remove-style"
+            <BtnMenuLabel>视图</BtnMenuLabel>
+            <BtnMenuItem onClick={() => setBig((b) => !b)} testId="wb-big"
+              title={big ? '退出大屏模式(回到带侧边栏的常规视图)' : '进入大屏模式(隐藏侧边栏)'}
             >
+              {big ? '退出大屏' : '大屏模式'}
+            </BtnMenuItem>
+            {/* 色彩资源:全屏 ColorStudio 入口(色盘/比例/笔刷三视图) */}
+            {kind === 'color' && (
+              <BtnMenuItem
+                onClick={() => {
+                  location.hash = `#/color/edit/${encodeURIComponent(group)}/${encodeURIComponent(name)}/full`;
+                }}
+                title="打开全屏 ColorStudio(色盘/比例/笔刷三视图,1:1 复刻 ve 项目)"
+                testId="wb-studio-full"
+              >
+                全屏 Studio →
+              </BtnMenuItem>
+            )}
+            <BtnMenuSep />
+            <BtnMenuLabel>风格</BtnMenuLabel>
+            <BtnMenuItem onClick={ops.setStyleDesc} disabled={!asset?.styles.length} testId="wb-style-desc">
+              风格描述
+            </BtnMenuItem>
+            <BtnMenuItem onClick={ops.removeStyle} disabled={!asset?.styles.length} testId="wb-remove-style">
               删除当前风格
             </BtnMenuItem>
+            <BtnMenuSep />
+            <BtnMenuLabel>资源</BtnMenuLabel>
             <BtnMenuItem onClick={ops.renameAsset} testId="wb-rename">改展示名</BtnMenuItem>
             <BtnMenuItem danger onClick={ops.removeAsset} testId="wb-remove">删除资源</BtnMenuItem>
           </BtnMenu>

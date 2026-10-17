@@ -9,9 +9,9 @@ import { exportZip as exportAssetZip } from '../core/assets/set.js';
 // 路径按 kind 走：/api/svg/export.zip、/api/html/export.zip
 export const EXPORT_ZIP_RE = /^\/api\/([a-z]+)\/export\.zip$/;
 
-// 与上传端同一张分派表：svg 平铺单文件 / html 一资源一目录三件套。
-// 两者返回同构（filename / buffer / count / skipped），这里无需区分。
-const EXPORTERS = { svg: exportSvgZip, html: exportAssetZip };
+// 与上传端同一张分派表：svg 平铺单文件 / html 一资源一目录三件套 / color 单 data。
+// 三者返回同构（filename / buffer / count / skipped），这里无需区分。
+const EXPORTERS = { svg: exportSvgZip, html: exportAssetZip, color: exportAssetZip };
 
 export async function handleZipDownload(req, res, url, kind) {
   if (req.method !== 'GET') {

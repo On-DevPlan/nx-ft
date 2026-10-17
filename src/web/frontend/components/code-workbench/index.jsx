@@ -37,6 +37,7 @@ export function readSlotCode(root, slots) {
  * @param {Record<string,string>} [code]  当前风格各 slot 初值
  * @param {string} [codeKey]  换风格时清种子 / 重挂载编辑器
  * @param {import('react').Ref} [rootRef]  父页读草稿用（与内部 root 合并）
+ * @param {Record<string,{label:string,render:Function}>} [extras]  非代码模块页签
  */
 export function MultiPaneEditor({
   layoutKey,
@@ -48,11 +49,18 @@ export function MultiPaneEditor({
   onChange,
   onSave,
   rootRef: rootRefProp,
+  // 非代码模块页签：{ [slotId]: { label, render() } }。与其余 slot 同层——
+  // 一样能拖动合并 / 分栏，只是内容不是 CodeEditor（如 svg 编辑区的「颜色」面板）。
+  extras = null,
 }) {
+  // 页签全集 = 代码 slots + 模块 slots。布局持久化按全集校验：老快照（没有模块
+  // slot）对不上 → 回退单面板默认布局，编排过的话会重排一次，属可接受的迁移。
+  const extraSlots = Object.keys(extras || {});
+  const tabSlots = [...slots, ...extraSlots];
   const toast = useToast();
   const bootRef = useRef(null);
   if (!bootRef.current) {
-    bootRef.current = initLayout(slots, loadDefaultLayout(layoutKey, slots));
+    bootRef.current = initLayout(tabSlots, loadDefaultLayout(layoutKey, tabSlots));
   }
   const [layout, setLayout] = useState(() => bootRef.current);
   const idSeq = useRef(bootRef.current.panels.length);
@@ -94,13 +102,13 @@ export function MultiPaneEditor({
     return ready ? String(code?.[slot] ?? '') : '';
   };
 
-  const slotsKey = slots.join(',');
+  const slotsKey = tabSlots.join(',');
   const layoutBootKey = useRef(`${layoutKey}:${slotsKey}`);
   useEffect(() => {
     const key = `${layoutKey}:${slotsKey}`;
     if (layoutBootKey.current === key) return;
     layoutBootKey.current = key;
-    const next = initLayout(slots, loadDefaultLayout(layoutKey, slots));
+    const next = initLayout(tabSlots, loadDefaultLayout(layoutKey, tabSlots));
     setSeeds({});
     setLayout(next);
     idSeq.current = next.panels.length;
@@ -231,6 +239,7 @@ export function MultiPaneEditor({
       axis={axis}
       multi={multi}
       labels={labels}
+      extras={extras}
       ready={ready}
       codeKey={codeKey}
       hint={hint}

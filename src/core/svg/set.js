@@ -178,36 +178,90 @@ export function importZipBuffer({ kind, group, zip, style = 'default', tags, lab
 // exportZip 把同一批文件**装进内存里的一个 zip** 交给 HTTP 层——
 // 面板上点「批量导出」就该直接下载，而不是先让人填一个目录路径。
 // 取文件的规则与 exportDir 完全一致（同一套「当前风格」判定），只是不落盘。
-export function exportZip({ kind, group, style } = {}) {
-  assertKind(kind);
-  const groupPaths = group
-    ? [parseGroupPath(group)]
-    : st.scanGroups(kind).map((g) => g.groupPath);
-  if (!groupPaths.length) throw notFound('库里还没有任何分组');
+// 把一个资源按当前风格取 svg 槽位：成功推入 entries，失败推入 skipped。
+// 与 core/assets/set.js 的 pushItem 同构，差异只在 svg 只取单文件（平铺），
+// 而 html 取三件套（一资源一目录）。
+function pushSvgEntry(entries, skipped, gp, a, style) {
+  const useStyle = style || a.activeStyle || Object.keys(a.styles)[0];
+  if (!useStyle || !a.styles[useStyle]) {
+    skipped.push({ group: gp, name: a.name, reason: '没有可导出的风格' });
+    return;
+  }
+  const svg = st.readCodeFiles('svg', gp, a.name, useStyle, SLOTS).svg || '';
+  if (!svg.trim()) {
+    skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的 svg 槽位为空` });
+    return;
+  }
+  entries.push({ name: `${gp}/${a.name}.svg`, data: svg });
+}
 
+export function exportZip({ kind, group, style, pick } = {}) {
+  assertKind(kind);
   const entries = [];
   const skipped = [];
-  for (const gp of groupPaths) {
-    const manifest = st.loadGroup(kind, gp);
-    if (!manifest) throw notFound(`分组不存在: ${gp}`);
-    for (const a of Object.values(manifest.assets).filter((x) => x.kind === kind)) {
-      const useStyle = style || a.activeStyle || Object.keys(a.styles)[0];
-      if (!useStyle || !a.styles[useStyle]) {
-        skipped.push({ group: gp, name: a.name, reason: '没有可导出的风格' });
-        continue;
+  const seen = new Set(); // 去重：整选目录与子项混选时同一资源只取一次
+
+  // 选区模式：dir 项递归该目录及所有子分组；asset 项单列。
+  // 与 core/assets/set.js 的 pick 分支逐条同构（group 模式只导出该组本身、不递归，
+  // 故右键目录"导出整个文件夹"必须走 pick）。
+  if (pick) {
+    if (!Array.isArray(pick) || !pick.length) throw badInput('pick 不能为空');
+    const all = st.scanGroups(kind); // [{groupPath, manifest}]
+    for (const p of pick) {
+      if (!p || typeof p !== 'object') throw badInput('pick 项必须是对象');
+      if (p.type === 'dir') {
+        const dirPath = String(p.path || '');
+        if (!dirPath) { skipped.push({ group: dirPath, name: '', reason: 'dir 项缺 path' }); continue; }
+        for (const { groupPath, manifest } of all) {
+          if (groupPath === dirPath || groupPath.startsWith(dirPath + '/')) {
+            for (const a of Object.values(manifest.assets).filter((x) => x.kind === kind)) {
+              const key = `${groupPath}/${a.name}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
+              pushSvgEntry(entries, skipped, groupPath, a, style);
+            }
+          }
+        }
+      } else if (p.type === 'asset') {
+        // p.key = 'group/name'（group 段本身可含 /，按最后一段切资源名）
+        const key = String(p.key || '');
+        const lastSlash = key.lastIndexOf('/');
+        if (lastSlash <= 0) { skipped.push({ group: '', name: key, reason: 'asset key 非法' }); continue; }
+        const gp = key.slice(0, lastSlash);
+        const nm = key.slice(lastSlash + 1);
+        const manifest = st.loadGroup(kind, parseGroupPath(gp));
+        if (!manifest) { skipped.push({ group: gp, name: nm, reason: '分组不存在' }); continue; }
+        const a = manifest.assets[nm];
+        if (!a || a.kind !== kind) { skipped.push({ group: gp, name: nm, reason: '资源不存在' }); continue; }
+        const dedupKey = `${gp}/${nm}`;
+        if (seen.has(dedupKey)) continue;
+        seen.add(dedupKey);
+        pushSvgEntry(entries, skipped, gp, a, style);
+      } else {
+        throw badInput('pick 项 type 必须是 dir 或 asset');
       }
-      const svg = st.readCodeFiles(kind, gp, a.name, useStyle, SLOTS).svg || '';
-      if (!svg.trim()) {
-        skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的 svg 槽位为空` });
-        continue;
+    }
+  } else {
+    const groupPaths = group
+      ? [parseGroupPath(group)]
+      : st.scanGroups(kind).map((g) => g.groupPath);
+    if (!groupPaths.length) throw notFound('库里还没有任何分组');
+    for (const gp of groupPaths) {
+      const manifest = st.loadGroup(kind, gp);
+      if (!manifest) throw notFound(`分组不存在: ${gp}`);
+      for (const a of Object.values(manifest.assets).filter((x) => x.kind === kind)) {
+        pushSvgEntry(entries, skipped, gp, a, style);
       }
-      entries.push({ name: `${gp}/${a.name}.svg`, data: svg });
     }
   }
+
   if (!entries.length) throw notFound('没有可导出的资源（都缺风格或内容为空）');
 
   const stamp = new Date().toISOString().slice(0, 10);
-  const scope = group ? group.replace(/\//g, '-') : `${kind}-all`;
+  let scope;
+  if (pick) scope = `${kind}-pick-${entries.length}`;
+  else if (group) scope = group.replace(/\//g, '-');
+  else scope = `${kind}-all`;
   return {
     status: 'ok',
     filename: `${scope}-${stamp}.zip`,

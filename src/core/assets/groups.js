@@ -250,6 +250,13 @@ function listDirs(dir) {
 // 否则「打开」会指向一个不存在的路径，用户看到的是文件管理器报错。
 export function revealDir({ kind, group, name }) {
   assertKind(kind);
+  // 不带 group 也不带 name（CLI 裸命令 / 面板根行与树空白处的右键）= 本域根目录。
+  // parseGroupPath 不认空串，这里先行短路——「根」是合法落点，不是缺参。
+  if (!group && !name) {
+    const root = st.groupsRoot(kind);
+    openPath(root);
+    return { status: 'ok', path: root, group: '', name: null };
+  }
   const groupPath = parseGroupPath(group);
   let dir = name ? st.assetBaseDir(kind, groupPath, name) : st.groupDir(kind, groupPath);
   if (!existsSync(dir)) {

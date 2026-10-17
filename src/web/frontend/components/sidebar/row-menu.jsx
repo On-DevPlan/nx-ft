@@ -1,6 +1,7 @@
 // 行操作菜单：「⋯」按钮与行右键共用的弹出菜单。
 // 通用层只管「怎么弹、怎么关」；菜单里有什么（打开 / 重命名 / 删除…）由调用方
-// 通过 items 给出——[{ label, icon?, danger?, run }]，run 在点击时执行（闭包里带原节点）。
+// 通过 items 给出——[{ label, icon?, danger?, run }]，run 在点击时执行（闭包里带原节点）；
+// 项写成 { sep: true } 时渲染为分组分隔线（不可点）。
 // 弹层本体由 Sidebar 统一渲染一份（行上不各自挂浮层）。
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
@@ -42,21 +43,25 @@ export function RowMenu({ items, at, onClose }) {
       // 菜单上右键不应再叠一层菜单
       onContextMenu={(e) => e.preventDefault()}
     >
-      {items.map((it, i) => (
-        <button
-          key={i}
-          type="button"
-          role="menuitem"
-          className={'gmenu-item' + (it.danger ? ' danger' : '')}
-          onClick={() => {
-            onClose();
-            it.run();
-          }}
-        >
-          {it.icon ? <span className="gmenu-ico">{it.icon}</span> : null}
-          {it.label}
-        </button>
-      ))}
+      {items.map((it, i) =>
+        it.sep ? (
+          <div key={i} role="separator" className="gmenu-sep" />
+        ) : (
+          <button
+            key={i}
+            type="button"
+            role="menuitem"
+            className={'gmenu-item' + (it.danger ? ' danger' : '')}
+            onClick={() => {
+              onClose();
+              it.run();
+            }}
+          >
+            {it.icon ? <span className="gmenu-ico">{it.icon}</span> : null}
+            {it.label}
+          </button>
+        ),
+      )}
     </div>
   );
 }

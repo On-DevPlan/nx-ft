@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { deflateRawSync } from 'node:zlib';
 import { Buffer } from 'node:buffer';
 import { crc32, unzipStore, zipStore } from '../../src/core/zip.js';
-import { importDir, importZipBuffer } from '../../src/core/svg/set.js';
+import { exportZip as exportSvgZip, importDir, importZipBuffer } from '../../src/core/svg/set.js';
 import * as assetSet from '../../src/core/assets/set.js';
 import { EXPORT_ZIP_RE, handleZipDownload } from '../../src/runtime/zip-download.js';
 import { IMPORT_ZIP_RE, handleZipUpload } from '../../src/runtime/zip-upload.js';
@@ -174,6 +174,36 @@ test('importDir --from x.zip：dry-run 不落库，重复导入是跳过', () =>
   assert.throws(() => importDir({ kind: 'svg', group: 'zip/icons', from: join(dir, 'nope.zip') }), /不存在或不可读/);
 });
 
+test('svg pick 导出：dir 项递归子目录（group 模式只导出该组本身）', () => {
+  sandbox();
+  // 父目录一个资源，子目录一个资源
+  importZipBuffer({ kind: 'svg', group: 'pick/parent', zip: zipStore([{ name: 'plus.svg', data: PLUS }]), labelFrom: 'filename' });
+  importZipBuffer({ kind: 'svg', group: 'pick/parent/child', zip: zipStore([{ name: 'minus.svg', data: MINUS }]), labelFrom: 'filename' });
+
+  // group 模式：只导出父组本身，不含子目录
+  const g = exportSvgZip({ kind: 'svg', group: 'pick/parent' });
+  assert.equal(g.count, 1);
+  assert.deepEqual(unzipStore(g.buffer).map((e) => e.name), ['pick/parent/plus.svg']);
+
+  // pick 模式（右键目录"导出整个文件夹"）：递归含子目录
+  const p = exportSvgZip({ kind: 'svg', pick: [{ type: 'dir', path: 'pick/parent' }] });
+  assert.equal(p.count, 2);
+  assert.deepEqual(
+    unzipStore(p.buffer).map((e) => e.name).sort(),
+    ['pick/parent/child/minus.svg', 'pick/parent/plus.svg']
+  );
+  assert.match(p.filename, /svg-pick-2/);
+
+  // asset 单列：只取该资源
+  const one = exportSvgZip({ kind: 'svg', pick: [{ type: 'asset', key: 'pick/parent/child/minus' }] });
+  assert.equal(one.count, 1);
+  assert.deepEqual(unzipStore(one.buffer).map((e) => e.name), ['pick/parent/child/minus.svg']);
+
+  // 空选区 / 非法项：如实报错
+  assert.throws(() => exportSvgZip({ kind: 'svg', pick: [] }), /pick 不能为空/);
+  assert.throws(() => exportSvgZip({ kind: 'svg', pick: [{ type: 'bad' }] }), /必须是 dir 或 asset/);
+});
+
 // ---- html 域：一资源一目录三件套（core/assets/set.js） ----
 // 与上面 svg 那组对应：同一套规矩（查重、dry-run、跳过不覆盖、条目过滤），
 // 换的只是「约定」——平铺单文件 vs 一资源一目录。
@@ -266,6 +296,8 @@ test('html 三件套：导出目录 / zip 与导入往返恒等，dry-run 不落
   assert.equal(dup.imported.length, 0);
   assert.equal(dup.skipped.length, 1);
 });
+
+// color 域的 zip 往返见 zip-color.test.mjs（单 data 槽，按域拆分以控行数）。
 
 // ---- HTTP 分派：/api/<kind>/{import,export}.zip ----
 // 假 req/res 直调 handler：这层钉的是「kind 从路径来、走对那份约定」，

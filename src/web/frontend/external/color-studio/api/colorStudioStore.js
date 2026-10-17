@@ -92,14 +92,26 @@ async function load() {
   const urlView = queryParam("view");
   const urlPalette = queryParam("palette");
   const mainView = urlView === "proportional" || urlView === "brush" ? urlView : "wheel";
+  const activeId = urlPalette && palettes.find((p) => p.id === urlPalette) ? urlPalette : palettes[0].id;
+  const activePalette = palettes.find((p) => p.id === activeId);
+  // 重开 Studio 要回到上次的和声状态：规则按钮高亮、色轮派生标记、色轮指示都读 viewState，
+  // 不能硬编码 null（否则 data 里存了 harmony 却显示「无」、不画派生标记——像功能坏了）。
+  const activeHarmony = activePalette?.harmony?.type ?? null;
   return {
     meta: { schemaVersion: "1.3.0", createdAt: palettes[0].createdAt, updatedAt: Date.now(), authorEmail: "" },
-    activePaletteId: urlPalette && palettes.find((p) => p.id === urlPalette) ? urlPalette : palettes[0].id,
+    activePaletteId: activeId,
     palettes,
     colorEntries,
     filterStack: [],
     pickHistory: [],
-    viewState: { leftPane: "palettes", showHarmony: false, selectedHarmony: null, brightness: 100, mainView, selectedColorId: null }
+    viewState: {
+      leftPane: "palettes",
+      showHarmony: activeHarmony != null,
+      selectedHarmony: activeHarmony,
+      brightness: 100,
+      mainView,
+      selectedColorId: activePalette?.harmony?.anchorColorId ?? null
+    }
   };
 }
 async function save(doc) {

@@ -18,6 +18,7 @@
 // 因此不需要给 html/body 加全局样式——组件没被渲染时全库零影响。
 import { createContext, useContext, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { SideResizer, useSideWidth } from './side-resizer.jsx';
 
 const BarCtx = createContext(null);
 
@@ -30,12 +31,22 @@ export function ShellBar({ children }) {
 export function Layout({ mode = 'a', header = null, sidebar = null, toolbar = null, children }) {
   const withSide = mode === 'a' && !!sidebar;
   const [barEl, setBarEl] = useState(null);
+  // 侧边栏宽度（像素）：拖拽分隔条调整，落 localStorage 记忆。宽度通过 CSS 变量
+  // --side-w 下发给 .gside（width 与 fold 负 margin 都读它，见 sidebar.css）。
+  const { sideW, beginDrag, onKeyDown, reset } = useSideWidth();
   return (
     <BarCtx.Provider value={barEl}>
       <div className="shell" data-testid="layout" data-mode={withSide ? 'a' : 'b'}>
         <header>{header}</header>
         <div className="shell-row">
-          {withSide ? <div className="shell-side">{sidebar}</div> : null}
+          {withSide ? (
+            <div className="shell-side" style={{ '--side-w': `${sideW}px` }}>
+              {sidebar}
+            </div>
+          ) : null}
+          {withSide ? (
+            <SideResizer sideW={sideW} beginDrag={beginDrag} onKeyDown={onKeyDown} reset={reset} />
+          ) : null}
           <main>
             <div className="shell-bar" ref={setBarEl} data-testid="layout-toolbar">
               {toolbar}

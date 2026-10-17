@@ -25,8 +25,9 @@ import { addGroup } from './groups.js';
 import * as st from './storage.js';
 import { unzipStore, zipStore } from '../zip.js';
 
-// 槽位 → 三件套里的文件名（主槽随 kind 变：html 的 index.html / svg 的 icon.svg）
-const FILES = { html: 'index.html', svg: 'icon.svg', css: 'style.css', js: 'script.js' };
+// 槽位 → 资源目录里的文件名（主槽随 kind 变：html 的 index.html / svg 的 icon.svg /
+// color 的 data）。color 的 data 槽无扩展名，slot 名即文件名（与 storage.codeFilePath 一致）。
+const FILES = { html: 'index.html', svg: 'icon.svg', css: 'style.css', js: 'script.js', data: 'data' };
 
 const slotsOf = (kind) => ASSET_KINDS[kind].slots;
 const fileNameOf = (slot) => FILES[slot];
@@ -39,6 +40,17 @@ function labelFromTitle(code, fallback) {
   const m = String(code).match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const t = m ? m[1].replace(/\s+/g, ' ').trim() : '';
   return t || fallback;
+}
+
+// color 的主槽是 Palette JSON（没有 <title>），展示名取 JSON 的 name，解析失败回退。
+function labelFromPalette(code, fallback) {
+  try {
+    const p = JSON.parse(code);
+    const t = p && p.name ? String(p.name).trim() : '';
+    return t || fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 // zip 条目 → 每资源一组槽位代码。目录名（最后一段）派生资源名，
@@ -62,7 +74,7 @@ function sourcesFromZip(kind, zip, from) {
     .map(([dir, code]) => ({ rel: dir, name: dir.split('/').pop(), code }));
   if (!sources.length) {
     throw notFound(
-      `zip 里没有可导入的资源目录（约定：<目录>/${fileNameOf(slots[0])} 等三件套）${from ? `: ${from}` : ''}`
+      `zip 里没有可导入的资源目录（约定：<目录>/${fileNameOf(slots[0])} 等槽位文件）${from ? `: ${from}` : ''}`
     );
   }
   return sources;
@@ -109,7 +121,10 @@ function buildImportPlan(kind, sources, labelFrom) {
   const plan = sources.map((s) => {
     const name = assertSafeName(String(s.name).trim(), '由目录名派生的资源名');
     const raw = s.code[main] || '';
-    return { name, label: labelFrom === 'title' ? labelFromTitle(raw, name) : name, rel: s.rel, code: s.code };
+    const label = labelFrom === 'title'
+      ? (kind === 'color' ? labelFromPalette(raw, name) : labelFromTitle(raw, name))
+      : name;
+    return { name, label, rel: s.rel, code: s.code };
   });
   const seen = new Map();
   const dupes = [];
@@ -218,7 +233,7 @@ function collectExports({ kind, group, style, pick }) {
       const code = st.readCodeFiles(kind, gp, a.name, useStyle, slots);
       const nonEmpty = slots.filter((s) => String(code[s] || '').trim());
       if (!nonEmpty.length) {
-        skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的三个槽位都是空的` });
+        skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的槽位都是空的` });
         return;
       }
       const key = `${gp}/${a.name}`;
@@ -276,7 +291,7 @@ function collectExports({ kind, group, style, pick }) {
       const code = st.readCodeFiles(kind, gp, a.name, useStyle, slots);
       const nonEmpty = slots.filter((s) => String(code[s] || '').trim());
       if (!nonEmpty.length) {
-        skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的三个槽位都是空的` });
+        skipped.push({ group: gp, name: a.name, reason: `风格 ${useStyle} 的槽位都是空的` });
         continue;
       }
       items.push({ group: gp, name: a.name, style: useStyle, code, slots: nonEmpty });

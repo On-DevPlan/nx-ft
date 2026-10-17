@@ -90,6 +90,47 @@ main { padding: 16px; }
 /* 工具区右侧的动作组：给组容器加 style={{marginLeft:'auto'}}（与 header 的 .meta 同一套做法） */
 .shell-content { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
 
+/* 侧边栏宽度分隔条（「资源管理面板 ↔ 内容区」之间的竖线，拖拽调整左右分配）。
+ * 不占 flex 空间（width:0），命中区用 ::before 向边界两侧各扩 3px，默认视觉
+ * 仍是 .gside 的 border-right；hover / 聚焦 / 拖拽时在边界浮出 2px 强调色竖线。
+ * 与工作台 SplitPane 同思路（见 split.css），但这里调的是像素宽度。
+ * z-index 压在折叠把手（2）之下、main 内容之上，保证命中区可点又不挡把手。
+ * 折叠态（.gside.fold）下整列宽 0，分隔条隐藏，只留折叠把手。 */
+.shell-resizer {
+  flex: none;
+  position: relative;
+  width: 0;
+  align-self: stretch;
+  cursor: col-resize;
+  z-index: 1;
+}
+.shell-resizer::before {
+  /* 命中区：边界两侧各 3px，透明（不画视觉线，避免被判装饰性渐变） */
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  width: 7px;
+}
+.shell-resizer::after {
+  /* 高亮线：2px 纯强调色竖线，居中在边界；hover / 聚焦 / 拖拽时浮出 */
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.shell-resizer:hover::after,
+.shell-resizer:focus-visible::after,
+body.sp-dragging .shell-resizer::after { opacity: 1; }
+/* 折叠态隐藏分隔条（:has 同 asset-workbench.css 用法） */
+.shell-side:has(.gside.fold) + .shell-resizer { display: none; }
+
 /* --- 工具区下拉里用的 chevron 角标 ---
  * 工具区自己的 .btn-menu*（位置 / 打开态 / 面板样式）都搬去 styles/btn.css 了；
  * 这里只留一个 chevron 旋转角标，给 workbench 那个 22x22 的 wb-tab-more 复用

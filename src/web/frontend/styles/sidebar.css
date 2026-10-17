@@ -14,11 +14,12 @@
   --sb-fol: color-mix(in srgb, var(--sb-blue) 64%, #fff);
   --sb-focus: color-mix(in srgb, var(--sb-blue) 38%, transparent);
   --sb-drop: color-mix(in srgb, var(--ink) 45%, transparent); /* 拖入描边/插入线：墨色 45% —— 有对比但不砸 */
-  --side-w: 232px;
 
   position: relative; /* 把手 .gside-collapse（head 里的真按钮）以这条边为定位基准 */
   flex: none;
-  width: var(--side-w);
+  /* 宽度由 Layout 注入的 --side-w（拖拽分隔条调整，见 layout/side-resizer.jsx）；
+     单独使用时回退默认 232px。 */
+  width: var(--side-w, 232px);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -33,7 +34,7 @@
  * 把手（.gside-collapse）是独立的绝对定位按钮，跟着盒子右缘走，
  * 收起后正好停在 main 左缘，永远可见可点。 */
 .gside.fold {
-  margin-left: calc(-1 * var(--side-w));
+  margin-left: calc(-1 * var(--side-w, 232px));
   border-right-color: transparent; /* 收起后边线归位成隐形，展开时随滑动淡入 */
 }
 
@@ -378,6 +379,12 @@
 .gmenu-item.danger:hover { background: var(--bad-soft); }
 .gmenu-ico { flex: none; width: 13px; height: 13px; color: var(--mid); display: inline-flex; }
 .gmenu-item.danger .gmenu-ico { color: var(--bad); }
+/* 分组分隔线：1px 细线（与边框同色），上下留 4px、左右贴边，仅用来分功能簇 */
+.gmenu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--soft-2);
+}
 
 /* ---- 设置气泡（2.3 双开关的入口）----
  * 齿轮与气泡同在 .gcfg 里：点齿轮自己负责开/关，点外面关（看 head.jsx）。

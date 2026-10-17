@@ -16,10 +16,11 @@ import { toErrorPayload, httpStatusOf, badInput } from '../core/errors/index.js'
 export const IMPORT_ZIP_RE = /^\/api\/([a-z]+)\/import\.zip$/;
 
 // 两种约定并列（都与 CLI 的 <kind> import 同一份核心函数）：
-//   svg  —— 一资源一文件平铺（core/svg/set.js）
-//   html —— 一资源一目录三件套（core/assets/set.js）
+//   svg   —— 一资源一文件平铺（core/svg/set.js）
+//   html / color —— 一资源一目录（core/assets/set.js，槽位随 kind 变：
+//            html 三件套 index.html/style.css/script.js；color 单 data 文件）
 // 返回结构一致，上层无需区分；未知 kind 直接 404（不猜）。
-const IMPORTERS = { svg: importSvgZip, html: importAssetZip };
+const IMPORTERS = { svg: importSvgZip, html: importAssetZip, color: importAssetZip };
 
 // 图标包都是几 KB 级的文本文件集合；给到 32MB 已经远超合理规模，
 // 真到这个量级该走 CLI 而不是浏览器上传。
