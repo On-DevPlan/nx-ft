@@ -1,5 +1,4 @@
 // 资源页的呈现件：风格条 / 描述面板 / 规范问题 / 标签条 / CLI 命令块。
-import { useEffect, useState } from 'react';
 import { Btn } from '../btn/index.jsx';
 import { Copyable } from '../ui.jsx';
 import { assetCommands, heredocSnippet } from './cli.js';
@@ -55,71 +54,9 @@ export function StyleStrip({ styles = [], activeStyle, current, onPick }) {
   );
 }
 
-// 描述编辑器：主描述 + 当前选中**那一**风格的特征，两个输入框。
-//
-// 原来显示所有风格的输入框，但用户反馈「未选中的不应混进来」：
-// 编辑描述的目标是修当前胶囊对应的特征，其他风格的描述入口在常驻栏已经常驻可看，
-// 没必要每开一次编辑都把所有都展开。切换胶囊（即换当前风格）后再 useEffect 重置表单。
-// 为什么要有「主描述」：资源多了以后靠名字找不回来，靠描述才召回得准
+// 描述编辑器已搬进抽屉（./desc-drawer.jsx 的 DescDrawer）：主描述 + 全部风格
+// 一次填完。为什么要有「主描述」：资源多了以后靠名字找不回来，靠描述才召回得准
 // （配合 tree --search —— 搜索会命中主描述与风格描述）。
-export function DescEditor({ desc, styles = [], current, onCancel, onSave, busy }) {
-  const [mainText, setMainText] = useState(desc || '');
-  const [styleText, setStyleText] = useState({});
-
-  useEffect(() => {
-    setMainText(desc || '');
-  }, [desc]);
-
-  // 只追踪当前风格的初始描述：表单里只显示当前那一个，其他的不参与编辑
-  useEffect(() => {
-    if (!current) return;
-    const s = styles.find((x) => x.name === current);
-    setStyleText((prev) => ({ ...prev, [current]: s?.desc || '' }));
-  }, [current, styles]);
-
-  const cur = current ? styles.find((s) => s.name === current) : null;
-
-  return (
-    <div className="desc-edit" data-testid="desc-edit">
-      <label className="desc-field">
-        <span className="desc-label">主描述（这个资源是什么场景）</span>
-        <input
-          className="desc-input"
-          spellCheck="false"
-          placeholder="如：一只骑车送外卖的鹈鹕，用于首页加载动画"
-          value={mainText}
-          disabled={busy}
-          onChange={(e) => setMainText(e.target.value)}
-          data-testid="desc-main-input"
-        />
-      </label>
-      {cur ? (
-        <label className="desc-field">
-          <span className="desc-label">
-            风格 <span className="mono">{cur.name}</span>（这一套的特征）
-          </span>
-          <input
-            className="desc-input"
-            spellCheck="false"
-            placeholder="如：整体更圆润，适合深色底"
-            value={styleText[cur.name] || ''}
-            disabled={busy}
-            onChange={(e) => setStyleText((prev) => ({ ...prev, [cur.name]: e.target.value }))}
-            data-testid={`desc-style-input-${cur.name}`}
-          />
-        </label>
-      ) : null}
-      <div className="desc-actions">
-        <Btn size="sm" variant="primary" busy={busy} onClick={() => onSave(mainText, styleText)} testId="desc-save">
-          保存全部
-        </Btn>
-        <Btn size="sm" variant="secondary" disabled={busy} onClick={onCancel}>
-          取消
-        </Btn>
-      </div>
-    </div>
-  );
-}
 
 // 规范问题清单：每条带 code 短标签 + 人读说明 + 怎么改。
 // profile 决定「没问题」时那句话怎么说——插画/动画不套图标那套，

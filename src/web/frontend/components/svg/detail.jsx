@@ -1,4 +1,4 @@
-// 资源页（路由 `#/svg/asset/<分组>/<名字>`）：一枚图标的全貌与编辑器。
+// 资源页（路由 `#/svg/edit/<分组>/<名字>`，关键字见 modules/svg/view.jsx 的 parseSvgRoute）：一枚图标的全貌与编辑器。
 //
 // 与共用面板（components/asset）的区别：那里是「html/svg 通用的资源浏览器」，
 // 按资源切换；这里专治图标集——多风格并排、规范问题清单、编辑历史回退、
@@ -14,7 +14,8 @@ import { Modal, useDialog, useGuard, useToast } from '../ui.jsx';
 import { ColorPanel } from './color-panel.jsx';
 import { migrateToVars } from './color-vars.js';
 import { makeDetailOps } from './detail-ops.jsx';
-import { CliBlock, DescEditor, IssueList, StyleStrip, TagBar } from './detail-parts.jsx';
+import { CliBlock, IssueList, StyleStrip, TagBar } from './detail-parts.jsx';
+import { DescDrawer } from './desc-drawer.jsx';
 import { Crumb, Empty } from './parts.jsx';
 import { Icon, IconGhost } from './svg-inline.jsx';
 import { useDetail, useNav } from './useSvg.js';
@@ -137,16 +138,17 @@ export default function Detail({ group, name }) {
 
   const issues = cur?.audit?.issues || [];
 
-  // 描述面板的「保存全部」：主描述 + 只提交**当前选中**那一格的风格描述（编辑表单里
-  // 也只显示这一格）。原来循环所有风格是表单里给所有都渲染了一行，现在表单收窄到
-  // 单格，保存也跟着收窄 —— 改其它格的描述就在常驻栏里点对应的胶囊切到当前，再开编辑。
+  // 描述抽屉的「保存全部」：主描述无条件存；风格描述按格对比，哪格变了存哪格。
+  // 口径随表单走——inline 单格时代只存当前格，抽屉把所有格摆开后回到全量对比。
+  // 每次风格保存服务端都会 reload 一次，这里遍历的是进抽屉那一刻的 styles 快照，不受影响。
   const saveDescs = async (mainText, styleText) => {
     setDescBusy(true);
     try {
       await ops.saveAssetDesc(mainText);
-      const cur = data?.styles?.find((x) => x.name === style);
-      if (cur && (cur.desc || '') !== (styleText[style] ?? '')) {
-        await ops.saveStyleDesc(style, styleText[style] ?? '');
+      for (const s of data?.styles || []) {
+        if ((s.desc || '') !== (styleText[s.name] ?? '')) {
+          await ops.saveStyleDesc(s.name, styleText[s.name] ?? '');
+        }
       }
       setDescEditing(false);
     } finally {
@@ -250,41 +252,28 @@ export default function Detail({ group, name }) {
             </div>
           </div>
 
-          {/* 描述 + 风格：一条。点「编辑」原地展开成表单（DescEditor），
-              不再为只读描述常驻一整块面板。 */}
-          <div className={'ds-line' + (descEditing ? ' ds-line-edit' : '')} data-testid="desc-panel">
-            {descEditing ? (
-              <DescEditor
-                desc={data.desc}
-                styles={data.styles}
-                current={style}
-                busy={descBusy}
-                onCancel={() => setDescEditing(false)}
-                onSave={saveDescs}
-              />
-            ) : (
-              <>
-                <span className="ds-label">描述</span>
-                <span className="ds-text" title={data.desc || ''}>
-                  {data.desc || <span className="muted">还没有主描述</span>}
-                </span>
-                <StyleStrip
-                  styles={data.styles}
-                  activeStyle={data.activeStyle}
-                  current={style}
-                  onPick={setStyle}
-                />
-                <Btn
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setDescEditing(true)}
-                  testId="desc-edit-toggle"
-                  title="主描述 + 每个风格一条；保存后 `svg tree --search` 能召回"
-                >
-                  编辑
-                </Btn>
-              </>
-            )}
+          {/* 描述 + 风格：一条只读行。点「编辑」开右侧抽屉（DescDrawer）集中填
+              主描述与全部风格描述，不再原地展开表单。 */}
+          <div className="ds-line" data-testid="desc-panel">
+            <span className="ds-label">描述</span>
+            <span className="ds-text" title={data.desc || ''}>
+              {data.desc || <span className="muted">还没有主描述</span>}
+            </span>
+            <StyleStrip
+              styles={data.styles}
+              activeStyle={data.activeStyle}
+              current={style}
+              onPick={setStyle}
+            />
+            <Btn
+              size="sm"
+              variant="secondary"
+              onClick={() => setDescEditing(true)}
+              testId="desc-edit-toggle"
+              title="主描述 + 每个风格一条；保存后 `svg tree --search` 能召回"
+            >
+              编辑
+            </Btn>
           </div>
 
           {/* 左右可拖拽（比例由用户定，不是写死的 380px）；双击分隔条复位，
@@ -391,6 +380,18 @@ export default function Detail({ group, name }) {
         <Modal title="编辑历史" onClose={() => setModal(null)}>
           {modal}
         </Modal>
+      ) : null}
+      {descEditing ? (
+        <DescDrawer
+          group={group}
+          name={name}
+          desc={data.desc}
+          styles={data.styles}
+          activeStyle={data.activeStyle}
+          busy={descBusy}
+          onClose={() => setDescEditing(false)}
+          onSave={saveDescs}
+        />
       ) : null}
       {dlgNode}
     </div>

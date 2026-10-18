@@ -5,6 +5,7 @@
  *   atomic           原子类（按钮 / 卡片 / 行 / 标签…）—— **各项目已高度一致，改它请三思**
  *   layout           壳的版式（头部 / tab 栏 / 面板 / 栅格）—— **这层按你的项目自由改**
  *   toast            轻提示（边框主义：淡底 + ok/bad/warn 描边）
+ *   drawer           抽屉弹窗组件（右侧滑入的编辑面板）—— 组件自带样式，别在别处改它
  *   code-workbench   多栏代码编辑器（页签 / 分栏 / sash）—— HTML 与 SVG 共用
  *   preview          预览容器组件（工具条 + 缩放平移画布）—— 组件自带样式，别在别处改它
  *   asset-manage     资产域第一层：管理页（搜索 + 标签云 + 分组卡片网格）
@@ -35,6 +36,7 @@
 @import './styles/layout.css';
 @import './styles/btn.css';
 @import './styles/toast.css';
+@import './styles/drawer.css';
 @import './styles/code-workbench.css';
 /* 组件样式（自带全部规则，页面只负责给它尺寸）——排在页面层之前，
    让 asset-workbench / board-detail 那些带上下文的覆盖规则后来居上 */

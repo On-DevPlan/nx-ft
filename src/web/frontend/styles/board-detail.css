@@ -133,13 +133,53 @@
 
 .issue-list { display: flex; flex-direction: column; }
 
-/* 描述编辑器（DescEditor）：只读那一半已经并进顶部的 .ds-line，
-   这里只剩逐条 inline 编辑的表单。 */
-.desc-edit { display: flex; flex-direction: column; gap: 8px; }
-.desc-field { display: flex; flex-direction: column; gap: 4px; }
-.desc-label { font-size: 11px; color: var(--mid); }
+/* 描述抽屉表单（components/svg/desc-drawer.jsx）：两个描边盒子（.desc-sec），
+   盒头 --soft 底 + 1px 底线承担分区与标题（GitHub Box 风格），盒内输入框走
+   「平输入」——透明边框，聚焦内凹（atomic 的 input:focus 影仍在），结构靠盒线
+   与三列网格，不靠每个控件自己画框。 */
+.desc-edit { display: flex; flex-direction: column; gap: 16px; }
 .desc-input { width: 100%; }
-.desc-actions { display: flex; align-items: center; gap: 8px; }
+.desc-sec { border: var(--border); border-radius: 8px; overflow: hidden; }
+.desc-sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--soft);
+  border-bottom: 1px solid var(--soft-2);
+}
+.desc-sec-title { font-size: 12px; font-weight: 600; }
+.desc-sec-hint { font-size: 11px; color: var(--mid); }
+.desc-sec-body { padding: 10px 12px; }
+.desc-sec .desc-input { border-color: transparent; background: transparent; }
+/* 平输入的聚焦要自己发光：内凹影在白底上弱到看不见（WCAG 焦点可见性），
+   聚焦铺 --soft 灰底——比行 hover 的 55% 混色更深，常态 < hover < 聚焦。 */
+.desc-sec .desc-input:focus { background: var(--soft); }
+.style-desc-row {
+  display: grid;
+  grid-template-columns: 28px 110px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: text;
+  transition: background 0.12s;
+}
+.style-desc-row + .style-desc-row { border-top: 1px solid var(--soft-2); }
+.style-desc-row:hover { background: color-mix(in srgb, var(--soft) 55%, var(--paper)); }
+.style-desc-art {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--soft);
+  display: grid;
+  place-items: center;
+}
+.style-desc-name { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; }
+.style-desc-name .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 「当前」不进墨底实心那档：表单里它是状态提示，走边框主义（浅绿底 + 绿描边），
+   与 save-chip / toast 同族；常驻栏胶囊上的「当前」维持原样。 */
+.style-desc-name .tag { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+.style-desc-empty { padding: 10px 12px; }
 .issue-row {
   display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 4px 10px;
   padding: 8px 0; border-bottom: 1px solid var(--soft-2);
