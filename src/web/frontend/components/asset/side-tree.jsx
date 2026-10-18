@@ -162,14 +162,18 @@ export function AssetSidebar({ kind }) {
   // 行操作菜单：「⋯」按钮与右键共用的同一份（参见 sidebar/row-menu.jsx 与 node-row.jsx）。
   // 目录与资源行形态对称——打开 / 重命名 / 删除；「打开」与点行同路，菜单里给一份
   // 入口是任务要求的冗余（不打开不可能执行操作，给一短路径省去找键盘习惯）。
-  // 根行与树空白处（node 为 null）也有菜单：最外层的创建与定位——空白处的拖拽
-  // 落点本就是「最外层」，右键语义与它对齐；删除之类的语义依然不进这份菜单。
+  // 根行与树空白处（node 为 null）也有菜单：最外层的创建、数据交换（导入落「未分类」/
+  // 导出整棵树）与定位——空白处的拖拽落点本就是「最外层」，右键语义与它对齐；
+  // 删除之类的语义依然不进这份菜单。
   const rowMenu = (node) => {
     if (!node || node.kind === 'root') {
       const root = node || { kind: 'root', path: `root:${kind}` };
       return [
         { label: '新建资源', icon: <NewFileGlyph />, run: () => createAssetInDir(root) },
         { label: '新建文件夹', icon: <NewFolderGlyph />, run: () => createSubDir(root) },
+        { sep: true },
+        { label: '导入到「未分类」', icon: <ImportGlyph />, run: () => importToDir(root) },
+        { label: '导出整棵树', icon: <ExportGlyph />, run: () => exportDirRow(root) },
         { sep: true },
         { label: '在文件管理器中打开', icon: <RevealGlyph />, run: () => revealRow(root) },
       ];

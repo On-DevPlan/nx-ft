@@ -25,7 +25,10 @@ export function useTreeOps({ kind, groups, currentDir, selectedKey, goDir, refre
 
   // 局部导入导出：右键目录时，目标分组锁定为该目录（命令式，见 use-zip-io.js）
   const { importToGroup, exportGroup, node: zipNode } = useZipIo(kind, { onChanged: refresh });
-  const importToDir = (node) => importToGroup(relOfKey(node.path));
+  // 根行（root:<kind>）与树空白处 relOfKey = ''：导入落「未分类」（根层资源的保留
+  // 分组，与建资源同一约定；后端 parseGroupPath 对空串直接 badInput）；导出传空
+  // group = 整棵树（见 use-zip-io 的空 group 分支）。
+  const importToDir = (node) => importToGroup(relOfKey(node.path) || HOME_DIR);
   const exportDirRow = (node) => exportGroup(relOfKey(node.path));
 
   // 新建命令（当前目录 / 右键目录建文件夹、右键目录建资源）：自成一簇，见 use-tree-create.js

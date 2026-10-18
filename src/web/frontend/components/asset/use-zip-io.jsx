@@ -103,11 +103,16 @@ export function useZipIo(kind, { onChanged } = {}) {
     inputRef.current?.click();
   };
 
-  // 局部导出：pick 单个目录（递归子目录），取回 blob 下载
+  // 局部导出：给 group = pick 该目录（递归子目录）；group 为空 = 整棵树——
+  // pick 的 dir 项空 path 会被后端跳过（set.js 的「dir 项缺 path」），整树必须走
+  // 无参模式（export.zip 不带 query = 全库打包，文件名 <kind>-all-<日期>.zip），
+  // 与按钮组件 zip-io.jsx「不带 group 导出全部」同一口径。
   const exportGroup = (group) =>
     guard(async () => {
-      const pick = [{ type: 'dir', path: group }];
-      const res = await fetch(`/api/${kind}/export.zip?pick=` + enc(JSON.stringify(pick)));
+      const url = group
+        ? `/api/${kind}/export.zip?pick=` + enc(JSON.stringify([{ type: 'dir', path: group }]))
+        : `/api/${kind}/export.zip`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error((await res.text()) || `HTTP ${res.status}`);
       const filename = filenameFromDisposition(res.headers.get('content-disposition'), `${kind}-export.zip`);
       downloadBlob(filename, await res.blob());

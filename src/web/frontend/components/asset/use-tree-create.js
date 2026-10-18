@@ -6,6 +6,10 @@
 import { api } from '../../api/client.js';
 import { relOfKey } from './tree-keys.js';
 
+// 根层资源的保留分组（与 use-tree-ops.HOME_DIR / manage.jsx 的建资源同一约定；
+// 此处自持常量——use-tree-ops import 了本文件，反向引它会成循环）。
+const HOME_DIR = '未分类';
+
 export function useTreeCreate({ kind, currentDir, goDir, refresh, dialog, guard, toast }) {
   // 新建文件夹：落在当前目录下（没选中 = 根），建完跳进去
   const createAtSelected = (name) =>
@@ -45,7 +49,9 @@ export function useTreeCreate({ kind, currentDir, goDir, refresh, dialog, guard,
 
   // 右键目录：在该目录下新建资源（group 锁定，问名字、展示名，建完进编辑器）
   const createAssetInDir = (node) => {
-    const group = relOfKey(node.path);
+    // 根行/空白处 relOfKey = ''：落「未分类」。不补这步根行建资源必 400
+    //（后端 parseGroupPath 对空串直接 badInput）。
+    const group = relOfKey(node.path) || HOME_DIR;
     dialog({
       title: `在 ${group || '最外层'} 下新建资源`,
       message:
