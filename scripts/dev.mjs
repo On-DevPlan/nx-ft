@@ -13,6 +13,9 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { probePanel, autoOpenEnabled, describeOccupant } from '../src/core/serve-port.js';
+import { openBrowser } from '../src/core/open.js';
+import { APP_NAME } from '../src/core/paths.js';
 
 const ROOT = dirname(fileURLToPath(import.meta.url)).replace(/[\\/]scripts$/, '');
 const NODE = process.execPath;
@@ -97,18 +100,38 @@ async function portBusy(port) {
   });
 }
 
-for (const [port, label] of [
-  [BACKEND_PORT, '后端 serve'],
-  [VITE_PORT, 'vite dev server'],
-]) {
-  if (await portBusy(port)) {
-    console.error(`[dev] 端口 ${port} 被占用（${label}），已中止。`);
-    console.error(`      多半是上一次的 nx-ft serve / pnpm dev 没退干净。`);
-    console.error(`      查占用进程:  netstat -ano | findstr :${port}     （Windows）`);
-    console.error(`                   lsof -i :${port}                    （macOS / Linux）`);
-    console.error(`      或换一组端口:  NX_FT_PORT=${BACKEND_PORT + 100} NX_FT_VITE_PORT=${VITE_PORT + 100} pnpm dev`);
-    process.exit(1);
+// 端口被占且占着的不是自己的面板：中止，并把「谁占了、怎么查、怎么换端口」写清楚。
+function abortBusyPort(port, label, occupant) {
+  console.error(`[dev] 端口 ${port} 被占用（${label}），已中止。`);
+  if (occupant) console.error(`      占用者: ${occupant}`);
+  console.error('      多半是上一次的 nx-ft serve / pnpm dev 没退干净。');
+  console.error(`      查占用进程:  netstat -ano | findstr :${port}     （Windows）`);
+  console.error(`                   lsof -i :${port}                    （macOS / Linux）`);
+  console.error(`      或换一组端口:  NX_FT_PORT=${BACKEND_PORT + 100} NX_FT_VITE_PORT=${VITE_PORT + 100} pnpm dev`);
+  process.exit(1);
+}
+
+// 后端端口被占时先问一句「上面跑的是不是我」。
+//
+// 占着后端端口的最常见情况不是「有别的服务」，而是「我自己已经开着一个面板」
+// （上次没退干净 / 手滑起了两个）。这种情况直接复用：不再 spawn 第二个 serve
+// 子进程，把浏览器指过去，vite 的代理目标照旧指向这个端口即可。
+let reuseBackend = false;
+if (await portBusy(BACKEND_PORT)) {
+  const panel = await probePanel(BACKEND_PORT, '127.0.0.1', 800);
+  const occupant = panel && panel.app ? panel.app.name : null;
+  if (occupant === APP_NAME) {
+    console.log(`[dev] 后端端口 ${BACKEND_PORT} 上已经是本项目的面板，直接复用（不重复启动）。`);
+    reuseBackend = true;
+    if (autoOpenEnabled(false)) openBrowser(`http://127.0.0.1:${BACKEND_PORT}`);
+  } else {
+    abortBusyPort(BACKEND_PORT, '后端 serve', describeOccupant(occupant));
   }
+}
+
+// vite 端口被占 → 保持现状：vite 跑在 --strictPort 下没法复用，只能中止。
+if (await portBusy(VITE_PORT)) {
+  abortBusyPort(VITE_PORT, 'vite dev server', null);
 }
 
 start('vite', [VITE_BIN, '--host', '127.0.0.1', '--strictPort', '--port', String(VITE_PORT)]);
@@ -122,9 +145,12 @@ if (!ready) {
   );
 }
 
-start('serve', [join(ROOT, 'bin', 'ft.mjs'), 'serve', '--no-open'], {
-  NX_FT_PORT: String(BACKEND_PORT),
-});
+// 后端已经被本项目的面板占着时不再起第二个 serve——复用即可。
+if (!reuseBackend) {
+  start('serve', [join(ROOT, 'bin', 'ft.mjs'), 'serve', '--no-open'], {
+    NX_FT_PORT: String(BACKEND_PORT),
+  });
+}
 
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
   process.on(sig, () => shutdown(0));

@@ -106,6 +106,8 @@ node bin/ft.mjs logo gen xy --bg #1E6FD9 --fg #FFFFFF # 自定义双色（对齐
 node bin/ft.mjs logo history                          # 最近生成记录（含目录）
 ```
 
+端口被占时 `serve` 会先认领：端口上已经是本项目的面板 → 直接打开它（不重复启动）；被别的服务占了 → 顺延到下一个空闲端口再开自己的面板。`--no-open` 只关这一次；设 `NX_SERVE_NO_OPEN=1` 则全局不开浏览器（所有 nx-xx 项目通用）。
+
 SVG 资源示例：`node bin/ft.mjs svg add ui/icons arrow-up --style line --code '<svg .../>'`
 （svg 模块的代码槽位是 `--code`（svg 本体）/`--code-css`/`--code-js`）。
 

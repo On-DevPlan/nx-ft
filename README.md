@@ -19,6 +19,8 @@ npx nx-ft serve
 # 开发期在仓库内：pnpm dev（vite 热更新 + serve 一条命令）
 ```
 
+端口被占时 `serve` 先认领：端口上跑的就是本项目的面板 → 直接把它指到浏览器（不重复启动）；被别的服务占了 → 顺延到下一个空闲端口再开自己的面板。想全局关掉自动开浏览器，设 `NX_SERVE_NO_OPEN=1`（所有 nx-xx 项目通用）；`--no-open` 只关这一次。
+
 面板四个页签：首页（概览）、HTML 资源、SVG 资源、LOGO 生成。
 
 ## 常用命令
@@ -76,6 +78,8 @@ pnpm install
 pnpm dev          # 一条命令起 dev（vite 7870 + serve 7869）
 pnpm test         # lint + build + 冒烟 + 单元
 ```
+
+`pnpm dev` 也会先认领后端端口：7869 上已经是本项目的面板时直接复用它（不再起第二个 serve），并把浏览器指过去。
 
 架构三原则：action 一源两端（CLI/HTTP 不可能分叉）、依赖只能向下（`core ← modules ← runtime`，eslint 强制）、失败抛异常 / 业务结果返回 `{status}`。
 
