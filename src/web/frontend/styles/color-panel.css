@@ -1,0 +1,227 @@
+/* ===== SVG 编辑页「颜色」页签面板（components/svg/color-*.jsx） =====
+ * 面板体撑满页签：一条说明 + 重置 → 槽位行 → 取色卡 → 色板区（一起滚）。
+ * 配色只用 tokens（灰阶 + 一个 --accent），字号只用 11 / 12 / 14 三档，
+ * 分隔靠 1px 浅底线——与整套面板同一审美基准。 */
+.cp {
+  flex: 1 1 0%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.cp__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.cp__hint { font-size: 11px; color: var(--mid); flex: 1 1 auto; min-width: 0; }
+
+/* 滚动区：槽位 + 取色卡 + 色板一起滚——面板再矮也不至于把内容挤没 */
+.cp__scroll {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 颜色槽：横向 wrap，每个槽 = 色块 + 标签，点选「当前要改哪个槽」 */
+.cp__slots { display: flex; flex-wrap: wrap; gap: 6px; flex: none; }
+.cp__slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 2px 8px 2px 3px;
+  border: var(--border);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  cursor: pointer;
+}
+.cp__slot:hover { background: var(--soft); }
+.cp__slot.on { border-color: var(--ink); background: var(--soft-2); font-weight: 600; }
+/* 已被覆盖的槽：色块加一圈内描边，与「声明原值」区分开 */
+.cp__slot.over .cp__chip { box-shadow: inset 0 0 0 1px var(--ink); }
+.cp__chip {
+  width: 18px;
+  height: 18px;
+  border: var(--border);
+  border-radius: 4px;
+  display: inline-block;
+  flex: none;
+}
+
+/* 变量改名行：选中变量槽时出现——改的是源码里的变量名（声明 + var() 用法一起改） */
+.cp-rename {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-size: 11px;
+  color: var(--mid);
+}
+.cp-rename__lbl { flex: none; }
+.cp-rename__in {
+  width: 168px;
+  height: 26px;
+  padding: 0 8px;
+  border: var(--border);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+}
+.cp-rename__hint { font-size: 11px; color: var(--mid); }
+.cp-rename__hint--bad { color: var(--bad); }
+
+/* ---- 取色卡 ---- */
+.cp-picker {
+  border: var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--paper);
+}
+.cp-picker__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+.cp-picker__wheel { flex: 0 0 auto; width: 220px; }
+/* react-colorful 自带的 .react-colorful 是 200×200 固定尺寸，这里按面板宽度放开。
+   选择器比库自带那条多一级，特异性更高，压得住它运行时注入的样式。 */
+.cp-picker__wheel .react-colorful { width: 100%; height: 240px; }
+/* 库默认在饱和面与色相条之间压一条 12px 黑边，太抢；收成 1px 浅底线 */
+.cp-picker__wheel .react-colorful__saturation {
+  border-bottom-width: 1px;
+  border-bottom-color: var(--soft-2);
+}
+.cp-picker__side {
+  flex: 1 1 220px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 格式切换（HEX / RGB / HSL） */
+.cp-picker__tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  border: var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.cp-picker__tab {
+  border: none;
+  background: var(--paper);
+  color: var(--mid);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.cp-picker__tab.on { background: var(--soft-2); color: var(--ink); font-weight: 600; }
+
+/* 数值输入 */
+.cp-picker__fields { display: flex; flex-wrap: wrap; gap: 6px; }
+.cp-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--mid);
+}
+.cp-field--wide { width: 100%; }
+.cp-field__lbl { flex: none; }
+.cp-field__in {
+  width: 52px;
+  height: 26px;
+  padding: 0 6px;
+  border: var(--border);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  font-family: inherit;
+}
+.cp-field__in--text { width: 116px; font-family: ui-monospace, monospace; }
+.cp-field__range { flex: 1 1 auto; accent-color: var(--accent); }
+.cp-field__val { flex: none; min-width: 34px; text-align: right; font-size: 11px; }
+
+/* 当前色预览 + 对比度 */
+.cp-picker__info { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.cp-picker__preview {
+  border: var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+}
+.cp-picker__ratio { color: var(--mid); flex: 1 1 auto; }
+
+/* 和声派生 */
+.cp-picker__harmony {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  border-top: var(--border);
+  padding-top: 8px;
+}
+.cp-picker__harmony-lbl { font-size: 11px; color: var(--mid); }
+.cp-hm { display: inline-flex; align-items: center; gap: 4px; }
+.cp-hm__lbl { font-size: 11px; color: var(--mid); }
+.cp-picker__echo { font-size: 11px; color: var(--mid); }
+
+/* ---- 色板区 ---- */
+.cp-swatches { display: flex; flex-direction: column; gap: 8px; }
+.cp-swatches__bar { display: flex; align-items: center; gap: 8px; }
+.cp-swatches__search {
+  flex: 1 1 auto;
+  height: 26px;
+  padding: 0 8px;
+  border: var(--border);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  font-family: inherit;
+}
+.cp-group { display: flex; flex-direction: column; gap: 4px; }
+.cp-group__head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  border-bottom: var(--border);
+  padding-bottom: 3px;
+}
+.cp-group__name { font-size: 12px; color: var(--ink); }
+.cp-group__path { font-size: 11px; color: var(--mid); }
+.cp-group__count { font-size: 11px; color: var(--mid); margin-left: auto; }
+.cp-group__row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.cp-sw {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: var(--border);
+  border-radius: 4px;
+  background: var(--paper);
+  cursor: pointer;
+}
+.cp-sw span { display: block; width: 100%; height: 100%; border-radius: 3px; }
+.cp-sw:hover { border-color: var(--ink); }
+.cp-sw--sm { width: 18px; height: 18px; }
+.cp-empty { font-size: 11px; color: var(--mid); margin: 0; }

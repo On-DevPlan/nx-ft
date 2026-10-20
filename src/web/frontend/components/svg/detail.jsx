@@ -12,7 +12,7 @@ import { buildSvgDoc } from '../preview/doc.js';
 import { PreviewPane } from '../preview/index.jsx';
 import { Modal, useDialog, useGuard, useToast } from '../ui.jsx';
 import { ColorPanel } from './color-panel.jsx';
-import { migrateToVars } from './color-vars.js';
+import { migrateToVars, renameVar } from './color-vars.js';
 import { makeDetailOps } from './detail-ops.jsx';
 import { CliBlock, IssueList, StyleStrip, TagBar } from './detail-parts.jsx';
 import { DescDrawer } from './desc-drawer.jsx';
@@ -109,6 +109,23 @@ export default function Detail({ group, name }) {
     else ta.value = r.svg;
     ta.dispatchEvent(new Event('input', { bubbles: true }));
     toast.ok(`已迁移 ${r.count} 处颜色为变量（记得保存）`);
+  };
+
+  // 「自定义变量名」：读编辑器现值 → 改声明与 var() 用法 → 写回 SVG 编辑器（脏态）
+  const renameVarName = (from, to) => {
+    const ta = editRef.current?.querySelector('[data-slot="svg"] .code-area');
+    if (!ta) return;
+    const r = renameVar(String(ta.value || ''), from, to);
+    if (!r.count) {
+      toast.bad(r.error || '变量改名失败');
+      return;
+    }
+    // 同样要绕过 React 的 value tracker（原因见 migrateColors）
+    const set = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ta), 'value')?.set;
+    if (set) set.call(ta, r.svg);
+    else ta.value = r.svg;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    toast.ok(`变量 ${from} 已改名为 ${to}（记得保存）`);
   };
 
   // 给操作层用的是**实时**判断（按下保存那一刻 DOM 一定已落定），不是上面那份滞后一帧的状态。
@@ -328,6 +345,7 @@ export default function Detail({ group, name }) {
                             theme={theme}
                             onChange={setTheme}
                             onMigrate={migrateColors}
+                            onRenameVar={renameVarName}
                           />
                         ),
                       },

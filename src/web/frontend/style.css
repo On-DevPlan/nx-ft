@@ -8,6 +8,7 @@
  *   drawer           抽屉弹窗组件（右侧滑入的编辑面板）—— 组件自带样式，别在别处改它
  *   code-workbench   多栏代码编辑器（页签 / 分栏 / sash）—— HTML 与 SVG 共用
  *   preview          预览容器组件（工具条 + 缩放平移画布）—— 组件自带样式，别在别处改它
+ *   color-panel      SVG 编辑页「颜色」页签面板（槽位 / 取色器 / 色板）
  *   asset-manage     资产域第一层：管理页（搜索 + 标签云 + 分组卡片网格）
  *   asset-workbench  资产域第二层：全屏工作台（面包屑 + 风格/描述 + 预览壳）
  *   logo             LOGO 生成页
@@ -41,6 +42,7 @@
 /* 组件样式（自带全部规则，页面只负责给它尺寸）——排在页面层之前，
    让 asset-workbench / board-detail 那些带上下文的覆盖规则后来居上 */
 @import './styles/preview.css';
+@import './styles/color-panel.css';
 @import './styles/asset-manage.css';
 @import './styles/asset-workbench.css';
 @import './styles/split.css';

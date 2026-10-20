@@ -4,8 +4,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   collectHardcoded,
+  isValidVarName,
   migrateToVars,
   parseVarDecls,
+  renameVar,
   upsertDeclBlock,
   varOverrideCss,
 } from '../../src/web/frontend/components/svg/color-vars.js';
@@ -39,12 +41,12 @@ test('migrateToVars：自闭合写法保持（/> 不能丢，否则整份 SVG �
 test('migrateToVars：同值共用一个变量；style 里已有的属性是死值——删属性不建变量', () => {
   const src = '<svg><path fill="#111" style="fill:#222" d="M0 0"/><path fill="#111" d="M1 1"/></svg>';
   const r = migrateToVars(src);
-  // 第一个 path 的 fill 属性本来就被 style 压住（死值）：删掉、不计入；
-  // 第二个 path 的 #111 建变量。
-  assert.equal(r.count, 1);
-  assert.deepEqual(r.vars, [{ name: '--c-1', value: '#111' }]);
-  assert.match(r.svg, /<path style="fill:#222" d="M0 0" \/>/);
-  assert.match(r.svg, /style="fill:var\(--c-1,#111\)"/);
+  // 第一个 path 的 fill 属性本来就被 style 压住（死值）：删掉、不建变量——
+  // 所以 #111 只由第二个 path 贡献了一个变量；style 里自己的字面量照迁（#222 一个变量）
+  assert.equal(r.count, 2);
+  assert.equal(r.vars.filter((v) => v.value === '#111').length, 1, '#111 只建一个变量');
+  assert.match(r.svg, /<path style="fill:var\(--c-1,#222\)" d="M0 0" \/>/);
+  assert.match(r.svg, /style="fill:var\(--c-2,#111\)"/);
 });
 
 test('migrateToVars：<style> 块 CSS 原地换 var()；属性与 CSS 同值共用变量', () => {
@@ -88,4 +90,84 @@ test('varOverrideCss：只输出有值的变量；空入参给空串', () => {
   assert.equal(varOverrideCss({ '--c-1': '#111', '--c-2': '' }), 'svg{--c-1:#111}');
   assert.equal(varOverrideCss(null), '');
   assert.equal(varOverrideCss({}), '');
+});
+
+test('isValidVarName：-- 开头，字母或下划线起', () => {
+  assert.equal(isValidVarName('--brand'), true);
+  assert.equal(isValidVarName('--brand-2'), true);
+  assert.equal(isValidVarName('--_x'), true);
+  assert.equal(isValidVarName('brand'), false, '少了 --');
+  assert.equal(isValidVarName('--2bad'), false, '数字不能起头');
+  assert.equal(isValidVarName('--a b'), false);
+  assert.equal(isValidVarName(''), false);
+});
+
+test('renameVar：声明与 var() 用法一起改（只改名字不改值）', () => {
+  const src =
+    '<svg><style>svg{--c-1:#2B3445;--c-2:#FFB0A5}</style>' +
+    '<path style="fill:var(--c-1,#2B3445)"/><path style="stroke:var(--c-2,#FFB0A5)"/></svg>';
+  const r = renameVar(src, '--c-1', '--brand');
+  assert.equal(r.count, 2, '1 处声明 + 1 处用法');
+  assert.match(r.svg, /svg\{--brand:#2B3445;--c-2:#FFB0A5\}/);
+  assert.match(r.svg, /fill:var\(--brand,#2B3445\)/);
+  assert.match(r.svg, /stroke:var\(--c-2,#FFB0A5\)/, '别的变量不受影响');
+});
+
+test('renameVar：前缀相同的变量不误伤（--c-1 与 --c-10）', () => {
+  const src =
+    '<svg><style>svg{--c-1:#111;--c-10:#222}</style>' +
+    '<path style="fill:var(--c-1,#111)"/><path style="fill:var(--c-10,#222)"/></svg>';
+  const r = renameVar(src, '--c-1', '--x');
+  assert.match(r.svg, /svg\{--x:#111;--c-10:#222\}/);
+  assert.match(r.svg, /var\(--x,#111\)/);
+  assert.match(r.svg, /var\(--c-10,#222\)/);
+});
+
+test('renameVar：改不动时原样返回（非法名 / 不存在 / 无声明块）', () => {
+  const src = '<svg><style>svg{--c-1:#111}</style><path style="fill:var(--c-1,#111)"/></svg>';
+  const bad = renameVar(src, '--c-1', 'brand');
+  assert.equal(bad.count, 0);
+  assert.equal(bad.svg, src);
+  assert.match(bad.error, /不合法/);
+  assert.equal(renameVar(src, '--nope', '--x').count, 0);
+  assert.equal(renameVar('<svg><path/></svg>', '--c-1', '--x').count, 0);
+  assert.equal(renameVar(src, '--c-1', '--c-1').count, 0, '改成同名等于没改');
+});
+
+test('migrateToVars：保留已有声明（含自定义名），新变量避让同名', () => {
+  const src = '<svg><style>svg{--brand:#2B3445}</style><path fill="#FF0000" d="M0 0"/></svg>';
+  const r = migrateToVars(src);
+  assert.equal(r.count, 1);
+  assert.match(r.svg, /svg\{--brand:#2B3445;--c-1:#FF0000\}/, '已有声明不丢');
+  assert.match(r.svg, /style="fill:var\(--c-1,#FF0000\)"/);
+});
+
+test('migrateToVars：字面量与已有变量同值 → 复用该变量，不新建', () => {
+  const src = '<svg><style>svg{--brand:#2B3445}</style><path fill="#2b3445" d="M0 0"/></svg>';
+  const r = migrateToVars(src);
+  assert.equal(r.count, 1);
+  assert.match(r.svg, /style="fill:var\(--brand,#2b3445\)"/);
+  assert.match(r.svg, /svg\{--brand:#2B3445\}/, '没有多出 --c-1');
+});
+
+test('migrateToVars：style 属性里的字面量也迁（style="fill:#xxx" 是常见写法）', () => {
+  const src = '<svg><path style="fill:#FF0000" d="M0 0"/></svg>';
+  const r = migrateToVars(src);
+  assert.equal(r.count, 1);
+  assert.match(r.svg, /style="fill:var\(--c-1,#FF0000\)"/);
+  assert.match(r.svg, /svg\{--c-1:#FF0000\}/);
+});
+
+test('migrateToVars：style 属性迁完，已有 var() 用法不被二次处理', () => {
+  const src = '<svg><path style="fill:var(--c-1,#FF0000)" d="M0 0"/></svg>';
+  const r = migrateToVars(src);
+  assert.equal(r.count, 0);
+  assert.equal(r.svg, src);
+});
+
+test('migrateToVars：无可迁移项时源码原样返回（已有声明块不被重写）', () => {
+  const src = '<svg><style>svg{--brand:#2B3445}</style><path style="fill:var(--brand,#2B3445)"/></svg>';
+  const r = migrateToVars(src);
+  assert.equal(r.count, 0);
+  assert.equal(r.svg, src);
 });
