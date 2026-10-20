@@ -62,8 +62,11 @@ function ColorStudioProvider({ children }) {
         setDocState(loaded);
         lastSavedJsonRef.current = JSON.stringify(loaded);
         setStatus("idle");
-      } catch {
+      } catch (e) {
         if (cancelled) return;
+        // 加载失败不能静默:整个 Studio 会退化成「默认调色板」空态,
+        // 用户只看到「没有颜色」,完全不知道是 load 抛了异常。
+        console.error("[colorStudio] load failed:", e);
         setDocState(emptyDoc());
         setStatus("error");
       }

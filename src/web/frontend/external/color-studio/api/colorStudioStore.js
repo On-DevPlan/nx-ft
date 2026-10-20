@@ -1,5 +1,6 @@
 import { fetch } from "./fetch.js";
 import { emptyDoc } from "./types.js";
+import { repairAnchor } from "../src/engine/anchor";
 // 解析查询参数:URL 形如 /#/path?... 时 location.search 为空,
 // 因此优先从 hash 的 ? 后取,再回落到 search。
 function queryParam(name) {
@@ -93,11 +94,9 @@ async function load() {
   const urlPalette = queryParam("palette");
   const mainView = urlView === "proportional" || urlView === "brush" ? urlView : "wheel";
   const activeId = urlPalette && palettes.find((p) => p.id === urlPalette) ? urlPalette : palettes[0].id;
-  const activePalette = palettes.find((p) => p.id === activeId);
-  // 重开 Studio 要回到上次的和声状态：规则按钮高亮、色轮派生标记、色轮指示都读 viewState，
-  // 不能硬编码 null（否则 data 里存了 harmony 却显示「无」、不画派生标记——像功能坏了）。
-  const activeHarmony = activePalette?.harmony?.type ?? null;
-  return {
+  // 锚色兜底:data 里的 anchorColorId 可能指向一张已经被删掉的卡(外部改过 JSON),
+  // 这种悬空锚色会让派生色整组算不出来——重新指到本板首色。
+  let doc = {
     meta: { schemaVersion: "1.3.0", createdAt: palettes[0].createdAt, updatedAt: Date.now(), authorEmail: "" },
     activePaletteId: activeId,
     palettes,
@@ -106,10 +105,24 @@ async function load() {
     pickHistory: [],
     viewState: {
       leftPane: "palettes",
-      showHarmony: activeHarmony != null,
-      selectedHarmony: activeHarmony,
+      showHarmony: false,
+      selectedHarmony: null,
       brightness: 100,
       mainView,
+      selectedColorId: null
+    }
+  };
+  for (const p of palettes) doc = repairAnchor(doc, p.id);
+  const activePalette = doc.palettes.find((p) => p.id === activeId);
+  // 重开 Studio 要回到上次的和声状态:规则按钮高亮、色轮派生标记、色轮指示都读 viewState,
+  // 不能硬编码 null(否则 data 里存了 harmony 却显示「无」、不画派生标记——像功能坏了)。
+  const activeHarmony = activePalette?.harmony?.type ?? null;
+  return {
+    ...doc,
+    viewState: {
+      ...doc.viewState,
+      showHarmony: activeHarmony != null,
+      selectedHarmony: activeHarmony,
       selectedColorId: activePalette?.harmony?.anchorColorId ?? null
     }
   };

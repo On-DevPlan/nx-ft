@@ -27,6 +27,9 @@ src/web/public/
 # 会话草稿：原型 / 验证脚本（HTML 原型本地交付、临时核对的 mjs）
 temp/
 
+# esbuild bundle 产物（引擎回归脚本/单测的临时打包目录）
+.tmp-test/
+
 # Playwright MCP 调试产物（浏览器自动化临时日志/快照）
 .playwright-mcp/
 .claude/

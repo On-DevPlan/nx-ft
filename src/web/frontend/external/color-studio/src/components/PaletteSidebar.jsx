@@ -7,6 +7,8 @@ import { Btn } from "./ui/Btn";
 import { makeId } from "../utils/id";
 import { resolveNewColorHex } from "../engine/colorMath";
 import { addColorEntryAndSelect } from "../engine/wheelCommit";
+import { applyAutoFill } from "../engine/autoFill";
+import { withAnchor } from "../engine/anchor";
 import { useSelectedColor } from "../hooks/useSelectedColor";
 function nowTs() {
   return Date.now();
@@ -18,6 +20,8 @@ function PaletteSidebar() {
   const [createMode, setCreateMode] = useState(null);
   const [newColorHex, setNewColorHex] = useState("");
   const activePalette = doc.palettes.find((p) => p.id === doc.activePaletteId);
+  // 锚色角标:让用户一眼看到「派生色的基准是哪张卡」(锚色跟随选中色)
+  const anchorId = activePalette?.harmony?.anchorColorId ?? null;
   const activeEntries = useMemo(() => {
     if (!activePalette) return [];
     return activePalette.colorIds.map((cid) => doc.colorEntries.find((c) => c.id === cid)).filter((c) => !!c);
@@ -36,13 +40,19 @@ function PaletteSidebar() {
     setNewPaletteName("");
   };
   const setActive = (id) => {
-    setDoc((d) => ({
-      ...d,
-      activePaletteId: id,
-      // 切板后选中态失效,回退新板首色
-      viewState: { ...d.viewState, selectedColorId: null },
-      meta: { ...d.meta, updatedAt: nowTs() }
-    }));
+    setDoc((d) => {
+      const p = d.palettes.find((x) => x.id === id);
+      // 切板后选中态失效 → 回退到新板的锚色(没有锚色则回退新板首色)
+      const anchorId = p?.harmony?.anchorColorId && p.colorIds.includes(p.harmony.anchorColorId)
+        ? p.harmony.anchorColorId
+        : null;
+      return {
+        ...d,
+        activePaletteId: id,
+        viewState: { ...d.viewState, selectedColorId: anchorId },
+        meta: { ...d.meta, updatedAt: nowTs() }
+      };
+    });
   };
   const createWhite = () => {
     setDoc((d) => addColorEntryAndSelect(d, "#FFFFFF", "wheel"));
@@ -55,13 +65,30 @@ function PaletteSidebar() {
     setCreateMode(null);
   };
   const removeColor = (entryId) => {
-    setDoc((d) => ({
-      ...d,
-      colorEntries: d.colorEntries.filter((c) => c.id !== entryId),
-      palettes: d.palettes.map((p) => ({ ...p, colorIds: p.colorIds.filter((id) => id !== entryId), updatedAt: nowTs() })),
-      viewState: d.viewState.selectedColorId === entryId ? { ...d.viewState, selectedColorId: null } : d.viewState,
-      meta: { ...d.meta, updatedAt: nowTs() }
-    }));
+    setDoc((d) => {
+      const palette = d.palettes.find((p) => p.id === d.activePaletteId);
+      const wasAnchor = palette?.harmony?.anchorColorId === entryId;
+      const rest = palette?.colorIds.filter((id) => id !== entryId) ?? [];
+      const next = {
+        ...d,
+        colorEntries: d.colorEntries.filter((c) => c.id !== entryId),
+        palettes: d.palettes.map((p) => ({ ...p, colorIds: p.colorIds.filter((id) => id !== entryId), updatedAt: nowTs() })),
+        viewState: d.viewState.selectedColorId === entryId ? { ...d.viewState, selectedColorId: null } : d.viewState,
+        meta: { ...d.meta, updatedAt: nowTs() }
+      };
+      if (!wasAnchor) return next;
+      // 锚色卡被删了 → 重新指锚 + 整组重派生
+      // (否则派生色永远挂在一个不存在的锚上,列表里看着「锚色无效」)
+      if (rest.length === 0) {
+        return {
+          ...next,
+          palettes: next.palettes.map((p) => p.id === next.activePaletteId ? { ...p, harmony: null, updatedAt: nowTs() } : p),
+          viewState: { ...next.viewState, selectedHarmony: null, showHarmony: false }
+        };
+      }
+      const reanchored = withAnchor(next, rest[0]);
+      return applyAutoFill(reanchored, reanchored.activePaletteId, { force: true });
+    });
   };
   const toggleLock = (entryId) => {
     setDoc((d) => ({
@@ -155,6 +182,7 @@ function PaletteSidebar() {
         {
           entry: e,
           active: e.id === effectiveId,
+          isAnchor: e.id === anchorId,
           onClick: select,
           onRemove: removeColor,
           onToggleLock: toggleLock

@@ -1,6 +1,6 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { Icon } from "./ui/Icon";
-function ColorChip({ entry, onRemove, onToggleLock, onClick, active }) {
+function ColorChip({ entry, onRemove, onToggleLock, onClick, active, isAnchor }) {
   return /* @__PURE__ */ jsxs(
     "div",
     {
@@ -23,6 +23,14 @@ function ColorChip({ entry, onRemove, onToggleLock, onClick, active }) {
             style: { backgroundColor: entry.hex },
             "aria-hidden": "true",
             children: entry.derivedFrom && /* @__PURE__ */ jsx("span", { className: "sl-cs-chip__derived", "aria-hidden": "true" })
+          }
+        ),
+        isAnchor && /* @__PURE__ */ jsx(
+          "span",
+          {
+            className: "sl-cs-chip__anchor",
+            title: "\u951A\u8272\uFF1A\u6D3E\u751F\u8272\u7684\u57FA\u51C6\u8272(\u8DDF\u968F\u5F53\u524D\u9009\u4E2D\u7684\u8272\u5361)",
+            children: "\u951A"
           }
         ),
         /* @__PURE__ */ jsx("code", { className: "sl-cs-chip__hex", children: entry.hex }),

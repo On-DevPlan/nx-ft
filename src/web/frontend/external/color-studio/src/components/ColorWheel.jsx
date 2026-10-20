@@ -5,6 +5,7 @@ import { useSelectedColor } from "../hooks/useSelectedColor";
 import { fromHex, toHex, parseUserInput } from "../engine/colorMath";
 import { pickWheelCommitMode, commitWheelColor } from "../engine/wheelCommit";
 import { applyAutoFill } from "../engine/autoFill";
+import { withHarmonyRule } from "../engine/anchor";
 import { HarmonyOverlay } from "./HarmonyOverlay";
 const SIZE = 300;
 const CENTER = SIZE / 2;
@@ -121,7 +122,12 @@ function ColorWheel() {
     [doc, effectiveId]
   );
   const isEmpty = commitMode.mode === "empty";
-  const anchorHex = selected?.hex ?? "#000000";
+  // currentHex = 色轮正在编辑的那张色卡;anchorHex = 派生色的基准色(= 锚色)。
+  // 两者现在恒等:锚色跟随选中色,所以「拖色轮改色」改的就是锚色本身。
+  const currentHex = selected?.hex ?? "#000000";
+  const activePalette = doc.palettes.find((x) => x.id === doc.activePaletteId);
+  const anchorId = activePalette?.harmony?.anchorColorId ?? null;
+  const anchorHex = doc.colorEntries.find((c) => c.id === anchorId)?.hex ?? currentHex;
   const v = doc.viewState.brightness / 100;
   const commitText = useCallback(() => {
     const parsed = parseUserInput(textHex);
@@ -130,18 +136,18 @@ function ColorWheel() {
       return;
     }
     setDoc((d) => {
-      const mode = pickWheelCommitMode(d, d.viewState.selectedColorId);
+      const mode = pickWheelCommitMode(d);
       return commitWheelColor(d, mode.anchorColorId, parsed);
     });
     setTextHex("");
   }, [textHex, setDoc]);
-  const hsv = useMemo(() => hexToHsv(anchorHex), [anchorHex]);
+  const hsv = useMemo(() => hexToHsv(currentHex), [currentHex]);
   const indicator = cursor ?? { h: hsv.h, s: hsv.s };
   const commitHex = useCallback((h, s, vv) => {
     const hex = hsvToHex(h, s, vv);
     const now = Date.now();
     setDoc((d) => {
-      const mode = pickWheelCommitMode(d, d.viewState.selectedColorId);
+      const mode = pickWheelCommitMode(d);
       return commitWheelColor(d, mode.anchorColorId, hex, now);
     });
   }, [setDoc]);
@@ -209,7 +215,7 @@ function ColorWheel() {
             cx: indX,
             cy: indY,
             r: 7,
-            fill: anchorHex,
+            fill: currentHex,
             stroke: "#FFFFFF",
             strokeWidth: 2.5,
             style: { filter: "drop-shadow(0 0 2px rgba(0,0,0,.5))", pointerEvents: "none" }
@@ -235,13 +241,13 @@ function ColorWheel() {
     ] }),
     /* @__PURE__ */ jsxs("div", { className: "sl-cw__controls", children: [
       /* @__PURE__ */ jsxs("div", { className: "sl-cw__quickrow", children: [
-        /* @__PURE__ */ jsx("span", { className: "sl-cw__quickrow-hex", style: { backgroundColor: anchorHex }, title: anchorHex }),
+        /* @__PURE__ */ jsx("span", { className: "sl-cw__quickrow-hex", style: { backgroundColor: currentHex }, title: currentHex }),
         /* @__PURE__ */ jsx(
           "input",
           {
             className: "sl-cw__quickrow-input",
             value: textHex,
-            placeholder: anchorHex,
+            placeholder: currentHex,
             onChange: (e) => setTextHex(e.target.value),
             onKeyDown: (e) => {
               if (e.key === "Enter") commitText();
@@ -251,8 +257,17 @@ function ColorWheel() {
             title: "\u8F93\u5165 hex/rgb/\u540D\u5B57,\u56DE\u8F66\u7F16\u8F91\u5F53\u524D\u9009\u4E2D\u8272\u5361"
           }
         ),
-        /* @__PURE__ */ jsx("code", { className: "sl-cw__quickrow-value", children: anchorHex })
+        /* @__PURE__ */ jsx("code", { className: "sl-cw__quickrow-value", children: currentHex })
       ] }),
+      (() => {
+        if (!activePalette?.harmony) return null;
+        // 注意:jsxs 的第三个参数是 key,子节点要放进 props.children
+        // (本目录是预编译产物,统一用 props.children 的写法)。
+        return /* @__PURE__ */ jsxs("div", { className: "sl-cw__anchor", title: "\u951A\u8272 = \u6D3E\u751F\u8272\u7684\u57FA\u51C6,\u8DDF\u968F\u5F53\u524D\u9009\u4E2D\u7684\u8272\u5361(\u70B9\u5DE6\u4FA7\u8272\u5361\u5373\u6362\u951A)", children: [
+          /* @__PURE__ */ jsx("span", { className: "sl-cw__anchor-label", children: "\u951A\u8272" }),
+          /* @__PURE__ */ jsx("code", { className: "sl-cw__anchor-hex", children: anchorHex })
+        ] });
+      })(),
       /* @__PURE__ */ jsxs("label", { className: "sl-cw__slider", children: [
         /* @__PURE__ */ jsx("span", { children: "B (\u660E\u5EA6)" }),
         /* @__PURE__ */ jsx(
@@ -266,7 +281,7 @@ function ColorWheel() {
               const newV = Number(e.target.value);
               const nextHex = hsvToHex(indicator.h, indicator.s, newV / 100);
               setDoc((d) => {
-                const mode = pickWheelCommitMode(d, d.viewState.selectedColorId);
+                const mode = pickWheelCommitMode(d);
                 return commitWheelColor(d, mode.anchorColorId, nextHex);
               });
             }
@@ -280,33 +295,11 @@ function ColorWheel() {
           type: "button",
           className: `sl-cs-btn sl-cs-btn--sm sl-cs-btn--ghost ${doc.viewState.selectedHarmony === opt.value ? "is-active" : ""}`,
           onClick: () => setDoc((d) => {
-            const next = {
-              ...d,
-              palettes: d.palettes.map((p) => {
-                if (p.id !== d.activePaletteId) return p;
-                // 选「无」= 清掉和声数据(applyAutoFill 会随之清掉派生条目)
-                if (!opt.value) return { ...p, harmony: null, updatedAt: Date.now() };
-                return {
-                  ...p,
-                  harmony: {
-                    type: opt.value,
-                    // 和声锚点 = 当前选中的色卡(而非固定首色)
-                    anchorColorId: commitMode.anchorColorId ?? p.colorIds[0] ?? "",
-                    autoFill: p.harmony?.autoFill ?? false
-                  },
-                  updatedAt: Date.now()
-                };
-              }),
-              viewState: {
-                ...d.viewState,
-                selectedHarmony: opt.value,
-                showHarmony: opt.value != null
-              },
-              meta: { ...d.meta, updatedAt: Date.now() }
-            };
+            // 规则键:写 harmony.type + 把锚色定到当前选中的色卡(锚色跟随选中色)。
             // 点规则 → 立即派生一次(force 绕过 autoFill 开关;选「无」→ 清掉派生条目)。
             // autoFill 复选框只控制「锚色后续变化时是否自动重派生」,
             // 不能让「点了规则但列表里没有派生色」——那会让用户以为功能坏了。
+            const next = withHarmonyRule(d, opt.value);
             return applyAutoFill(next, d.activePaletteId, { force: true });
           }),
           children: opt.label
@@ -316,7 +309,7 @@ function ColorWheel() {
       (() => {
         const p = doc.palettes.find((x) => x.id === doc.activePaletteId);
         if (!p || !p.harmony) return null;
-        return /* @__PURE__ */ jsxs("label", { className: "sl-cw__autofill", children: [
+        return /* @__PURE__ */ jsxs("label", { className: "sl-cw__autofill", title: "\u5F00\u542F\u540E:\u62D6\u8272\u8F6E/\u6539 HEX \u90FD\u4F1A\u5B9E\u65F6\u91CD\u7B97\u6D3E\u751F\u8272;\u5173\u95ED\u65F6\u624B\u5DE5\u8C03\u951A\u8272\u4E0D\u4F1A\u8986\u76D6\u5F53\u524D\u6D3E\u751F\u8272(\u6362\u951A\u8272\u5361\u4ECD\u7136\u91CD\u7B97)", children: [
           /* @__PURE__ */ jsx(
             "input",
             {

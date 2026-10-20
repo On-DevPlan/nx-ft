@@ -83,6 +83,14 @@
   border: 1px solid rgba(0,0,0,.15); border-radius: 4px; cursor: pointer; padding: 0;
 }
 .sl-cs-chip__hex { font-family: var(--sl-font-family-mono, monospace); font-size: 11px; }
+/* 锚色角标：这张卡是派生色的基准 */
+.sl-cs-chip__anchor {
+  flex-shrink: 0;
+  font-size: 11px; line-height: 1;
+  padding: 2px 4px; border-radius: 4px;
+  background: var(--sl-color-primary); color: var(--sl-color-on-primary);
+  cursor: default;
+}
 .sl-cs-chip__actions { display: flex; gap: 2px; margin-left: auto; }
 .sl-cs-chip__actions button { background: transparent; border: 0; cursor: pointer; font-size: 11px; }
 
@@ -609,6 +617,15 @@
 .sl-cw__quickrow-value {
   font-family: var(--sl-font-family-mono, monospace); font-size: 12px;
   margin-right: auto;
+}
+/* 锚色读数：派生色的基准色，跟随当前选中的色卡 */
+.sl-cw__anchor { display: flex; align-items: center; gap: 8px; }
+.sl-cw__anchor-label { font-size: 11px; color: var(--sl-color-text-secondary); }
+.sl-cw__anchor-hex {
+  font-family: var(--sl-font-family-mono, monospace); font-size: 12px;
+  background: var(--sl-color-surface-alt);
+  border: 1px solid var(--sl-color-border-strong); border-radius: 4px;
+  padding: 1px 6px;
 }
 .sl-cw__quickrow-kbd {
   background: var(--sl-color-surface-alt);

@@ -29,7 +29,14 @@ function applyAutoFill(doc, paletteId, { force = false } = {}) {
     if (typeof c.derivedFrom.slot !== "number") continue;
     existingBySlot.set(c.derivedFrom.slot, { id: c.id, entry: c });
   }
-  const nextEntries = [...doc.colorEntries];
+  // 锚色是「基准色」不是「派生色」:它可能本来就是张派生色卡(拿派生色当锚色),
+  // 这时要摘掉它身上的 derivedFrom 角标,否则列表里会出现两个锚色角标。
+  const nextEntries = doc.colorEntries.map((c) => {
+    if (c.id !== anchor.id || !c.derivedFrom) return c;
+    const copy = { ...c };
+    delete copy.derivedFrom;
+    return copy;
+  });
   const newIds = [];
   for (let slot = 0; slot < derivedOnly.length; slot++) {
     const hex = derivedOnly[slot];

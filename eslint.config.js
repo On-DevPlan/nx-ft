@@ -72,7 +72,9 @@ const BASE_RULES = {
 };
 
 export default defineConfig([
-  { ignores: ['src/web/public/**', 'node_modules/**', 'templates/**'] },
+  // temp/ 是会话草稿目录（gitignore），里面可能有临时脚本、浏览器 profile 等产物，
+  // 不该被 lint 当成项目代码扫。
+  { ignores: ['src/web/public/**', 'node_modules/**', 'templates/**', '.tmp-test/**', 'temp/**'] },
   {
     files: ['**/*.{js,mjs,jsx}'],
     languageOptions: {
