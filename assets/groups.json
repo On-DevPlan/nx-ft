@@ -3,8 +3,8 @@
   "$comment": "group 名 → skill 名列表的别名表。路径恒由 assets/<skills[i]>/ 推导；本文件只做聚合。",
   "groups": {
     "nx-ft": {
-      "skills": ["nx-ft", "ft-html", "ft-svg", "ft-color", "ft-uiux"],
-      "summary": "nx-ft 主 skill（存储 / 命令 / 数据模型）+ ft-html（HTML 资源：内部工程 + 案例）+ ft-svg（SVG 资源：规范档位 + 工作流 + 场景）+ ft-color（色彩资源：调色板 / 槽位身份和声 / 4 种导出格式）+ ft-uiux（Web 面板视觉与交互规范：A 序列 sub-agent 评分 + B 序列主 agent 实现参考）；skill install --group nx-ft 一次装齐"
+      "skills": ["nx-ft", "ft-html", "ft-svg", "ft-color"],
+      "summary": "nx-ft 主 skill（三域存储模型 / 通用命令面 / URL 词汇）+ ft-html（HTML 资源：内部工程 + 案例）+ ft-svg（SVG 资源：规范档位 + 工作流 + 场景）+ ft-color（色彩资源：调色板 / 槽位身份和声 / 4 种导出格式）；skill install --group nx-ft 一次装齐"
     }
   }
 }

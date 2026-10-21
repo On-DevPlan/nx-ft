@@ -2,6 +2,35 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.7.2
+
+### Fixed
+
+- **skill 对三个域的数据操作引导补齐第三域**（色彩资源）。主 skill 原来只讲 html / svg
+  两个域：URL 词汇表写死「`<域>` 是 `html` 或 `svg`」、命令表没有 color、面板段写
+  「两个 tab 是同一套网盘布局」——色彩域整块缺席，agent 拿不到「调色板怎么存、怎么改、
+  怎么导出」的引导。现在主 skill 给出**三域一张槽位表**（`html`/`css`/`js` ·
+  `svg`/`css`/`js` · `data` 单槽）、**24 条三域通用命令**（换域名前缀即可）+ 各域专属
+  命令，以及 **export 三域同名不同义**的陷阱表（html/svg 导出成目录树，color 导出一份
+  文本且**没有 import**，回写只能 `put --code-data`）。
+- **修 ft-color 的过时描述与死链**：全屏 Studio 早已挂在
+  `#/color/edit/<组>/<名>/full`（文档却写「尚未迁入 nx-ft——等复制进来后挂到」）；
+  指向并不存在的 `ft-uiux` skill 的死链去掉；`groups.json` 里悬空的 `ft-uiux` 安装项
+  删除（装这个 group 会装到空气）。顺带修正 `autoFill: false` 的语义说明（它是**冻结**
+  当前派生集，不是清空）。
+- **修实测出来的错命令**：`color entry rm` 的 hex 是 **flag**（`--hex`）不是位置参数——
+  文档写的位置参数形状会被 CLI 直接拒掉（「多余的参数」）；`color history list` 的风格
+  是必填位置参数（没有默认值）。两者都写成文档后又被单测钉住。
+- **命令形态统一**：三份域 skill 统一用 `nx-ft <域> …`（全局命令，没装就 `npx nx-ft`），
+  仓内等价写法在每份 skill 开头注明——原先 ft-html / ft-svg 写 `node bin/ft.mjs …`
+  （只在 nx-ft 仓库根目录成立）、ft-color 写 `nx-ft …`，同一个包里两套写法。
+- **新增 `25-color-resources.md`**：色彩域的 CLI ↔ HTTP 逐条对照（主 skill 的域速查 ref
+  补齐第三份）；主 skill 同时加上 ref 路由表——原来三份 ref 没有任何入口，agent 找不到。
+- **新增防漂移断言** `tests/unit/assets-skill-consistency.test.mjs`：assets 文档里的命令
+  必须在真实命令表里存在；「N 条通用 / 专属命令」的数字必须与命令表一致；`groups.json`
+  不得有悬空 skill；主 skill 必须三个域都出现；color 删色命令的 hex 不得写成位置参数。
+  （已做反向验证：三条故意写坏的用例全部被断言抓住。）
+
 ## 0.7.1
 
 ### Fixed

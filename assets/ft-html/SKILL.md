@@ -8,6 +8,9 @@ description: nx-ft 里 **HTML 资源的协作层**：一个资源 = 一个场景
 这是 [`nx-ft`](../nx-ft/SKILL.md) 的**配套 skill**。nx-ft 负责存储与同源命令，
 ft-html 负责 HTML 资源这件事本身：**一个场景怎么写、怎么并存多种风格、怎么验证**。
 
+> **命令形态**：本文用 `nx-ft html …`——全局装了 nx-ft 就能用，没装就 `npx nx-ft html …`。
+> 在 nx-ft 仓库根目录里工作的话，等价写法是 `node bin/ft.mjs html …`。
+
 > 一个**资源 = 一个场景**（如「登录按钮」），不是一整个页面。
 > 场景里可以有**不限数量**的**风格**（minimal / dark / glass…），用来横向对比；
 > 每次保存把「改动前」推入该风格的**编辑历史**（最近 5 条），改坏了能退回。
@@ -42,21 +45,21 @@ ft-html 负责 HTML 资源这件事本身：**一个场景怎么写、怎么并�
 
 ```bash
 # 1) 建分组（1~8 段路径，支持多层）
-node bin/ft.mjs html group add ui/buttons --label 按钮
+nx-ft html group add ui/buttons --label 按钮
 
 # 2) 建资源 = 一个场景，带第一套风格
-node bin/ft.mjs html add ui/buttons login-btn --label 登录按钮 --style minimal --tags button,login
+nx-ft html add ui/buttons login-btn --label 登录按钮 --style minimal --tags button,login
 
 # 3) 写三个槽位（多行内容必须 heredoc，见 A01）
-node bin/ft.mjs html put ui/buttons login-btn --style minimal --code-html - <<'EOF'
+nx-ft html put ui/buttons login-btn --style minimal --code-html - <<'EOF'
 <button class="btn" type="button">登录</button>
 EOF
 
 # 4) 看效果：面板 → HTML 资源 tab → 点卡片进工作台（三编辑框 + 实时预览）
-node bin/ft.mjs serve
+nx-ft serve
 ```
 
-命令、参数与 flag 的**权威清单**看 `node bin/ft.mjs routes --json`，不要凭记忆杜撰。
+命令、参数与 flag 的**权威清单**看 `nx-ft routes --json`，不要凭记忆杜撰。
 加 `--json` 得机器可读输出。
 
 ## 什么时候**不**触发本 skill

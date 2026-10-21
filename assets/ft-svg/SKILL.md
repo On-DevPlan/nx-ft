@@ -8,6 +8,9 @@ description: nx-ft 里 **SVG 资源的规范与协作层**：**先判类别**再
 这是 [`nx-ft`](../nx-ft/SKILL.md) 的**配套 skill**。nx-ft 负责存储与同源命令，
 ft-svg 负责 SVG 这件事本身的标准：**怎么画、怎么判、怎么批量修**。
 
+> **命令形态**：本文用 `nx-ft svg …`——全局装了 nx-ft 就能用，没装就 `npx nx-ft svg …`。
+> 在 nx-ft 仓库根目录里工作的话，等价写法是 `node bin/ft.mjs svg …`。
+
 > **主文档不含任何几何 / 颜色的具体数值**——那些是**各类别自己的约束**。
 > SVG 不只放图标：带动画的图形、插画、品牌标**套上图标那套判据只会被改坏**
 > （动画的关键帧与线宽都是内容的一部分）。
@@ -47,12 +50,12 @@ ft-svg 负责 SVG 这件事本身的标准：**怎么画、怎么判、怎么批
 ## 60 秒上手
 
 ```bash
-node bin/ft.mjs svg spec show                 # 打印规范与骨架（写新图标前先看它）
-node bin/ft.mjs svg spec fix <组> --dry-run   # 先看要改什么，确认后再去掉 --dry-run
-node bin/ft.mjs svg board                     # 整库状态：哪些待规范
+nx-ft svg spec show                 # 打印规范与骨架（写新图标前先看它）
+nx-ft svg spec fix <组> --dry-run   # 先看要改什么，确认后再去掉 --dry-run
+nx-ft svg board                     # 整库状态：哪些待规范
 ```
 
-命令、参数与 flag 的**权威清单**看 `node bin/ft.mjs routes --json`，不要凭记忆杜撰。
+命令、参数与 flag 的**权威清单**看 `nx-ft routes --json`，不要凭记忆杜撰。
 合规骨架（合规的 `<svg>` 长什么样）见 [[B01-图标]]；多行内容走 heredoc 的写法见 [[A01-工作流]]。
 加 `--json` 得机器可读输出。
 
