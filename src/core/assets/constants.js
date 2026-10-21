@@ -39,6 +39,27 @@ export function parseGroupPath(input) {
   return segs.join('/');
 }
 
+// 「根」是一等分组：空路径 = groups/<kind>/ 本身（根清单 group.json 就在那里，
+// 根资源在 groups/<kind>/assets/<名>/）。**资源级**入口用它；
+// 分组级入口（建/改名/删分组）仍走 parseGroupPath——根不可创建、不可删除。
+export function parseGroupPathOrRoot(input) {
+  const raw = String(input ?? '').trim();
+  if (!raw) return '';
+  return parseGroupPath(raw);
+}
+
+// 2-slot 命令（group/name）的 CLI 左移：`html add btn` → group=''、name='btn'。
+//
+// 只在「恰好给了一个位置参数」时左移（name 缺、group 有）。3-slot 命令
+// （style.* / history.* / move）**不做**这种推断：`style add ui x` 既可能指
+// 「组 ui 的资源 x（缺 style）」也可能指「根资源 ui 的风格 x」——静默二选一
+// 必然有人中招，那里保持 group 位置参数必填（根变体走 HTTP / 面板）。
+export function shiftGroupName(ctx) {
+  if (ctx.name !== undefined) return ctx; // 两段齐全（HTTP 恒走这里）：原样放行
+  if (ctx.group === undefined) return ctx; // 全缺：后续必填校验会报缺参
+  return { ...ctx, group: '', name: ctx.group };
+}
+
 export const nowIso = () => new Date().toISOString();
 
 export const toTag = (iso) => String(iso || '').replace(/[-:]/g, '').replace(/\..*$/, '').replace('T', '-');

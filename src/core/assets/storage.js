@@ -90,6 +90,17 @@ export function newManifest(groupPath, label) {
   };
 }
 
+// 根清单（groups/<kind>/group.json）：根是一等分组，资源可以直接住这儿。
+// 惰性创建——第一个根级写入口（建资源 / 导入 / 移到根）才落盘；没根资源时
+// 盘上不多一个空清单（scanGroups 也不会多出空根条目，存量行为零变化）。
+export function ensureRootManifest(kind) {
+  const existing = loadGroup(kind, '');
+  if (existing) return existing;
+  const manifest = newManifest('', '全部');
+  saveGroup(kind, '', manifest);
+  return manifest;
+}
+
 // 分组改名/移动 = 目录改名 + 清单里的 path/name 跟着改（子分组的 path 也要改）。
 // 返回重命名后的新路径，供调用方回填。
 export function renameGroupDir(kind, fromPath, toPath) {
@@ -215,6 +226,17 @@ export function scanGroups(kind) {
   const out = [];
   const root = groupsRoot(kind);
   if (!existsSync(root)) return out;
+
+  // 根条目：根清单存在才收录（groups/<kind>/group.json 本身不是子目录，
+  // 下面的 walk 看不到它）。根资源住在 assets/ 子目录里，与子分组天然隔离。
+  if (existsSync(join(root, GROUP_FILE))) {
+    try {
+      const manifest = loadGroup(kind, '');
+      if (manifest) out.push({ groupPath: '', manifest });
+    } catch {
+      /* 跳过损坏的根清单 */
+    }
+  }
 
   const walk = (absDir, relPath, depth) => {
     for (const name of listSubdirs(absDir)) {

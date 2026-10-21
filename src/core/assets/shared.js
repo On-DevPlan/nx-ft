@@ -5,7 +5,7 @@
 import { randomBytes } from 'node:crypto';
 import { notFound } from '../errors/index.js';
 import { assertSafeName } from '../paths.js';
-import { assertKind, nowIso, parseGroupPath, toTag } from './constants.js';
+import { assertKind, nowIso, parseGroupPathOrRoot, toTag } from './constants.js';
 import * as st from './storage.js';
 
 export function locate(kind, groupPath, name) {
@@ -49,10 +49,11 @@ export function styleMeta(s) {
   };
 }
 
-// 供 actions 层复用的资源定位（返回写入用上下文）
+// 供 actions 层复用的资源定位（返回写入用上下文）。group 允许空串 = 根
+//（assets.js 的 desc/rename/remove/tags 与 styles.js 全部经这里放行根资源）。
 export function resolveAsset(kind, group, name) {
   assertKind(kind);
-  const groupPath = parseGroupPath(group);
+  const groupPath = parseGroupPathOrRoot(group);
   const entryName = assertSafeName(String(name ?? '').trim(), '资源名');
   const { manifest, entry } = locate(kind, groupPath, entryName);
   return { groupPath, entryName, manifest, entry };

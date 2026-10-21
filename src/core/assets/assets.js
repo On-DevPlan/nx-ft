@@ -5,7 +5,7 @@
 // 风格的增删切换与编辑历史在 styles.js。
 import { badInput, notFound } from '../errors/index.js';
 import { assertSafeName } from '../paths.js';
-import { ASSET_KINDS, assertKind, normalizeTags, nowIso, parseGroupPath } from './constants.js';
+import { ASSET_KINDS, assertKind, normalizeTags, nowIso, parseGroupPathOrRoot } from './constants.js';
 import { labelOf } from './groups.js';
 import { locate, resolveAsset, styleMeta, usedSlots } from './shared.js';
 import { addStyle } from './styles.js';
@@ -15,9 +15,11 @@ import * as st from './storage.js';
 
 export function createAsset({ kind, group, name, label, style, code, tags }) {
   assertKind(kind);
-  const groupPath = parseGroupPath(group);
+  const groupPath = parseGroupPathOrRoot(group);
   const entryName = assertSafeName(String(name ?? '').trim(), '资源名');
-  const manifest = st.loadGroup(kind, groupPath);
+  // 根清单（''）惰性创建：第一次往根里建资源时落 groups/<kind>/group.json；
+  // 具名分组不存在仍报错（不静默建组，沿用「先 group add」的约定）。
+  const manifest = groupPath === '' ? st.ensureRootManifest(kind) : st.loadGroup(kind, groupPath);
   if (!manifest) throw notFound(`分组不存在: ${groupPath}（先用 group add 建组）`);
   if (manifest.assets[entryName]) return { status: 'skipped', group: groupPath, name: entryName, reason: '已存在' };
 
@@ -53,7 +55,7 @@ export function createAsset({ kind, group, name, label, style, code, tags }) {
 
 export function loadAsset({ kind, group, name, code = false }) {
   assertKind(kind);
-  const groupPath = parseGroupPath(group);
+  const groupPath = parseGroupPathOrRoot(group);
   const entryName = assertSafeName(String(name ?? '').trim(), '资源名');
   const { entry } = locate(kind, groupPath, entryName);
   const slots = ASSET_KINDS[kind].slots;
@@ -135,13 +137,14 @@ export function renameAsset({ kind, group, name, label, to }) {
 // 源资源还没有目录（没写过代码——只动清单键，目录无从搬起）。
 export function moveAsset({ kind, from, name, to }) {
   assertKind(kind);
-  const fromPath = parseGroupPath(from);
-  const toPath = parseGroupPath(to);
+  const fromPath = parseGroupPathOrRoot(from);
+  const toPath = parseGroupPathOrRoot(to);
   if (fromPath === toPath) {
     return { status: 'skipped', group: fromPath, name, reason: '源与目标是同一分组' };
   }
   const src = resolveAsset(kind, fromPath, name);
-  const targetManifest = st.loadGroup(kind, toPath);
+  // 移到根（to=''）：根清单惰性建；移到具名分组仍要求该组已存在
+  const targetManifest = toPath === '' ? st.ensureRootManifest(kind) : st.loadGroup(kind, toPath);
   if (!targetManifest) throw notFound(`目标分组不存在: ${toPath}（先用 group add 建组）`);
   if (targetManifest.assets[src.entryName]) {
     return { status: 'blocked', group: toPath, name: src.entryName, reason: '目标分组已有同名资源' };
@@ -163,11 +166,12 @@ export function moveAsset({ kind, from, name, to }) {
 // 排序语义与目录一致：有 order 的按序在前，没有的按名字垫底（树两侧同规则）。
 export function reorderAssets({ kind, group, order }) {
   assertKind(kind);
-  const groupPath = parseGroupPath(group);
+  const groupPath = parseGroupPathOrRoot(group);
   if (!Array.isArray(order) || !order.length) throw badInput('需要 --order <资源名的完整新顺序>');
   const names = order.map(String);
   if (new Set(names).size !== names.length) throw badInput('order 里有重复的资源名');
-  const manifest = st.loadGroup(kind, groupPath);
+  // 根（''）同样可排序：清单惰性建（与建/移入口同一口径）
+  const manifest = groupPath === '' ? st.ensureRootManifest(kind) : st.loadGroup(kind, groupPath);
   if (!manifest) throw notFound(`分组不存在: ${groupPath}`);
   const missing = Object.keys(manifest.assets).filter((n) => !names.includes(n));
   if (missing.length) throw badInput(`order 缺少这些资源: ${missing.join(', ')}`);
