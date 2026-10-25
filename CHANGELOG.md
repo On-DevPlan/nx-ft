@@ -2,6 +2,12 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.7.3
+
+### Changed
+
+- 维护性 patch 发版：功能与 0.7.2 一致。
+
 ## 0.7.2
 
 ### Fixed
