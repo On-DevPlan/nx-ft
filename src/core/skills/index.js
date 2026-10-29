@@ -184,7 +184,21 @@ export async function installGroup(group, opts = {}) {
     if (!spec) {
         throw badInput(`未知 group: ${key}（可用: ${Object.keys(manifest.groups).join(', ')}）`);
     }
-    const names = [...new Set(spec.skills)];
+    return installMany([...new Set(spec.skills)], opts, { group: key });
+}
+// 一键装**全部**随包 skill（--all）。语义与 installGroup 一字不差：先无副作用预检，
+// 任一冲突就整体不落盘，加 --force 才整批覆盖。
+// 名单取自目录扫描（assets/<名>/SKILL.md）而不是 groups.json：清单漏写一个新 skill 时，
+// --all 仍该把它装上——「全部」的口径是可发现，不是「清单里写了几个」。
+export async function installAll(opts = {}) {
+    const names = await bundledSkillNames();
+    if (!names.length) {
+        throw notFound('包里没有可分发的 skill（assets/ 下没有含 SKILL.md 的目录）');
+    }
+    return installMany(names, opts, { all: true });
+}
+// installGroup / installAll 的共体：预检在前、落盘在后，meta 决定结果里带 group 还是 all。
+async function installMany(names, opts, meta) {
     // 无副作用预检：任一项「已存在且有差异」→ 整体 conflict，不落任何文件。
     // 有安装钩子的 skill：先跑 preInstall 取 vars（pre 抛错 = 整组拒绝），
     // 再按渲染结果比较；无钩子走字节 diff。
@@ -216,12 +230,12 @@ export async function installGroup(group, opts = {}) {
             }
         }
         if (conflicts.length)
-            return { status: 'conflict', group: key, skills: conflicts };
+            return { status: 'conflict', ...meta, skills: conflicts };
     }
     const skills = [];
     for (const n of names)
         skills.push(await installOne(n, { to: opts.to, force: opts.force }));
-    return { status: 'ok', group: key, skills };
+    return { status: 'ok', ...meta, skills };
 }
 // 对比两棵树，返回内容不同的相对路径（安装器据此判断跳过 / 冲突 / 覆盖）。
 async function diffTrees(src, dst, rel = '') {

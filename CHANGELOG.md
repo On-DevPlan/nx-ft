@@ -2,6 +2,17 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## 0.7.4
+
+### Added
+
+- **`skill install --all`**：一次装齐 `assets/` 下**全部** skill（当前 4 个：`nx-ft` 主 skill
+  + `ft-html` / `ft-svg` / `ft-color`）。此前要一次装齐只能 `--group nx-ft`，而 group 是
+  **清单**——`groups.json` 漏写一个新 skill 它就装不上。`--all` 改成读目录（含 `SKILL.md`
+  的目录都算），新加 skill 不必回头同步清单。
+  语义与 `--group` 一字不差：先全员预检，任一冲突就**整批不落盘**（装一半的批次比全没装
+  更难收拾），加 `--force` 才整批覆盖。`--all` 与位置参数、`--group` 三者互斥。
+
 ## 0.7.3
 
 ### Changed
