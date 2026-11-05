@@ -195,7 +195,9 @@ export async function installAll(opts = {}) {
     if (!names.length) {
         throw notFound('包里没有可分发的 skill（assets/ 下没有含 SKILL.md 的目录）');
     }
-    return installMany(names, opts, { all: true });
+    // --all 的语义是「装全 + 对齐到包内版本」：force 恒开，跳过冲突预检。
+    // 想保留目标目录里的本地改动就别用 --all；--group 的预检语义不变。
+    return installMany(names, { ...opts, force: true }, { all: true });
 }
 // installGroup / installAll 的共体：预检在前、落盘在后，meta 决定结果里带 group 还是 all。
 async function installMany(names, opts, meta) {

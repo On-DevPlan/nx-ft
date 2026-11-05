@@ -93,7 +93,7 @@ export default {
       id: 'skill.install',
       cli: ['skill', 'install'],
       http: ['POST', '/api/skill-install'],
-      summary: '安装 skill（单个 / 整组 / --all 全部）',
+      summary: '安装 skill（单个 / 整组 / --all 全部；--all 直接覆盖，不需要 --force）',
       args: [{ name: 'name', required: false }],
       flags: {
         all: { type: 'boolean' },

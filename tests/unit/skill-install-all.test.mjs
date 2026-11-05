@@ -1,8 +1,8 @@
-// skill install --all：一次装齐随包 skill。
+// skill install --all：一次装齐随包 skill，且**直接覆盖**。
 //
-// 语义与 installGroup 是同一条铁律——**先无副作用预检，任一冲突就整批不落盘**。
-// 理由：装了一半的分组比全没装更糟，用户看不出哪几个是新的、哪几个还是旧的；
-// 宁可返回 conflict 让他加 --force 整批重来。
+// 与 installGroup 的差别是刻意的：--group 是「挑一组装」，仍走无副作用预检
+// （任一冲突整批不落盘，让用户加 --force 决策）；--all 是「把本机装全并对齐包内版本」，
+// 覆盖是其定义的一部分——否则得先 --all 看冲突、再 --all --force 重来，多一个来回。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, readdir, readFile, writeFile } from 'node:fs/promises';
@@ -43,7 +43,7 @@ test('installAll：幂等——已经是最新时全部 skipped', async () => {
   }
 });
 
-test('installAll：有一个已存在且有差异 → 整批 conflict，本地改动不被静默覆盖', async () => {
+test('installAll：本地有差异 → 直接覆盖（--all 的语义，不需要 --force）', async () => {
   const dir = await temp();
   try {
     const names = await skills.bundledSkillNames();
@@ -54,16 +54,38 @@ test('installAll：有一个已存在且有差异 → 整批 conflict，本地�
     await writeFile(victim, original + '\n<!-- 本地改动 -->\n', 'utf8');
 
     const r = await skills.installAll({ to: dir });
-    assert.equal(r.status, 'conflict');
+    assert.equal(r.status, 'ok');
     assert.equal(r.all, true);
-    assert.equal(r.skills.length, 1, '只有被动过的那一个算冲突');
-    assert.equal(r.skills[0].name, names[0]);
-    assert.match(await readFile(victim, 'utf8'), /本地改动/, '冲突时一个文件都不许动');
+    // 被动过的那一个被 replaced；没动过的仍是 skipped
+    const touched = r.skills.find((s) => s.name === names[0]);
+    assert.equal(touched.replaced, true, '--all 恒覆盖，不走冲突预检');
+    assert.equal(await readFile(victim, 'utf8'), original, '本地改动被包内版本替换');
+    assert.ok(
+      r.skills.filter((s) => s.name !== names[0]).every((s) => s.status === 'skipped'),
+      '没动过的 skill 不该重装'
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
 
-    // 加 --force 才整批覆盖
-    const forced = await skills.installAll({ to: dir, force: true });
-    assert.equal(forced.status, 'ok');
-    assert.equal(await readFile(victim, 'utf8'), original);
+test('installGroup 仍保留冲突预检（--all 与 --group 语义不同）', async () => {
+  const dir = await temp();
+  try {
+    const names = await skills.bundledSkillNames();
+    const manifest = await skills.loadGroups();
+    // 找任意一个含多个 skill 的 group；没有就跳过这条对照
+    const multi = Object.entries(manifest.groups || {}).find(([, g]) => (g.skills || []).length > 1);
+    if (!multi) return;
+
+    await skills.installGroup(multi[0], { to: dir });
+    const victim = join(dir, names[0], 'SKILL.md');
+    const original = await readFile(victim, 'utf8');
+    await writeFile(victim, original + '\n<!-- 本地改动 -->\n', 'utf8');
+
+    const r = await skills.installGroup(multi[0], { to: dir });
+    assert.equal(r.status, 'conflict', '--group 遇到差异仍是 conflict，不静默覆盖');
+    assert.match(await readFile(victim, 'utf8'), /本地改动/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
